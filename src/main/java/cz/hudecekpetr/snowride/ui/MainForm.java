@@ -23,7 +23,7 @@ import java.io.IOException;
 
 
 public class MainForm {
-    private static final Font TEXT_EDIT_FONT = new Font("Consolas", 8);
+    private static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private final TextArea tbTextEdit;
     GateParser gateParser = new GateParser();
     private Stage stage;
@@ -93,13 +93,20 @@ public class MainForm {
                 }
             }
         });
+        MenuItem bReparseChanged = new MenuItem("Reparse changed files");
+        bReparseChanged.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               // projectTree.getRoot().getValue().reparseWhatChanged();
+            }
+        });
         MenuItem bExit = new MenuItem("Exit Snowride");
         bExit.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
                 Platform.exit();
             }
         });
-        projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll, bExit);
+        projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll,bReparseChanged, bExit);
         mainMenu.getMenus().add(projectMenu);
         return mainMenu;
     }
@@ -107,7 +114,7 @@ public class MainForm {
     public void loadProjectFromCurrentDir() {
         FolderSuite folderSuite = null;
         try {
-            folderSuite = gateParser.loadDirectory(new File(".").getAbsoluteFile());
+            folderSuite = gateParser.loadDirectory(new File(".").getAbsoluteFile().getCanonicalFile());
 
             projectTree.setRoot(folderSuite.treeNode);
         } catch (IOException e) {

@@ -8,10 +8,12 @@ import java.util.ArrayList;
 
 public class FileSuite extends HighElement {
     private final File file;
+    private final RobotFile fileParsed;
 
-    public FileSuite(File file, String name, String contents, ArrayList<HighElement> children) {
-        super(name, contents, children);
+    public FileSuite(File file,String name, String contents,  RobotFile fileParsed) {
+        super(name, contents, fileParsed.getHighElements());
         this.file = file;
+        this.fileParsed = fileParsed;
     }
 
     @Override
@@ -23,6 +25,7 @@ public class FileSuite extends HighElement {
     public void saveAll() throws IOException {
         if (this.changedByUser) {
             this.changedByUser = false;
+            System.out.println("SaveAll: " + this.name);
             FileUtils.write(file, contents, "utf-8");
         }
     }
