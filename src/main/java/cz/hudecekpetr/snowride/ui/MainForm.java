@@ -171,6 +171,7 @@ public class MainForm {
         return toolBar;
     }
 
+    // Hello
     private ImageView loadIcon(String path) {
         Image image = new Image(getClass().getResourceAsStream("/icons/" + path), 16, 16, false, false);
         ImageView imageView = new ImageView(image);
