@@ -31,9 +31,11 @@ public class GateParser {
                 Parser parser = new Parser(lexed);
                 initFile = inFile;
                 initFileParsed = parser.fileSuite();
-            } else {
+            } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
                 FileSuite inThing = loadFile(inFile);
                 fileSuites.add(inThing);
+            } else {
+                // We can ignore this file.
             }
         }
         return new FolderSuite(initFile, initFileParsed, name, contents, fileSuites);

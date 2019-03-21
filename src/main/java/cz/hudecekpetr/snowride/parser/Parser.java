@@ -33,8 +33,8 @@ public class Parser {
     private TestDataSection testDataSection() {
         SectionHeader header = parseTestDataSectionHeader();
         switch (header.getSectionKind()) {
-            case TEST_CASES:
-                return testCasesSection(header);
+          //  case TEST_CASES:
+          //      return testCasesSection(header);
             default:
                 return textBasedSection(header);
         }
@@ -50,6 +50,7 @@ public class Parser {
 
             position++;
         }
+        return null;
     }
 
     private TestDataSection textBasedSection(SectionHeader header) {

@@ -32,6 +32,9 @@ public class Lexer {
             }
             line.cells.add(cell);
         }
+        if (line.cells.size() == 0) {
+            line.cells.add(new Cell("",""));
+        }
         return line;
     }
 
