@@ -1,6 +1,8 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.parser.GateParser;
+import cz.hudecekpetr.snowride.runner.RunTab;
+import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import javafx.application.Platform;
@@ -16,13 +18,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainForm {
@@ -35,8 +43,10 @@ public class MainForm {
     BooleanProperty canSave = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
-    BooleanProperty canRun = new SimpleBooleanProperty(true);
-    BooleanProperty canStop = new SimpleBooleanProperty(false);
+    public BooleanProperty canRun = new SimpleBooleanProperty(true);
+    public BooleanProperty canStop = new SimpleBooleanProperty(false);
+    private ContextMenu treeContextMenu;
+    RunTab runTab;
 
     public MainForm(Stage stage) {
         this.stage = stage;
@@ -61,8 +71,8 @@ public class MainForm {
         tabTextEdit.setClosable(false);
         Tab tabGrid = new Tab("Assisted grid editing");
         tabGrid.setClosable(false);
-        Tab tabRun = new Tab("Run");
-        tabRun.setClosable(false);
+        runTab = new RunTab(this);
+        Tab tabRun = runTab.createTab();
         TabPane tabs = new TabPane(tabTextEdit, tabGrid, tabRun);
         VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
@@ -84,9 +94,66 @@ public class MainForm {
                 focusTreeNode(newValue);
             }
         });
+        treeContextMenu = new ContextMenu();
+        treeContextMenu.getItems().add(new MenuItem("A"));
+        treeContextMenu.setOnShowing(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                treeContextMenu.getItems().clear();
+                TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
+                if (focused != null) {
+                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                }
+            }
+        });
+        projectTree.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
+            @Override
+            public void handle(ContextMenuEvent event) {
+                treeContextMenu.show(projectTree, event.getScreenX(), event.getScreenY());
+            }
+        });
+        projectTree.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    treeContextMenu.hide();
+                }
+            }
+        });
         VBox vBox = new VBox(tbSearchTests, projectTree);
         VBox.setVgrow(projectTree, Priority.ALWAYS);
         return vBox;
+    }
+
+    private List<MenuItem> createContextMenuFor(TreeItem<HighElement> forWhat) {
+        List<MenuItem> menu = new ArrayList<>();
+        HighElement element = forWhat.getValue();
+        if (element instanceof FolderSuite) {
+            menu.add(new MenuItem("New folder suite"));
+            menu.add(new MenuItem("New file suite/resource file"));
+        }
+        maybeAddSeparator(menu);
+        if (element instanceof FileSuite) {
+            menu.add(new MenuItem("New test case"));
+        }
+        if (element instanceof FolderSuite || element instanceof FileSuite) {
+            menu.add(new MenuItem("New user keyword"));
+        }
+        maybeAddSeparator(menu);
+        if (element instanceof FolderSuite || element instanceof FileSuite) {
+            menu.add(new MenuItem("Select all tests"));
+            menu.add(new MenuItem("Deselect all tests"));
+        }
+        maybeAddSeparator(menu);
+        menu.add(new MenuItem("Rename"));
+        menu.add(new MenuItem("Delete"));
+        return menu;
+    }
+
+    private void maybeAddSeparator(List<MenuItem> menu) {
+        if (menu.size() > 0 && !(menu.get(menu.size() - 1) instanceof SeparatorMenuItem)) {
+            menu.add(new SeparatorMenuItem());
+        }
     }
 
     private ToolBar buildToolBar() {
