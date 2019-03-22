@@ -1,10 +1,11 @@
-package cz.hudecekpetr.snowride.parser;
+package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 
 public class SectionHeader {
     public LogicalLine line;
     public SectionKind sectionKind;
+    public String followupEmptyLines = "";
 
     public SectionHeader(LogicalLine line) {
         this.line = line;

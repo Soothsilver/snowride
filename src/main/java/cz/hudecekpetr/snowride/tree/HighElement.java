@@ -5,6 +5,7 @@ import javafx.scene.control.TreeItem;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public abstract class HighElement {
     public final String name;
@@ -25,8 +26,22 @@ public abstract class HighElement {
 
     @Override
     public String toString() {
+        if (changedByUser) {
+            return "[changed] " + name;
+        }
         return name;
     }
 
     public abstract void saveAll() throws IOException;
+
+    protected void refreshToString() {
+        this.treeNode.setValue(null);
+        this.treeNode.setValue(this);
+    }
+    public Stream<HighElement> selfAndDescendantHighElements() {
+        return Stream.concat(
+                Stream.of(this),
+                children.stream().flatMap(HighElement::selfAndDescendantHighElements)
+        );
+    }
 }

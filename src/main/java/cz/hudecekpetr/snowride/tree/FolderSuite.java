@@ -18,7 +18,7 @@ public class FolderSuite extends HighElement {
 
     @Override
     public String toString() {
-        return "[folder] " + name;
+        return "[folder] " + super.toString();
     }
 
     @Override
@@ -27,9 +27,15 @@ public class FolderSuite extends HighElement {
             changedByUser = false;
             System.out.println("SaveAll: [initfile] " + this.name);
             FileUtils.write(initFile, contents, "utf-8");
+            refreshToString();
         }
         for (HighElement child : children) {
             child.saveAll();
         }
+    }
+
+
+    public RobotFile getInitFileParsed() {
+        return initFileParsed;
     }
 }

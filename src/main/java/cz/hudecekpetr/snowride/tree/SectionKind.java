@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.parser;
+package cz.hudecekpetr.snowride.tree;
 
 public enum SectionKind {
     SETTINGS,

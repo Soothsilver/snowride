@@ -1,10 +1,12 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.TestCase;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -18,14 +20,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,22 +35,35 @@ import java.util.List;
 
 
 public class MainForm {
-    private static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
+    public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private final TextArea tbTextEdit;
     GateParser gateParser = new GateParser();
+    private NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
     private TreeView<HighElement> projectTree;
+    private SearchSuites searchSuitesAutoCompletion;
     boolean switchingTextEditContents = false;
+    private final TabPane tabs;
+    private final Tab tabTextEdit;
+
+    public TreeView<HighElement> getProjectTree() {
+        return projectTree;
+    }
+
+    boolean humanInControl = true;
     BooleanProperty canSave = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
     private ContextMenu treeContextMenu;
-    RunTab runTab;
+    private RunTab runTab;
+    private GridTab gridTab;
 
     public MainForm(Stage stage) {
         this.stage = stage;
+        canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
+        canNavigateForwards.bindBidirectional(navigationStack.canNavigateForwards);
         stage.setTitle("Snowride");
         MenuBar mainMenu = buildMainMenu();
         ToolBar toolBar = buildToolBar();
@@ -64,16 +78,19 @@ public class MainForm {
                     System.out.println(whatChanged.name + " changed.");
                     whatChanged.changedByUser = true;
                     whatChanged.contents = newValue;
+                    whatChanged.treeNode.setValue(null);
+                    whatChanged.treeNode.setValue(whatChanged);
+                    canSave.set(true);
                 }
             }
         });
-        Tab tabTextEdit = new Tab("Edit entire file as text", tbTextEdit);
+        tabTextEdit = new Tab("Edit entire file as text", tbTextEdit);
         tabTextEdit.setClosable(false);
-        Tab tabGrid = new Tab("Assisted grid editing");
-        tabGrid.setClosable(false);
+        gridTab = new GridTab(this);
+        Tab tabGrid = gridTab.createTab();
         runTab = new RunTab(this);
         Tab tabRun = runTab.createTab();
-        TabPane tabs = new TabPane(tabTextEdit, tabGrid, tabRun);
+        tabs = new TabPane(tabTextEdit, tabGrid, tabRun);
         VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
@@ -87,10 +104,13 @@ public class MainForm {
     private VBox createLeftPane() {
         TextField tbSearchTests = new TextField();
         tbSearchTests.setPromptText("Search for tests or suites...");
+        searchSuitesAutoCompletion = new SearchSuites(this);
+        searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
+
                 focusTreeNode(newValue);
             }
         });
@@ -163,8 +183,11 @@ public class MainForm {
         Button bRun = new Button("Run");
         Button bStop = new Button("Stop");
         bNavigateBack.disableProperty().bind(canNavigateBack.not());
+        bNavigateBack.setOnAction(this::goBack);
         bNavigateForwards.disableProperty().bind(canNavigateForwards.not());
+        bNavigateForwards.setOnAction(this::goForwards);
         bSaveAll.disableProperty().bind(canSave.not());
+        bSaveAll.setOnAction(this::saveAll);
         bRun.disableProperty().bind(canRun.not());
         bStop.disableProperty().bind(canStop.not());
         ToolBar toolBar = new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
@@ -180,10 +203,24 @@ public class MainForm {
 
     private void focusTreeNode(TreeItem<HighElement> focusedNode) {
         if (focusedNode != null) {
+            if (humanInControl) {
+                navigationStack.standardEnter(focusedNode.getValue());
+            }
+
             switchingTextEditContents = true;
             tbTextEdit.setText(focusedNode.getValue().contents);
+            gridTab.loadElement(focusedNode.getValue());
             switchingTextEditContents = false;
         }
+    }
+
+    private void saveAll(ActionEvent event) {
+        try {
+            projectTree.getRoot().getValue().saveAll();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        canSave.setValue(false);
     }
 
     private MenuBar buildMainMenu() {
@@ -196,16 +233,7 @@ public class MainForm {
             }
         });
         MenuItem bSaveAll = new MenuItem("Save all");
-        bSaveAll.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                try {
-                    projectTree.getRoot().getValue().saveAll();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        bSaveAll.setOnAction(this::saveAll);
         bSaveAll.disableProperty().bind(canSave.not());
         MenuItem bReparseChanged = new MenuItem("Reparse changed files");
         bReparseChanged.setOnAction(new EventHandler<ActionEvent>() {
@@ -223,11 +251,46 @@ public class MainForm {
         projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll,bReparseChanged, bExit);
         MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
         back.disableProperty().bind(canNavigateBack.not());
+        back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
+        back.setOnAction(this::goBack);
         MenuItem forwards = new MenuItem("Navigate forwards", loadIcon("GoRight.png"));
+        forwards.setOnAction(this::goForwards);
+        forwards.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.CONTROL_DOWN));
         forwards.disableProperty().bind(canNavigateForwards.not());
         Menu navigateMenu = new Menu("Navigate", null, back, forwards);
         mainMenu.getMenus().addAll(projectMenu, navigateMenu);
         return mainMenu;
+    }
+
+    private void goBack(ActionEvent event) {
+        if (navigationStack.canNavigateBack.getValue()) {
+            selectProgrammatically(navigationStack.navigateBackwards());
+        }
+    }
+    private void goForwards(ActionEvent event) {
+        if (navigationStack.canNavigateForwards.getValue()) {
+            selectProgrammatically(navigationStack.navigateForwards());
+        }
+    }
+
+    public void selectProgrammatically(HighElement navigateTo) {
+        if (navigateTo == null) {
+            return;
+        }
+        TreeItem<HighElement> selectWhat = navigateTo.treeNode;
+        expandUpTo(selectWhat);
+        int index = projectTree.getRow(selectWhat);
+        humanInControl = false;
+        projectTree.getFocusModel().focus(index);
+        projectTree.getSelectionModel().select(index);
+        humanInControl = true;
+    }
+
+    private void expandUpTo(TreeItem<HighElement> expandUpTo) {
+        if (expandUpTo.getParent() != null) {
+            expandUpTo(expandUpTo.getParent());
+        }
+        expandUpTo.setExpanded(true);
     }
 
     public void loadProjectFromCurrentDir() {
@@ -236,6 +299,9 @@ public class MainForm {
             folderSuite = gateParser.loadDirectory(new File(".").getAbsoluteFile().getCanonicalFile());
 
             projectTree.setRoot(folderSuite.treeNode);
+            projectTree.requestFocus();
+            projectTree.getSelectionModel().select(0);
+            projectTree.getFocusModel().focus(0);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

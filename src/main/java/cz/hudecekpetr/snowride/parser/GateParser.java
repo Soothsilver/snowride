@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.parser;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.listener.AntlrGate;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GateParser {
-    private Lexer lexer = new Lexer();
+    private AntlrGate gate = new AntlrGate();
 
     public FolderSuite loadDirectory(File directoryPath) throws IOException {
         String name = directoryPath.getName();
@@ -27,10 +28,8 @@ public class GateParser {
                 fileSuites.add(inThing);
             } else if (inFile.getName().toLowerCase().equals("__init__.robot")) {
                 contents = FileUtils.readFileToString(inFile, "utf-8");
-                List<LogicalLine> lexed = lexer.lex(contents);
-                Parser parser = new Parser(lexed);
                 initFile = inFile;
-                initFileParsed = parser.fileSuite();
+                initFileParsed = gate.parse(contents);
             } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
                 FileSuite inThing = loadFile(inFile);
                 fileSuites.add(inThing);
@@ -44,9 +43,7 @@ public class GateParser {
     private FileSuite loadFile(File inFile) throws IOException {
         String name = inFile.getName();
         String contents = FileUtils.readFileToString(inFile, "utf-8");
-        List<LogicalLine> lexed = lexer.lex(contents);
-        Parser parser = new Parser(lexed);
-        return new FileSuite(inFile, name, contents, parser.fileSuite());
+        return new FileSuite(inFile, name, contents, gate.parse(contents));
 
     }
 }

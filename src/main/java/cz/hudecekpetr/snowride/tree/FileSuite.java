@@ -18,7 +18,7 @@ public class FileSuite extends HighElement {
 
     @Override
     public String toString() {
-        return "[file] " + name;
+        return "[file] " + super.toString();
     }
 
     @Override
@@ -27,6 +27,11 @@ public class FileSuite extends HighElement {
             this.changedByUser = false;
             System.out.println("SaveAll: " + this.name);
             FileUtils.write(file, contents, "utf-8");
+            refreshToString();
         }
+    }
+
+    public RobotFile getFileParsed() {
+        return fileParsed;
     }
 }
