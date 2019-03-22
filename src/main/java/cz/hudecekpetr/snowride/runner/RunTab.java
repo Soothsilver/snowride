@@ -54,8 +54,8 @@ public class RunTab {
         Label lblPassed = new Label("Passed: 0");
         Label lblKeyword = new Label("No keyword running.");
         lblTotalTime.setMinWidth(50);
-        lblFailed.setMinWidth(50);
-        lblPassed.setMinWidth(50);
+        lblFailed.setMinWidth(90);
+        lblPassed.setMinWidth(90);
         HBox hboxExecutionLine = new HBox(lblTotalTime, lblFailed, lblPassed, lblKeyword);
         hboxExecutionLine.setAlignment(Pos.CENTER_LEFT);
         VBox vboxTabRun = new VBox(0, hboxScript, hboxButtons, hboxArguments, hboxExecutionLine, splitterOutput);

@@ -119,16 +119,17 @@ public class MainForm {
         treeContextMenu.setOnShowing(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                treeContextMenu.getItems().clear();
-                TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
-                if (focused != null) {
-                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
-                }
+
             }
         });
         projectTree.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
             @Override
             public void handle(ContextMenuEvent event) {
+                treeContextMenu.getItems().clear();
+                TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
+                if (focused != null) {
+                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                }
                 treeContextMenu.show(projectTree, event.getScreenX(), event.getScreenY());
             }
         });
