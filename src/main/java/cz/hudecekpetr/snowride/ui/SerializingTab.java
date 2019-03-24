@@ -23,6 +23,7 @@ public class SerializingTab {
 
     public Tab createTab() {
         t = new Tab("Would serialize to", tbWouldSerializeTo);
+        t.setClosable(false);
         return t;
     }
 

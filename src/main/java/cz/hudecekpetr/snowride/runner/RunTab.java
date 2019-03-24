@@ -1,6 +1,8 @@
 package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -9,12 +11,23 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 
 public class RunTab {
     private MainForm mainForm;
+    private FileChooser openScriptFileDialog;
+    private TextField tbScript;
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
+        openScriptFileDialog = new FileChooser();
+        openScriptFileDialog.setTitle("Choose runner script");
+        openScriptFileDialog.getExtensionFilters().addAll(
+               new FileChooser.ExtensionFilter("Windows executable files", "*.bat", "*.exe"),
+               new FileChooser.ExtensionFilter("All files", "*.*")
+        );
     }
 
     public Tab createTab() {
@@ -28,8 +41,9 @@ public class RunTab {
         SplitPane splitterOutput = new SplitPane(tbOutput, tbLog);
         splitterOutput.setOrientation(Orientation.VERTICAL);
         Label lblScript = new Label("Script:");
-        TextField tbScript = new TextField();
+        tbScript = new TextField();
         Button bLoadScriptButton = new Button("...");
+        bLoadScriptButton.setOnAction(this::loadScriptOnClick);
         HBox hboxScript = new HBox(5, lblScript, tbScript, bLoadScriptButton);
         hboxScript.setPadding(new Insets(2));
         hboxScript.setAlignment(Pos.CENTER_LEFT);
@@ -63,5 +77,12 @@ public class RunTab {
         Tab tabRun = new Tab("Run", vboxTabRun);
         tabRun.setClosable(false);
         return tabRun;
+    }
+
+    private void loadScriptOnClick(ActionEvent actionEvent) {
+        File file = openScriptFileDialog.showOpenDialog(mainForm.getStage());
+        if (file != null) {
+            tbScript.setText(file.getAbsoluteFile().toString());
+        }
     }
 }

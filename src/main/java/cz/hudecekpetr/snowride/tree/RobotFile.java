@@ -8,7 +8,11 @@ public class RobotFile {
     public List<Exception> errors = new ArrayList<>();
 
     public List<HighElement> getHighElements() {
-        return new ArrayList<>();
+        List<HighElement> he = new ArrayList<>();
+        for(RobotSection section : sections) {
+            he.addAll(section.getHighElements());
+        }
+        return he;
     }
 
     public String serialize() {

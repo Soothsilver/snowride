@@ -1,13 +1,12 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
-import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.TestCase;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -16,7 +15,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -26,8 +24,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,6 +99,7 @@ public class MainForm {
         VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
+        SplitPane.setResizableWithParent(searchableTree, false);
         treeAndGrid.setDividerPosition(0,0.3);
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
@@ -186,17 +185,21 @@ public class MainForm {
         }
         maybeAddSeparator(menu);
         if (element instanceof FileSuite) {
+            // TODO
             menu.add(new MenuItem("New test case"));
         }
         if (element instanceof FolderSuite || element instanceof FileSuite) {
+            // TODO
             menu.add(new MenuItem("New user keyword"));
         }
         maybeAddSeparator(menu);
         if (element instanceof FolderSuite || element instanceof FileSuite) {
+            // TODO
             menu.add(new MenuItem("Select all tests"));
             menu.add(new MenuItem("Deselect all tests"));
         }
         maybeAddSeparator(menu);
+        // TODO
         menu.add(new MenuItem("Rename"));
         menu.add(new MenuItem("Delete"));
         return menu;
@@ -244,6 +247,9 @@ public class MainForm {
             gridTab.loadElement(focusedNode.getValue());
             serializingTab.loadElement(focusedNode.getValue());
             switchingTextEditContents = false;
+            if (focusedNode.getValue() instanceof Scenario) {
+                tabs.getSelectionModel().select(gridTab.getTabGrid());
+            }
         }
     }
 
@@ -269,20 +275,14 @@ public class MainForm {
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         bSaveAll.setOnAction(this::saveAll);
         bSaveAll.disableProperty().bind(canSave.not());
-        MenuItem bReparseChanged = new MenuItem("Reparse changed files");
-        bReparseChanged.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-               // projectTree.getRoot().getValue().reparseWhatChanged();
-            }
-        });
+
         MenuItem bExit = new MenuItem("Exit Snowride");
         bExit.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
                 Platform.exit();
             }
         });
-        projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll,bReparseChanged, bExit);
+        projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll, bExit);
         MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
         back.disableProperty().bind(canNavigateBack.not());
         back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
@@ -348,5 +348,9 @@ public class MainForm {
     public void selectProgrammaticallyAndRememberInHistory(HighElement enterWhere) {
         navigationStack.standardEnter(enterWhere);
         selectProgrammatically(enterWhere);
+    }
+
+    public Window getStage() {
+        return this.stage;
     }
 }

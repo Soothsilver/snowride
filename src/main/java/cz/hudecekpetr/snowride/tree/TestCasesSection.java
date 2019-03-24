@@ -1,14 +1,25 @@
 package cz.hudecekpetr.snowride.tree;
 
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
-
 import java.util.List;
 
 public class TestCasesSection extends RobotSection {
-    private final List<TestCase> testCases;
+    private final List<Scenario> testCases;
 
-    public TestCasesSection(SectionHeader header, List<TestCase> testCases) {
+    public TestCasesSection(SectionHeader header, List<Scenario> testCases) {
         super(header);
         this.testCases = testCases;
+    }
+
+    @Override
+    public void serializeInto(StringBuilder sb) {
+        header.serializeInto(sb);
+        testCases.forEach(tc -> {
+            tc.serializeInto(sb);
+        });
+    }
+
+    @Override
+    public List<? extends  HighElement> getHighElements() {
+        return testCases;
     }
 }

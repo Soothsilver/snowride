@@ -1,13 +1,16 @@
 package cz.hudecekpetr.snowride.tree;
 
+import java.util.Collection;
+import java.util.List;
+
 public abstract class RobotSection {
-    private final SectionHeader header;
+    protected final SectionHeader header;
 
     public RobotSection(SectionHeader header)  {
         this.header = header;
     }
 
-    public void serializeInto(StringBuilder sb) {
-        header.serializeInto(sb);
-    }
+    public abstract void serializeInto(StringBuilder sb);
+
+    public abstract List<? extends HighElement> getHighElements();
 }
