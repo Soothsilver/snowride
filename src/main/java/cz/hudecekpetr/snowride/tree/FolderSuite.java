@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.util.List;
 
 public class FolderSuite extends HighElement {
+    public final File directoryPath;
     private File initFile;
     private final RobotFile initFileParsed;
 
-    public FolderSuite(File initFile, RobotFile initFileParsed, String name, String contents, List<HighElement> children) {
+    public FolderSuite(File directoryPath, File initFile, RobotFile initFileParsed, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
+        this.directoryPath = directoryPath;
         this.initFile = initFile;
         this.initFileParsed = initFileParsed;
     }

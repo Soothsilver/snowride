@@ -37,7 +37,7 @@ public class GateParser {
                 // We can ignore this file.
             }
         }
-        return new FolderSuite(initFile, initFileParsed, name, contents, fileSuites);
+        return new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
     }
 
     private FileSuite loadFile(File inFile) throws IOException {

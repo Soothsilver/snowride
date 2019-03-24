@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
@@ -37,6 +38,7 @@ import java.util.List;
 public class MainForm {
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private final TextArea tbTextEdit;
+    private final SerializingTab serializingTab;
     GateParser gateParser = new GateParser();
     private NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
@@ -45,6 +47,7 @@ public class MainForm {
     boolean switchingTextEditContents = false;
     private final TabPane tabs;
     private final Tab tabTextEdit;
+    private Filesystem filesystem;
 
     public TreeView<HighElement> getProjectTree() {
         return projectTree;
@@ -62,6 +65,7 @@ public class MainForm {
 
     public MainForm(Stage stage) {
         this.stage = stage;
+        filesystem = new Filesystem(this);
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
         canNavigateForwards.bindBidirectional(navigationStack.canNavigateForwards);
         stage.setTitle("Snowride");
@@ -90,7 +94,10 @@ public class MainForm {
         Tab tabGrid = gridTab.createTab();
         runTab = new RunTab(this);
         Tab tabRun = runTab.createTab();
-        tabs = new TabPane(tabTextEdit, tabGrid, tabRun);
+        serializingTab = new SerializingTab(this);
+        Tab tabSerializing = serializingTab.createTab();
+        tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing);
+        tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
         VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
@@ -150,8 +157,32 @@ public class MainForm {
         List<MenuItem> menu = new ArrayList<>();
         HighElement element = forWhat.getValue();
         if (element instanceof FolderSuite) {
-            menu.add(new MenuItem("New folder suite"));
-            menu.add(new MenuItem("New file suite/resource file"));
+            MenuItem new_folder_suite = new MenuItem("New folder suite");
+            new_folder_suite.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    String name = TextFieldForm.askForText("Create new folder suite", "Enter folder name:", "Create new folder", "");
+                    if (name != null) {
+                        filesystem.createNewFolderInTree((FolderSuite) element, name);
+                    }
+                }
+            });
+            menu.add(new_folder_suite);
+            MenuItem new_file_suite = new MenuItem("New file suite/resource file");
+            new_file_suite.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    String name = TextFieldForm.askForText("Create new file", "Enter file name (without .robot extension):", "Create new file", "");
+                    if (name != null) {
+                        try {
+                            filesystem.createNewRobotFile((FolderSuite)element, name);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
+            menu.add(new_file_suite);
         }
         maybeAddSeparator(menu);
         if (element instanceof FileSuite) {
@@ -211,6 +242,7 @@ public class MainForm {
             switchingTextEditContents = true;
             tbTextEdit.setText(focusedNode.getValue().contents);
             gridTab.loadElement(focusedNode.getValue());
+            serializingTab.loadElement(focusedNode.getValue());
             switchingTextEditContents = false;
         }
     }
@@ -234,6 +266,7 @@ public class MainForm {
             }
         });
         MenuItem bSaveAll = new MenuItem("Save all");
+        bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         bSaveAll.setOnAction(this::saveAll);
         bSaveAll.disableProperty().bind(canSave.not());
         MenuItem bReparseChanged = new MenuItem("Reparse changed files");
@@ -310,5 +343,10 @@ public class MainForm {
 
     public void show() {
         stage.show();
+    }
+
+    public void selectProgrammaticallyAndRememberInHistory(HighElement enterWhere) {
+        navigationStack.standardEnter(enterWhere);
+        selectProgrammatically(enterWhere);
     }
 }

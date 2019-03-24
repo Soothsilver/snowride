@@ -10,4 +10,15 @@ public class RobotFile {
     public List<HighElement> getHighElements() {
         return new ArrayList<>();
     }
+
+    public String serialize() {
+        StringBuilder sb = new StringBuilder();
+        for(RobotSection robotSection : sections) {
+            robotSection.serializeInto(sb);
+        }
+        if (errors.size() > 0) {
+            throw new RuntimeException("There were parse errors. Editing or saving is not possible.");
+        }
+        return sb.toString();
+    }
 }

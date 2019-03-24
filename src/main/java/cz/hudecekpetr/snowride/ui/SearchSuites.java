@@ -34,7 +34,7 @@ public class SearchSuites {
             protected void completeUserInput(HighElement completion) {
                 super.completeUserInput(completion);
                 if (completion != null) {
-                    mainForm.selectProgrammatically(completion);
+                    mainForm.selectProgrammaticallyAndRememberInHistory(completion);
                 }
             }
         };

@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -7,6 +8,7 @@ import cz.hudecekpetr.snowride.tree.TestCase;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +49,13 @@ public class GridTab {
     }
 
     private void setParseErrors(List<Exception> errors) {
-        this.lblParseError.setText("Parser error count: " + errors.size() + "\n" + String.join("\n", errors.stream().map(exc -> exc.toString()).collect(Collectors.toList())));
+        if (errors.size() > 0) {
+            this.lblParseError.setText("Parser error count: " + errors.size() + "\n" + errors.stream().map(Extensions::toStringWithTrace).collect(Collectors.joining("\n")));
+        } else {
+            this.lblParseError.setText("Clear of parse errors.");
+        }
+
     }
+
+
 }

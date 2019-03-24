@@ -34,4 +34,8 @@ public class FileSuite extends HighElement {
     public RobotFile getFileParsed() {
         return fileParsed;
     }
+
+    public String serialize() {
+        return fileParsed.serialize();
+    }
 }

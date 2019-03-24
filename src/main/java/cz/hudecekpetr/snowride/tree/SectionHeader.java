@@ -5,11 +5,17 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 public class SectionHeader {
     public LogicalLine line;
     public SectionKind sectionKind;
+    private String headerText;
     public String followupEmptyLines = "";
 
     public SectionHeader(LogicalLine line) {
         this.line = line;
         this.sectionKind = determineSectionKind();
+    }
+
+    public SectionHeader(SectionKind sectionKind, String headerText) {
+        this.sectionKind = sectionKind;
+        this.headerText = headerText;
     }
 
     public SectionKind determineSectionKind() {
@@ -38,5 +44,12 @@ public class SectionHeader {
 
     public SectionKind getSectionKind() {
         return sectionKind;
+    }
+
+    public void serializeInto(StringBuilder sb) {
+        sb.append(headerText);
+        if (followupEmptyLines != null) {
+            sb.append(followupEmptyLines);
+        }
     }
 }

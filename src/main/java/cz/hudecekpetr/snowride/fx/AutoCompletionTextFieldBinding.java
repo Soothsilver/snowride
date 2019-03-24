@@ -87,8 +87,7 @@ public class AutoCompletionTextFieldBinding<T>  extends AutoCompletionBinding<T>
     public AutoCompletionTextFieldBinding(final TextField textField,
                                           Callback<ISuggestionRequest, Collection<T>> suggestionProvider) {
 
-        this(textField, suggestionProvider, AutoCompletionTextFieldBinding
-                .<T>defaultStringConverter());
+        this(textField, suggestionProvider, AutoCompletionTextFieldBinding.<T>defaultStringConverter());
     }
 
     /**

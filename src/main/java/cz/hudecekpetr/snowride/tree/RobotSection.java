@@ -1,9 +1,13 @@
 package cz.hudecekpetr.snowride.tree;
 
-public abstract  class RobotSection {
+public abstract class RobotSection {
     private final SectionHeader header;
 
     public RobotSection(SectionHeader header)  {
         this.header = header;
+    }
+
+    public void serializeInto(StringBuilder sb) {
+        header.serializeInto(sb);
     }
 }

@@ -50,12 +50,16 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         if (ctx.emptyLines() != null) {
             header.followupEmptyLines = ctx.emptyLines().Trivia;
         }
-        ctx.testCase().stream().map(ctxx -> ctxx.TestCase).forEachOrdered(tc -> {
-            // TODO  do this properly
-            text.append(tc.name);
-        });
+        List<TestCase> tcc = new ArrayList<>();
+        // TODO  do this properly
+        ctx.testCase().stream().map(ctxx -> ctxx.TestCase).forEachOrdered(tcc::add);
         // TODO do this properly
-        ctx.Section = new TestCasesSection(header, new ArrayList<>());
+        ctx.Section = new TestCasesSection(header, tcc);
+    }
+
+    @Override
+    public void exitTestCasesHeader(RobotParser.TestCasesHeaderContext ctx) {
+        ctx.SectionHeader = new SectionHeader(SectionKind.TEST_CASES, ctx.getText());
     }
 
     @Override
