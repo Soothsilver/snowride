@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -23,14 +24,14 @@ import javafx.scene.input.*;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
+import javafx.stage.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 public class MainForm {
@@ -46,6 +47,10 @@ public class MainForm {
     private final TabPane tabs;
     private final Tab tabTextEdit;
     private Filesystem filesystem;
+    private SeparatorMenuItem separatorBeforeRecentProjects;
+    private SeparatorMenuItem separatorAfterRecentProjects;
+    private DirectoryChooser openFolderDialog;
+    private Menu projectMenu;
 
     public TreeView<HighElement> getProjectTree() {
         return projectTree;
@@ -113,6 +118,7 @@ public class MainForm {
         searchSuitesAutoCompletion = new SearchSuites(this);
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
+        projectTree.setFixedCellSize(16);
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
@@ -264,13 +270,20 @@ public class MainForm {
 
     private MenuBar buildMainMenu() {
         MenuBar mainMenu = new MenuBar();
-        final Menu projectMenu = new Menu("Project");
+        projectMenu = new Menu("Project");
         MenuItem bLoadCurrentDir = new MenuItem("Load project from current directory");
         bLoadCurrentDir.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
                 loadProjectFromCurrentDir();
             }
         });
+
+
+        MenuItem bLoadArbitrary = new MenuItem("Load directory...");
+        bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
+        bLoadArbitrary.setOnAction(this::openDirectory);
+        openFolderDialog = new DirectoryChooser();
+
         MenuItem bSaveAll = new MenuItem("Save all");
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         bSaveAll.setOnAction(this::saveAll);
@@ -282,7 +295,9 @@ public class MainForm {
                 Platform.exit();
             }
         });
-        projectMenu.getItems().addAll(bLoadCurrentDir, bSaveAll, bExit);
+        separatorBeforeRecentProjects = new SeparatorMenuItem();
+        separatorAfterRecentProjects = new SeparatorMenuItem();
+        projectMenu.getItems().addAll(bLoadCurrentDir, bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
         MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
         back.disableProperty().bind(canNavigateBack.not());
         back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
@@ -294,6 +309,13 @@ public class MainForm {
         Menu navigateMenu = new Menu("Navigate", null, back, forwards);
         mainMenu.getMenus().addAll(projectMenu, navigateMenu);
         return mainMenu;
+    }
+
+    private void openDirectory(ActionEvent actionEvent) {
+        File openWhat = openFolderDialog.showDialog(this.stage);
+        if (openWhat != null) {
+            loadProjectFromFolder(openWhat);
+        }
     }
 
     private void goBack(ActionEvent event) {
@@ -328,18 +350,45 @@ public class MainForm {
     }
 
     public void loadProjectFromCurrentDir() {
+        loadProjectFromFolder(new File("."));
+    }
+
+    private void loadProjectFromFolder(File path) {
         FolderSuite folderSuite = null;
         try {
-            folderSuite = gateParser.loadDirectory(new File(".").getAbsoluteFile().getCanonicalFile());
-
-            projectTree.setRoot(folderSuite.treeNode);
-            projectTree.requestFocus();
-            projectTree.getSelectionModel().select(0);
-            projectTree.getFocusModel().focus(0);
+            folderSuite = gateParser.loadDirectory(path.getAbsoluteFile().getCanonicalFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        projectTree.setRoot(folderSuite.treeNode);
+        projectTree.requestFocus();
+        projectTree.getSelectionModel().select(0);
+        projectTree.getFocusModel().focus(0);
+
+        Settings.getInstance().lastOpenedProject = path.toString();
+        Settings.getInstance().addToRecentlyOpen(path.toString());
+        refreshRecentlyOpenMenu();
+        Settings.getInstance().save();
     }
+
+    private void refreshRecentlyOpenMenu() {
+        int startAt = projectMenu.getItems().indexOf(separatorBeforeRecentProjects) + 1;
+        int endAt = projectMenu.getItems().indexOf(separatorAfterRecentProjects);
+        projectMenu.getItems().remove(startAt, endAt);
+        List<MenuItem> newItems = new ArrayList<>();
+        for (String whatShouldBeThere : Settings.getInstance().lastOpenedProjects) {
+            MenuItem newItem = new MenuItem(whatShouldBeThere);
+            newItem.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    loadProjectFromFolder(new File(whatShouldBeThere));
+                }
+            });
+            newItems.add(newItem);
+        }
+        projectMenu.getItems().addAll(startAt, newItems);
+    }
+
 
     public void show() {
         stage.show();

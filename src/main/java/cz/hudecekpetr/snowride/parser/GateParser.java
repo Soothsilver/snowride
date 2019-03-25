@@ -16,28 +16,32 @@ import java.util.List;
 public class GateParser {
     private AntlrGate gate = new AntlrGate();
 
-    public FolderSuite loadDirectory(File directoryPath) throws IOException {
-        String name = directoryPath.getName();
-        String contents = "";
-        File initFile = null;
-        RobotFile initFileParsed = null;
-        List<HighElement> fileSuites = new ArrayList<>();
-        for (File inFile : directoryPath.listFiles()) {
-            if (inFile.isDirectory()) {
-                FolderSuite inThing = loadDirectory(inFile);
-                fileSuites.add(inThing);
-            } else if (inFile.getName().toLowerCase().equals("__init__.robot")) {
-                contents = FileUtils.readFileToString(inFile, "utf-8");
-                initFile = inFile;
-                initFileParsed = gate.parse(contents);
-            } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
-                FileSuite inThing = loadFile(inFile);
-                fileSuites.add(inThing);
-            } else {
-                // We can ignore this file.
+    public FolderSuite loadDirectory(File directoryPath) {
+        try {
+            String name = directoryPath.getName();
+            String contents = "";
+            File initFile = null;
+            RobotFile initFileParsed = null;
+            List<HighElement> fileSuites = new ArrayList<>();
+            for (File inFile : directoryPath.listFiles()) {
+                if (inFile.isDirectory()) {
+                    FolderSuite inThing = loadDirectory(inFile);
+                    fileSuites.add(inThing);
+                } else if (inFile.getName().toLowerCase().equals("__init__.robot")) {
+                    contents = FileUtils.readFileToString(inFile, "utf-8");
+                    initFile = inFile;
+                    initFileParsed = gate.parse(contents);
+                } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
+                    FileSuite inThing = loadFile(inFile);
+                    fileSuites.add(inThing);
+                } else {
+                    // We can ignore this file.
+                }
             }
+            return new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
+        } catch (IOException exc) {
+            throw new RuntimeException(exc);
         }
-        return new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
     }
 
     private FileSuite loadFile(File inFile) throws IOException {
