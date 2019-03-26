@@ -18,6 +18,12 @@ import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -25,7 +31,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.*;
+import javafx.stage.Window;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -36,6 +45,7 @@ import java.util.Set;
 
 public class MainForm {
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
+    private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
     private final TextArea tbTextEdit;
     private final SerializingTab serializingTab;
     GateParser gateParser = new GateParser();
@@ -60,8 +70,6 @@ public class MainForm {
     BooleanProperty canSave = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
-    public BooleanProperty canRun = new SimpleBooleanProperty(true);
-    public BooleanProperty canStop = new SimpleBooleanProperty(false);
     private ContextMenu treeContextMenu;
     private RunTab runTab;
     private GridTab gridTab;
@@ -72,6 +80,8 @@ public class MainForm {
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
         canNavigateForwards.bindBidirectional(navigationStack.canNavigateForwards);
         stage.setTitle("Snowride");
+        runTab = new RunTab(this);
+        Tab tabRun = runTab.createTab();
         MenuBar mainMenu = buildMainMenu();
         ToolBar toolBar = buildToolBar();
         tbTextEdit = new TextArea();
@@ -95,8 +105,6 @@ public class MainForm {
         tabTextEdit.setClosable(false);
         gridTab = new GridTab(this);
         Tab tabGrid = gridTab.createTab();
-        runTab = new RunTab(this);
-        Tab tabRun = runTab.createTab();
         serializingTab = new SerializingTab(this);
         Tab tabSerializing = serializingTab.createTab();
         tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing);
@@ -108,7 +116,9 @@ public class MainForm {
         treeAndGrid.setDividerPosition(0,0.3);
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
-        stage.setScene(new Scene(vBox, 800, 700));
+        Scene scene = new Scene(vBox, 800, 700);
+        scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
+        stage.setScene(scene);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake2.png")));
     }
 
@@ -119,6 +129,16 @@ public class MainForm {
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
         projectTree.setFixedCellSize(16);
+       /* projectTree.setCellFactory(tv -> {
+                TreeCell<HighElement> cell = new TreeCell<HighElement>() {
+                    @Override
+                    protected void updateItem(HighElement item, boolean empty) {
+                       // this.setFont(MainForm.TREE_VIEW_FONT);
+                        super.updateItem(item, empty);
+                    }
+                };
+                return cell;
+            });*/
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
@@ -193,6 +213,18 @@ public class MainForm {
         if (element instanceof FileSuite) {
             // TODO
             menu.add(new MenuItem("New test case"));
+            MenuItem open_in_external_editor = new MenuItem("Open in external editor");
+            open_in_external_editor.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    try {
+                        Desktop.getDesktop().edit(((FileSuite)element).file);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            menu.add(open_in_external_editor);
         }
         if (element instanceof FolderSuite || element instanceof FileSuite) {
             // TODO
@@ -229,8 +261,10 @@ public class MainForm {
         bNavigateForwards.setOnAction(this::goForwards);
         bSaveAll.disableProperty().bind(canSave.not());
         bSaveAll.setOnAction(this::saveAll);
-        bRun.disableProperty().bind(canRun.not());
-        bStop.disableProperty().bind(canStop.not());
+        bRun.disableProperty().bind(runTab.canRun.not());
+        bRun.setOnAction(runTab::clickRun);
+        bStop.disableProperty().bind(runTab.canStop.not());
+        bStop.setOnAction(runTab::clickStop);
         ToolBar toolBar = new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
         return toolBar;
     }
@@ -298,6 +332,8 @@ public class MainForm {
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
         projectMenu.getItems().addAll(bLoadCurrentDir, bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
+        refreshRecentlyOpenMenu();
+
         MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
         back.disableProperty().bind(canNavigateBack.not());
         back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
@@ -401,5 +437,9 @@ public class MainForm {
 
     public Window getStage() {
         return this.stage;
+    }
+
+    public TabPane getTabs() {
+        return this.tabs;
     }
 }

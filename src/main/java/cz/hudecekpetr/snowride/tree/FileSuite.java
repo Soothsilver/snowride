@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class FileSuite extends HighElement {
-    private final File file;
+    public final File file;
     private final RobotFile fileParsed;
 
     public FileSuite(File file,String name, String contents,  RobotFile fileParsed) {
