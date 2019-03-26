@@ -391,8 +391,10 @@ public class MainForm {
 
     private void loadProjectFromFolder(File path) {
         FolderSuite folderSuite = null;
+        File canonicalPath;
         try {
-            folderSuite = gateParser.loadDirectory(path.getAbsoluteFile().getCanonicalFile());
+            canonicalPath = path.getAbsoluteFile().getCanonicalFile();
+            folderSuite = gateParser.loadDirectory(canonicalPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -401,8 +403,8 @@ public class MainForm {
         projectTree.getSelectionModel().select(0);
         projectTree.getFocusModel().focus(0);
 
-        Settings.getInstance().lastOpenedProject = path.toString();
-        Settings.getInstance().addToRecentlyOpen(path.toString());
+        Settings.getInstance().lastOpenedProject = canonicalPath.toString();
+        Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());
         refreshRecentlyOpenMenu();
         Settings.getInstance().save();
     }

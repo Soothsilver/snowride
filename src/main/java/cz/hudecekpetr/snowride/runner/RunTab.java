@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -19,12 +20,19 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class RunTab {
@@ -42,17 +50,29 @@ public class RunTab {
     private Label lblFailed;
     private Label lblTotalTime;
     private HBox hboxExecutionLine;
+    private TcpHost tcpHost = new TcpHost();
     private TextField tbArguments;
+    private Path temporaryDirectory;
 
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
+        this.temporaryDirectory = createTemporaryDirectory();
         openScriptFileDialog = new FileChooser();
         openScriptFileDialog.setTitle("Choose runner script");
         openScriptFileDialog.getExtensionFilters().addAll(
-               new FileChooser.ExtensionFilter("Windows executable files", "*.bat", "*.exe"),
-               new FileChooser.ExtensionFilter("All files", "*.*")
+                new FileChooser.ExtensionFilter("Windows executable files", "*.bat", "*.exe"),
+                new FileChooser.ExtensionFilter("All files", "*.*")
         );
+    }
+
+    private Path createTemporaryDirectory() {
+        try {
+            Path tempDirectory = Files.createTempDirectory("Snowride");
+            return tempDirectory;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Tab createTab() {
@@ -95,7 +115,7 @@ public class RunTab {
             }
         });
         bReport.disableProperty().bind(Bindings.isNull(run.reportFile));
-        HBox hboxButtons = new HBox(5,bRun, bStop, bLog, bReport);
+        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport);
         hboxButtons.setPadding(new Insets(2));
         Label labelArguments = new Label("Arguments:");
         tbArguments = new TextField(Settings.getInstance().runArguments);
@@ -149,13 +169,63 @@ public class RunTab {
             lblKeyword.setText("");
             rememberRunPageSettings();
             planRobots();
-                // TODO do the exectuion
-                throw new RuntimeException("not yet implemented");
+
+            String runner = tbScript.getText();
+            File runnerFile = new File(runner);
+            File runnerDirectory = runnerFile.getParentFile();
+
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            List<String> command = composeScriptAndArguments();
+            tbOutput.setText("> " + String.join(" ", command));
+            processBuilder.command(command);
+            processBuilder.directory(runnerDirectory);
+            processBuilder.redirectErrorStream(true);
+            Process start = processBuilder.start();
+            start.getInputStream(); // TODO do something about it
+            // TODO notice the exit
+
 
         } catch (Exception ex) {
             canRun.set(true);
-            new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE);
+            tbOutput.setText(Extensions.toStringWithTrace(ex));
+            new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE).showAndWait();
         }
+    }
+
+    private List<String> composeScriptAndArguments() {
+        File argfile;
+        File runnerAgent;
+        try {
+            runnerAgent = temporaryDirectory.resolve("TestRunnerAgent.py").toFile();
+            argfile = File.createTempFile("argfile", ".txt", temporaryDirectory.toFile());
+            createArgFile(argfile);
+            File testRunnerAgentFile = new File(this.getClass().getResource("/TestRunnerAgent.py").getFile());
+            byte[] testRunnerAgentData = Files.readAllBytes(testRunnerAgentFile.toPath());
+            Files.write(runnerAgent.toPath(), testRunnerAgentData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        List<String> result = new ArrayList<>();
+        result.add(this.tbScript.getText());
+        result.add("--argumentfile");
+        result.add(argfile.toString());
+        result.add("--listener");
+        result.add(runnerAgent.toString() + ":" + tcpHost.portNumber + ":False");
+        String[] args = StringUtils.splitByWholeSeparator(this.tbArguments.getText(), " ");
+        for (String arg : args) {
+            result.add(arg);
+        }
+        result.add(((FolderSuite) mainForm.getProjectTree().getRoot().getValue()).directoryPath.toString());
+        return result;
+    }
+
+    private void createArgFile(File argfile) throws IOException {
+        List<String> lines = new ArrayList<String>();
+        lines.add("--outputdir");
+        lines.add(temporaryDirectory.toString());
+        lines.add("-C");
+        lines.add("ansi");
+        FileUtils.writeLines(argfile, lines);
     }
 
     private void planRobots() {
