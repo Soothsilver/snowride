@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.antlr.RobotParser;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 
 public class SectionHeader {
@@ -50,6 +51,12 @@ public class SectionHeader {
         sb.append(headerText);
         if (followupEmptyLines != null) {
             sb.append(followupEmptyLines);
+        }
+    }
+
+    public void addTrivia(RobotParser.EmptyLinesContext emptyLines) {
+        if (emptyLines != null) {
+            this.followupEmptyLines = emptyLines.Trivia;
         }
     }
 }

@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.ui.Images;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -13,6 +14,7 @@ public class FolderSuite extends HighElement {
 
     public FolderSuite(File directoryPath, File initFile, RobotFile initFileParsed, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
+        this.imageView.setImage(Images.folderIcon);
         this.directoryPath = directoryPath;
         this.initFile = initFile;
         this.initFileParsed = initFileParsed;

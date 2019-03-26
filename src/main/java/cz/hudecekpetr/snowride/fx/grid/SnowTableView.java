@@ -35,17 +35,9 @@ public class SnowTableView extends TableView<LogicalLine> {
                 header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
             }
         });
-        this.getColumns().addListener(new ListChangeListener<TableColumn<LogicalLine, ?>>() {
-            @Override
-            public void onChanged(Change<? extends TableColumn<LogicalLine, ?>> c) {
-                c.next();
-                if (c.wasPermutated()) {
-                    c.reset();
-                }
-            }
-        });
         addColumn(-1);
         this.getColumns().get(0).setText("Row");
+        this.getColumns().get(0).setPrefWidth(40);
     }
 
     private void addColumn(int cellIndex) {
@@ -63,7 +55,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                         return new Cell(string, "    ");
                     }
                 }));
-        column.setPrefWidth(100);
+        column.setPrefWidth(250);
         this.getColumns().add(column);
         column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
             @Override
@@ -76,7 +68,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                         return new ReadOnlyObjectWrapper<>(param.getValue().cells.get(cellIndex));
                     }
                 }
-                return new ReadOnlyObjectWrapper<>(new Cell("(empty)", ""));
+                return new ReadOnlyObjectWrapper<>(new Cell("", ""));
             }
         });
     }

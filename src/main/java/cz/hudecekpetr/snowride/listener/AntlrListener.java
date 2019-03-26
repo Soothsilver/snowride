@@ -24,6 +24,9 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitFile(RobotParser.FileContext ctx) {
         ctx.File = new RobotFile();
         for(RobotParser.SectionContext section : ctx.section()) {
+            if (section.Section == null) {
+                throw new IllegalStateException("A section cannot be null.");
+            }
             ctx.File.sections.add(section.Section);
         }
     }
@@ -36,6 +39,10 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
             ctx.Section = ctx.testCasesSection().Section;
         } else if (ctx.unknownSection() != null) {
             ctx.Section = ctx.unknownSection().Section;
+        } else if (ctx.settingsSection() != null) {
+            ctx.Section = ctx.settingsSection().Section;
+        } else if (ctx.variablesSection() != null) {
+            ctx.Section = ctx.variablesSection().Section;
         }
     }
 
@@ -92,11 +99,11 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitTestCase(RobotParser.TestCaseContext ctx) {
         Cell nameCell = ctx.testCaseName().Cell;
-        Lines settings = ctx.testCaseSettings().Lines;
+        ///Lines settings = ctx.testCaseSettings().Lines;
         Lines steps = ctx.testCaseSteps().Lines;
         String emptyLines = ctx.emptyLines() != null ? ctx.emptyLines().Trivia : "";
-        List<LogicalLine> newList = new ArrayList<LogicalLine>(settings.getLines());
-        newList.addAll(steps.getLines());
+        List<LogicalLine> newList = new ArrayList<LogicalLine>(steps.getLines());
+       // newList.addAll(steps.getLines());
         ctx.TestCase = new Scenario(nameCell, true, newList, emptyLines);
     }
 
@@ -104,32 +111,71 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitStep(RobotParser.StepContext ctx) {
         ctx.LogicalLine = ctx.restOfRow().Line.prepend(ctx.CELLSPACE().getText(), ctx.ANY_CELL().getText());
     }
-
+/*
     @Override
     public void exitTestCaseSetting(RobotParser.TestCaseSettingContext ctx) {
         ctx.LogicalLine = ctx.restOfRow().Line.prepend(ctx.CELLSPACE().getText(), ctx.TEST_CASE_SETTING_CELL().getText());
     }
+    @Override
+    public void exitTestCaseSettings(RobotParser.TestCaseSettingsContext ctx) {
+        ctx.Lines = new Lines(ctx.testCaseSetting().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
+    }*/
 
     @Override
     public void exitTestCaseSteps(RobotParser.TestCaseStepsContext ctx) {
         ctx.Lines = new Lines(ctx.step().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
     }
 
-    @Override
-    public void exitTestCaseSettings(RobotParser.TestCaseSettingsContext ctx) {
-        ctx.Lines = new Lines(ctx.testCaseSetting().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
-    }
+
 
     @Override
     public void exitKeywordsSection(RobotParser.KeywordsSectionContext ctx) {
         SectionHeader header = ctx.keywordsHeader().SectionHeader;
-        StringBuilder text = new StringBuilder();
-        if (ctx.emptyLines() != null) {
-            header.followupEmptyLines = ctx.emptyLines().Trivia;
-        }
+        header.addTrivia(ctx.emptyLines());
         List<Scenario> tcc = ctx.testCase().stream().map(ctxx -> ctxx.TestCase).collect(Collectors.toList());
         tcc.forEach(sc->sc.setTestCase(false));
         ctx.Section = new KeywordsSection(header, tcc);
+    }
+
+    @Override
+    public void exitSettingsSection(RobotParser.SettingsSectionContext ctx) {
+        SectionHeader header = ctx.settingsHeader().SectionHeader;
+        header.addTrivia(ctx.emptyLines(0));
+        List<LogicalLine> pairs = new ArrayList<>();
+        List<RobotParser.KeyValuePairContext> keyValuePairContexts = ctx.keyValuePair();
+        for (RobotParser.KeyValuePairContext context : keyValuePairContexts) {
+            pairs.add(context.Line);
+        }
+        // TODO the other empty lines
+        ctx.Section = new KeyValuePairSection(header, pairs);
+    }
+
+    @Override
+    public void exitVariablesSection(RobotParser.VariablesSectionContext ctx) {
+        SectionHeader header = ctx.variablesHeader().SectionHeader;
+        header.addTrivia(ctx.emptyLines(0));
+        List<LogicalLine> pairs = new ArrayList<>();
+        List<RobotParser.KeyValuePairContext> keyValuePairContexts = ctx.keyValuePair();
+        for (RobotParser.KeyValuePairContext context : keyValuePairContexts) {
+            pairs.add(context.Line);
+        }
+        // TODO the other empty lines
+        ctx.Section = new KeyValuePairSection(header, pairs);
+    }
+
+    @Override
+    public void exitKeyValuePair(RobotParser.KeyValuePairContext ctx) {
+        ctx.Line = ctx.restOfRow().Line.prepend(ctx.ANY_CELL().getText());
+    }
+
+    @Override
+    public void exitSettingsHeader(RobotParser.SettingsHeaderContext ctx) {
+        ctx.SectionHeader = new SectionHeader(SectionKind.SETTINGS, ctx.getText());
+    }
+
+    @Override
+    public void exitVariablesHeader(RobotParser.VariablesHeaderContext ctx) {
+        ctx.SectionHeader = new SectionHeader(SectionKind.VARIABLES, ctx.getText());
     }
 
     @Override
@@ -139,8 +185,12 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     //------------- errors
     @Override
-    public void syntaxError(Recognizer<?, ?> recognizer, Object o, int i, int i1, String s, RecognitionException e) {
-        errors.add(e);
+    public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+        if (e != null) {
+            errors.add(e);
+        } else {
+            errors.add(new RuntimeException("Non-exception error " + msg));
+        }
     }
 
     @Override

@@ -1,3 +1,8 @@
 .button {
     -fx-text-fill: black;
 }
+.tree-cell {
+    -fx-label-padding: 0;
+    -fx-padding: 0;
+    -fx-font-size: 8pt;
+}

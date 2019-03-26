@@ -20,6 +20,11 @@ public class LogicalLine {
         this.preTrivia = "";
         return this;
     }
+    public LogicalLine prepend(String cell) {
+        cells.add(0, new Cell(cell, this.preTrivia));
+        this.preTrivia = "";
+        return this;
+    }
 
     public void serializeInto(StringBuilder sb) {
         cells.forEach(cell -> {

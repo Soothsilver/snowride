@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 public abstract class HighElement {
     public final String name;
+    protected final ImageView imageView;
     private HBox graphic;
     public String contents;
     public final List<HighElement> children;
@@ -21,7 +22,8 @@ public abstract class HighElement {
 
     public HighElement(String name, String contents, List<HighElement> children) {
         graphic = new HBox();
-        graphic.getChildren().add(new ImageView(Images.fileIcon));
+        imageView = new ImageView(Images.fileIcon);
+        graphic.getChildren().add(imageView);
         treeNode = new TreeItem<>(this, this.graphic);
         this.name = name;
         this.contents = contents;

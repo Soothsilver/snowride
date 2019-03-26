@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.ui.Images;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +22,9 @@ public class Scenario extends HighElement {
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines, String postTrivia) {
         super(nameCell.contents, null, new ArrayList<>());
+
         this.nameCell = nameCell;
-        this.isTestCase = isTestCase;
+        this.setTestCase(isTestCase);
         this.lines = lines;
         for (int i = 0; i < lines.size(); i++) {
             this.lines.get(i).lineNumber.set(i+1);
@@ -50,6 +52,11 @@ public class Scenario extends HighElement {
 
     public void setTestCase(boolean testCase) {
         isTestCase = testCase;
+        if (isTestCase) {
+            this.imageView.setImage(Images.testIcon);
+        } else {
+            this.imageView.setImage(Images.keywordIcon);
+        }
     }
 
     @Override
