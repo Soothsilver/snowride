@@ -4,6 +4,9 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -20,43 +23,49 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class RunTab {
     private MainForm mainForm;
     private FileChooser openScriptFileDialog;
     private TextField tbScript;
-    private Run run = new Run();
+    public Run run = new Run();
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
     private TextArea tbOutput;
-    private TextArea tbLog;
+    public TextArea tbLog;
     private Tab tabRun;
-    private Label lblKeyword;
+    public Label lblKeyword;
     private Label lblPassed;
     private Label lblFailed;
     private Label lblTotalTime;
     private HBox hboxExecutionLine;
-    private TcpHost tcpHost = new TcpHost();
+    private TcpHost tcpHost;
     private TextField tbArguments;
     private Path temporaryDirectory;
+    private Executor executor = Executors.newFixedThreadPool(4);
 
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
+        this.tcpHost = new TcpHost(this);
+        this.tcpHost.start();
         this.temporaryDirectory = createTemporaryDirectory();
         openScriptFileDialog = new FileChooser();
         openScriptFileDialog.setTitle("Choose runner script");
@@ -76,7 +85,11 @@ public class RunTab {
     }
 
     public Tab createTab() {
-
+        canStop.bind(run.stoppableProcessId.greaterThan(-1));
+        canRun.bind(run.stoppableProcessId.isEqualTo(-1));
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), event -> timer()));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
         tbOutput = new TextArea("Standard output goes here.");
         tbOutput.setFont(MainForm.TEXT_EDIT_FONT);
         tbOutput.setEditable(false);
@@ -125,10 +138,11 @@ public class RunTab {
         hboxArguments.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tbArguments, Priority.ALWAYS);
         lblTotalTime = new Label("0:00:00");
+        lblTotalTime.setPadding(new Insets(0,0,0,10));
         lblFailed = new Label("Failed: 0");
         lblPassed = new Label("Passed: 0");
         lblKeyword = new Label("No keyword running.");
-        lblTotalTime.setMinWidth(50);
+        lblTotalTime.setMinWidth(90);
         lblFailed.setMinWidth(90);
         lblPassed.setMinWidth(90);
         hboxExecutionLine = new HBox(lblTotalTime, lblFailed, lblPassed, lblKeyword);
@@ -140,11 +154,19 @@ public class RunTab {
         return tabRun;
     }
 
+    private void timer() {
+        if (run.isInProgress()) {
+            this.lblTotalTime.setText(Extensions.millisecondsToHumanTime(System.currentTimeMillis() - run.lastRunBeganWhen));
+            this.lblKeyword.setText(run.keywordStackAsString());
+        }
+    }
+
     public void clickStop(ActionEvent actionEvent) {
         if (run.stoppableProcessId.getValue() > 0) {
             run.forciblyKilled = true;
             try {
                 ProcessUtil.destroyForcefullyAndWait(Processes.newPidProcess(run.stoppableProcessId.getValue()));
+                run.stoppableProcessId.setValue(-1);
                 appendGreenText("Robot process killed.");
                 updateResultsPanel();
             } catch (Exception e) {
@@ -153,7 +175,7 @@ public class RunTab {
         }
     }
 
-    private void appendGreenText(String text) {
+    public void appendGreenText(String text) {
         this.tbOutput.appendText(text + "\n");
     }
 
@@ -162,8 +184,6 @@ public class RunTab {
             tbOutput.clear();
             tbLog.clear();
             mainForm.getTabs().getSelectionModel().select(tabRun);
-            canRun.set(false);
-            canStop.set(false);
             run.clear();
             updateResultsPanel();
             lblKeyword.setText("");
@@ -181,15 +201,50 @@ public class RunTab {
             processBuilder.directory(runnerDirectory);
             processBuilder.redirectErrorStream(true);
             Process start = processBuilder.start();
-            start.getInputStream(); // TODO do something about it
+            run.stoppableProcessId.setValue(Processes.newPidProcess(start).getPid());
+            executor.execute(() -> readFromOutput(start.getInputStream())); // TODO do something about it
             // TODO notice the exit
+            executor.execute(() -> this.waitForProcessExit(start));
 
 
         } catch (Exception ex) {
-            canRun.set(true);
             tbOutput.setText(Extensions.toStringWithTrace(ex));
             new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE).showAndWait();
         }
+    }
+
+    private void readFromOutput(InputStream inputStream) {
+        try {
+            InputStreamReader twilight = new InputStreamReader(inputStream);
+            char[] buffer = new char[255];
+            int howManyRead = twilight.read(buffer);
+            while (howManyRead != -1) {
+                String s = new String(buffer, 0, howManyRead);
+                Platform.runLater(()->{
+                    this.appendBlackText(s);
+                });
+                howManyRead = twilight.read(buffer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            // end of business
+        }
+    }
+
+    public void appendBlackText(String text) {
+        this.tbOutput.appendText(text);
+    }
+
+    private void waitForProcessExit(Process start) {
+        try {
+            start.waitFor();
+        } catch (InterruptedException e) {
+            // doesn't matter
+        }
+        Platform.runLater(()->{
+            run.stoppableProcessId.set(-1);
+            updateResultsPanel();
+        });
     }
 
     private List<String> composeScriptAndArguments() {
@@ -238,13 +293,13 @@ public class RunTab {
         Settings.getInstance().save();
     }
 
-    private void updateResultsPanel() {
+    public void updateResultsPanel() {
         if (run.forciblyKilled) {
             setHboxBackgroundColor(Color.LIGHTGRAY);
         } else if (run.countFailedTests > 0) {
             setHboxBackgroundColor(Color.SANDYBROWN);
         } else if (run.countPassedTests > 0) {
-            if (run.runInProgress) {
+            if (run.isInProgress()) {
                 setHboxBackgroundColor(Color.LIGHTGREEN);
             } else {
                 setHboxBackgroundColor(Color.LIMEGREEN);

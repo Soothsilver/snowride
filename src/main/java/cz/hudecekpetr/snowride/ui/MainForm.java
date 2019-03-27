@@ -16,6 +16,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -28,6 +29,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.*;
@@ -41,6 +43,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class MainForm {
@@ -80,6 +84,12 @@ public class MainForm {
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
         canNavigateForwards.bindBidirectional(navigationStack.canNavigateForwards);
         stage.setTitle("Snowride");
+        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                System.exit(0);
+            }
+        });
         runTab = new RunTab(this);
         Tab tabRun = runTab.createTab();
         MenuBar mainMenu = buildMainMenu();
@@ -173,8 +183,13 @@ public class MainForm {
                 }
             }
         });
-        VBox vBox = new VBox(tbSearchTests, projectTree);
-        VBox.setVgrow(projectTree, Priority.ALWAYS);
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.visibleProperty().bind(projectLoad.progress.lessThan(1));
+        progressBar.progressProperty().bind(projectLoad.progress);
+        StackPane stackPane = new StackPane(projectTree, progressBar);
+        StackPane.setAlignment(progressBar, Pos.CENTER);
+        VBox vBox = new VBox(tbSearchTests, stackPane);
+        VBox.setVgrow(stackPane, Priority.ALWAYS);
         return vBox;
     }
 
@@ -326,7 +341,7 @@ public class MainForm {
         MenuItem bExit = new MenuItem("Exit Snowride");
         bExit.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
-                Platform.exit();
+                System.exit(0);
             }
         });
         separatorBeforeRecentProjects = new SeparatorMenuItem();
@@ -389,24 +404,32 @@ public class MainForm {
         loadProjectFromFolder(new File("."));
     }
 
-    private void loadProjectFromFolder(File path) {
-        FolderSuite folderSuite = null;
-        File canonicalPath;
-        try {
-            canonicalPath = path.getAbsoluteFile().getCanonicalFile();
-            folderSuite = gateParser.loadDirectory(canonicalPath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        projectTree.setRoot(folderSuite.treeNode);
-        projectTree.requestFocus();
-        projectTree.getSelectionModel().select(0);
-        projectTree.getFocusModel().focus(0);
+    private LongRunningOperation projectLoad = new LongRunningOperation();
+    private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
 
-        Settings.getInstance().lastOpenedProject = canonicalPath.toString();
-        Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());
-        refreshRecentlyOpenMenu();
-        Settings.getInstance().save();
+    public void loadProjectFromFolder(File path) {
+        projectLoad.progress.set(0);
+        projectLoader.submit(()->{
+            try {
+                File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
+                FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 1);
+                Platform.runLater(()-> {
+                    projectLoad.progress.set(1);
+                    projectTree.setRoot(folderSuite.treeNode);
+                    projectTree.requestFocus();
+                    projectTree.getSelectionModel().select(0);
+                    projectTree.getFocusModel().focus(0);
+
+                    Settings.getInstance().lastOpenedProject = canonicalPath.toString();
+                    Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());
+                    refreshRecentlyOpenMenu();
+                    Settings.getInstance().save();
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 
     private void refreshRecentlyOpenMenu() {

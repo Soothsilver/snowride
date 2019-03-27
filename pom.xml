@@ -74,6 +74,11 @@
             <artifactId>zt-process-killer</artifactId>
             <version>1.9</version>
         </dependency>
+        <dependency>
+            <groupId>com.jsoniter</groupId>
+            <artifactId>jsoniter</artifactId>
+            <version>0.9.19</version>
+        </dependency>
 
     </dependencies>
 

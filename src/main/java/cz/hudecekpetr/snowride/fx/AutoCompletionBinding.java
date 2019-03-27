@@ -336,7 +336,9 @@ public abstract class AutoCompletionBinding<T> implements EventTarget {
             }
             // create a new fetcher task
             suggestionsTask = new AutoCompletionBinding.FetchSuggestionsTask(userText, delay);
-            new Thread(suggestionsTask).start();
+            Thread thread = new Thread(suggestionsTask);
+            thread.setDaemon(true);
+            thread.start();
         }
     }
 

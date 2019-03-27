@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class Extensions {
@@ -23,5 +24,12 @@ public class Extensions {
             }
         }
         return currentMax;
+    }
+
+    public static String millisecondsToHumanTime(long period) {
+        return String.format("%02d:%02d.%01d",
+                TimeUnit.MILLISECONDS.toMinutes(period),
+                TimeUnit.MILLISECONDS.toSeconds(period) % 60,
+                (TimeUnit.MILLISECONDS.toMillis(period) % 1000) / 100);
     }
 }
