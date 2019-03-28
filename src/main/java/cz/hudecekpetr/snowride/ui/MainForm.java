@@ -35,14 +35,11 @@ import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.stage.Window;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -102,7 +99,7 @@ public class MainForm {
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 if (!switchingTextEditContents) {
                     HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
-                    System.out.println(whatChanged.name + " changed.");
+                    System.out.println(whatChanged.shortName + " changed.");
                     whatChanged.changedByUser = true;
                     whatChanged.contents = newValue;
                     whatChanged.treeNode.setValue(null);

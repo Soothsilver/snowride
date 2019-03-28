@@ -8,6 +8,7 @@ import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.ui.LongRunningOperation;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,14 +45,18 @@ public class GateParser {
                     partOfOperation.success(perFile);
                 }
             }
-            return new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
+            FolderSuite folderSuite = new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
+            for(HighElement fs : fileSuites) {
+                fs.parent = folderSuite;
+            }
+            return folderSuite;
         } catch (IOException exc) {
             throw new RuntimeException(exc);
         }
     }
 
     private FileSuite loadFile(File inFile) throws IOException {
-        String name = inFile.getName();
+        String name = FilenameUtils.removeExtension(inFile.getName());
         String contents = FileUtils.readFileToString(inFile, "utf-8");
         return new FileSuite(inFile, name, contents, gate.parse(contents));
 

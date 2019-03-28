@@ -40,6 +40,8 @@ public class Settings {
     public static void load() {
         try {
             XStream xStream = new XStream(new StaxDriver());
+            XStream.setupDefaultSecurity(xStream);
+            xStream.allowTypesByWildcard(new String[] { "cz.**" });
             Settings settings = (Settings) xStream.fromXML(getFile());
             instance = settings;
         } catch (Exception exception) {

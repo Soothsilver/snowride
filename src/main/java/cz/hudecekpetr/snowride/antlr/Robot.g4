@@ -34,7 +34,7 @@ step returns [LogicalLine LogicalLine]: CELLSPACE ANY_CELL restOfRow;
 endOfLine: LINE_SEPARATOR | EOF;
 restOfRow returns [LogicalLine Line]: (CELLSPACE (ANY_CELL CELLSPACE?)* (COMMENT | endOfLine)) | endOfLine;
 emptyLines returns [String Trivia]: emptyLine+;
-emptyLine: ((CELLSPACE | SINGLE_SPACE)+ (COMMENT | endOfLine)) | LINE_SEPARATOR;
+emptyLine: ((CELLSPACE | SINGLE_SPACE)+ (COMMENT | endOfLine)) | LINE_SEPARATOR | COMMENT;
 
 
 fragment CHARACTER: [\u0001-\u0008\u000e-\u001f\u0021-\u007f\u0080-\uffff];//[^ \t\r\n];//[\u0000-\u0250];
@@ -48,7 +48,7 @@ KEYWORDS_CELL: BEFORE_SECTION_HEADER'Keywords'AFTER_SECTION_HEADER;
 SETTINGS_CELL: BEFORE_SECTION_HEADER'Settings'AFTER_SECTION_HEADER;
 VARIABLES_CELL: BEFORE_SECTION_HEADER'Variables'AFTER_SECTION_HEADER;
 LINE_SEPARATOR: ('\n'|'\r\n');
-CELLSPACE: ('  '[ \t]*)  |   ('\t'[ \t]*);
+CELLSPACE: ('  '[ \t]*)  |   ('\t'[ \t]*) | (' ''\t'[ \t]*);
 //TEST_CASE_SETTING_CELL: '[' TEXT ']';
 ANY_CELL: TEXT;
 SINGLE_SPACE: ' ';

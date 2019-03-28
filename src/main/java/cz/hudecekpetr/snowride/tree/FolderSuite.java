@@ -29,7 +29,7 @@ public class FolderSuite extends HighElement {
     public void saveAll() throws IOException {
         if (initFile != null && changedByUser) {
             changedByUser = false;
-            System.out.println("SaveAll: [initfile] " + this.name);
+            System.out.println("SaveAll: [initfile] " + this.shortName);
             FileUtils.write(initFile, contents, "utf-8");
             refreshToString();
         }

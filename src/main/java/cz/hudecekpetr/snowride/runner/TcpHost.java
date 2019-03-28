@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.runner;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 
@@ -138,11 +139,11 @@ public class TcpHost {
             switch (command) {
                 case "pid":
                     runTab.run.stoppableProcessId.set(arguments.get(0).as(int.class));
-                    logIntoLogOutput("Stoppable process is: " + runTab.run.stoppableProcessId);
+                    logIntoLogOutput("Stoppable process PID is: " + runTab.run.stoppableProcessId.getValue());
                     break;
                 case "log_message":
                     Map<String, Any> additionals = arguments.get(0).asMap();
-                   // logIntoLogOutput(additionals.get("timestamp") + " [" + additionals.get("level") + "] " + additionals.get("message"));
+                    logIntoLogOutput(additionals.get("timestamp") + " [" + additionals.get("level") + "] " + additionals.get("message"));
                     break;
                 case "start_keyword":
                     String keywordName = arguments.get(0).as(String.class);
@@ -188,11 +189,11 @@ public class TcpHost {
     }
 
     private void schedule(Runnable action) {
-        Platform.runLater(action);
+        DeferredActions.runLater(action);
     }
 
     private void logIntoLogOutput(String s) {
-        runTab.tbLog.appendText(s + "\n");
+        DeferredActions.logLater(s + "\n");
     }
 
     private void logIntoMainOutput(String s) {

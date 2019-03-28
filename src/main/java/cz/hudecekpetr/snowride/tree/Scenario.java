@@ -54,13 +54,15 @@ public class Scenario extends HighElement {
         isTestCase = testCase;
         if (isTestCase) {
             this.imageView.setImage(Images.testIcon);
+            this.checkbox.setVisible(true);
         } else {
             this.imageView.setImage(Images.keywordIcon);
+            this.checkbox.setVisible(false);
         }
     }
 
     @Override
     public String toString() {
-        return (isTestCase ? "[test]" : "[keyword]") + " " + name;
+        return (isTestCase ? "[test]" : "[keyword]") + " " + shortName;
     }
 }

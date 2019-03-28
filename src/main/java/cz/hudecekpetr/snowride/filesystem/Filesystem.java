@@ -27,6 +27,7 @@ public class Filesystem {
         FolderSuite folderSuite = new FolderSuite(asFile, null, null, newFolder, null, new ArrayList<>());
         parentFolder.children.add(folderSuite);
         parentFolder.treeNode.getChildren().add(folderSuite.treeNode);
+        folderSuite.parent = parentFolder;
         mainForm.selectProgrammaticallyAndRememberInHistory(folderSuite);
     }
 
@@ -36,9 +37,10 @@ public class Filesystem {
         if (!asFile.createNewFile()) {
             throw new RuntimeException("File already exists.");
         }
-        FileSuite fs = new FileSuite(asFile, newFileWithoutExtension + ".robot", "", new RobotFile());
+        FileSuite fs = new FileSuite(asFile, newFileWithoutExtension, "", new RobotFile());
         parentFolder.children.add(fs);
         parentFolder.treeNode.getChildren().add(fs.treeNode);
+        fs.parent = parentFolder;
         mainForm.selectProgrammaticallyAndRememberInHistory(fs);
     }
 }

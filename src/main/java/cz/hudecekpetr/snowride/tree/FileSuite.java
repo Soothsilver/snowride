@@ -4,16 +4,20 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class FileSuite extends HighElement {
     public final File file;
     private final RobotFile fileParsed;
 
-    public FileSuite(File file,String name, String contents,  RobotFile fileParsed) {
+    public FileSuite(File file, String name, String contents,  RobotFile fileParsed) {
         super(name, contents, fileParsed.getHighElements());
         this.file = file;
         this.fileParsed = fileParsed;
+        for (HighElement scenario : fileParsed.getHighElements()) {
+            if (scenario instanceof Scenario) {
+                ((Scenario)scenario).parent = this;
+            }
+        }
     }
 
     @Override
@@ -25,7 +29,7 @@ public class FileSuite extends HighElement {
     public void saveAll() throws IOException {
         if (this.changedByUser) {
             this.changedByUser = false;
-            System.out.println("SaveAll: " + this.name);
+            System.out.println("SaveAll: " + this.shortName);
             FileUtils.write(file, contents, "utf-8");
             refreshToString();
         }

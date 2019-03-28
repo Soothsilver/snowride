@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.Extensions;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -9,6 +10,7 @@ import java.util.Deque;
 
 public class Run {
     public SimpleIntegerProperty stoppableProcessId = new SimpleIntegerProperty(-1);
+    public SimpleBooleanProperty running = new SimpleBooleanProperty(false);
     public long lastRunBeganWhen = System.currentTimeMillis();
     public long lastKeywordBeganWhen = System.currentTimeMillis();
     public int countPassedTests = 0;
@@ -47,6 +49,6 @@ public class Run {
     }
 
     public boolean isInProgress() {
-        return stoppableProcessId.get() > -1;
+        return running.getValue();
     }
 }

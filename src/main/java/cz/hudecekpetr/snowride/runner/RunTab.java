@@ -3,6 +3,9 @@ package cz.hudecekpetr.snowride.runner;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
+import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -34,10 +37,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -86,7 +87,7 @@ public class RunTab {
 
     public Tab createTab() {
         canStop.bind(run.stoppableProcessId.greaterThan(-1));
-        canRun.bind(run.stoppableProcessId.isEqualTo(-1));
+        canRun.bind(run.running.not());
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), event -> timer()));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
@@ -159,6 +160,7 @@ public class RunTab {
             this.lblTotalTime.setText(Extensions.millisecondsToHumanTime(System.currentTimeMillis() - run.lastRunBeganWhen));
             this.lblKeyword.setText(run.keywordStackAsString());
         }
+        DeferredActions.timer(this);
     }
 
     public void clickStop(ActionEvent actionEvent) {
@@ -167,6 +169,7 @@ public class RunTab {
             try {
                 ProcessUtil.destroyForcefullyAndWait(Processes.newPidProcess(run.stoppableProcessId.getValue()));
                 run.stoppableProcessId.setValue(-1);
+                run.running.set(false);
                 appendGreenText("Robot process killed.");
                 updateResultsPanel();
             } catch (Exception e) {
@@ -181,6 +184,15 @@ public class RunTab {
 
     public void clickRun(ActionEvent actionEvent) {
         try {
+            List<Scenario> testCases = getCheckedTestCases();
+            if (testCases.size() == 0) {
+                Optional<ButtonType> buttonType = new Alert(Alert.AlertType.CONFIRMATION, "You didn't choose any test case. Do you want to run the entire suite?", ButtonType.YES, ButtonType.NO).showAndWait();
+                if (buttonType.orElse(ButtonType.NO) == ButtonType.NO) {
+                    // cancel
+                    return;
+                }
+            }
+
             tbOutput.clear();
             tbLog.clear();
             mainForm.getTabs().getSelectionModel().select(tabRun);
@@ -195,21 +207,39 @@ public class RunTab {
             File runnerDirectory = runnerFile.getParentFile();
 
             ProcessBuilder processBuilder = new ProcessBuilder();
-            List<String> command = composeScriptAndArguments();
+            List<String> command = composeScriptAndArguments(testCases);
             tbOutput.setText("> " + String.join(" ", command));
             processBuilder.command(command);
             processBuilder.directory(runnerDirectory);
             processBuilder.redirectErrorStream(true);
             Process start = processBuilder.start();
-            run.stoppableProcessId.setValue(Processes.newPidProcess(start).getPid());
-            executor.execute(() -> readFromOutput(start.getInputStream())); // TODO do something about it
-            // TODO notice the exit
+            run.stoppableProcessId.setValue(-1);
+            run.running.set(true);
+            executor.execute(() -> readFromOutput(start.getInputStream()));
             executor.execute(() -> this.waitForProcessExit(start));
 
 
         } catch (Exception ex) {
             tbOutput.setText(Extensions.toStringWithTrace(ex));
             new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE).showAndWait();
+        }
+    }
+
+    private List<Scenario> getCheckedTestCases() {
+        HighElement element = mainForm.getProjectTree().getRoot().getValue();
+        List<Scenario> checkedStuff = new ArrayList<>();
+        collectCheckedTestCases(element, checkedStuff);
+        return checkedStuff;
+    }
+
+    private void collectCheckedTestCases(HighElement element, List<Scenario> checkedStuff) {
+        if (element instanceof Scenario) {
+            if (element.checkbox.isSelected()) {
+                checkedStuff.add((Scenario) element);
+            }
+        }
+        for(HighElement child : element.children) {
+            collectCheckedTestCases(child, checkedStuff);
         }
     }
 
@@ -243,17 +273,18 @@ public class RunTab {
         }
         Platform.runLater(()->{
             run.stoppableProcessId.set(-1);
+            run.running.set(false);
             updateResultsPanel();
         });
     }
 
-    private List<String> composeScriptAndArguments() {
+    private List<String> composeScriptAndArguments(List<Scenario> testCases) {
         File argfile;
         File runnerAgent;
         try {
             runnerAgent = temporaryDirectory.resolve("TestRunnerAgent.py").toFile();
             argfile = File.createTempFile("argfile", ".txt", temporaryDirectory.toFile());
-            createArgFile(argfile);
+            createArgFile(argfile, testCases);
             File testRunnerAgentFile = new File(this.getClass().getResource("/TestRunnerAgent.py").getFile());
             byte[] testRunnerAgentData = Files.readAllBytes(testRunnerAgentFile.toPath());
             Files.write(runnerAgent.toPath(), testRunnerAgentData);
@@ -274,12 +305,18 @@ public class RunTab {
         return result;
     }
 
-    private void createArgFile(File argfile) throws IOException {
+    private void createArgFile(File argfile, List<Scenario> testCases) throws IOException {
         List<String> lines = new ArrayList<String>();
         lines.add("--outputdir");
         lines.add(temporaryDirectory.toString());
         lines.add("-C");
         lines.add("ansi");
+        for(Scenario testCase : testCases) {
+            lines.add("--suite");
+            lines.add(testCase.parent.getQualifiedName());
+            lines.add("--test");
+            lines.add(testCase.getQualifiedName());
+        }
         FileUtils.writeLines(argfile, lines);
     }
 
