@@ -234,7 +234,7 @@ public class RunTab {
 
     private void collectCheckedTestCases(HighElement element, List<Scenario> checkedStuff) {
         if (element instanceof Scenario) {
-            if (element.checkbox.isSelected()) {
+            if (element.checkbox.isSelected() && ((Scenario)element).isTestCase()) {
                 checkedStuff.add((Scenario) element);
             }
         }
@@ -309,8 +309,11 @@ public class RunTab {
         List<String> lines = new ArrayList<String>();
         lines.add("--outputdir");
         lines.add(temporaryDirectory.toString());
+        /*
+        TODO add when we have colorful textbox
         lines.add("-C");
         lines.add("ansi");
+        */
         for(Scenario testCase : testCases) {
             lines.add("--suite");
             lines.add(testCase.parent.getQualifiedName());

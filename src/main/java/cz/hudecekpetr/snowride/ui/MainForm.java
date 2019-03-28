@@ -244,15 +244,35 @@ public class MainForm {
         }
         maybeAddSeparator(menu);
         if (element instanceof FolderSuite || element instanceof FileSuite) {
-            // TODO
-            menu.add(new MenuItem("Select all tests"));
-            menu.add(new MenuItem("Deselect all tests"));
+            MenuItem select_all_tests = new MenuItem("Select all tests");
+            select_all_tests.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    setCheckboxes(element, true);
+                }
+            });
+            menu.add(select_all_tests);
+            MenuItem deselect_all_tests = new MenuItem("Deselect all tests");
+            deselect_all_tests.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    setCheckboxes(element, false);
+                }
+            });
+            menu.add(deselect_all_tests);
         }
         maybeAddSeparator(menu);
         // TODO
         menu.add(new MenuItem("Rename"));
         menu.add(new MenuItem("Delete"));
         return menu;
+    }
+
+    private void setCheckboxes(HighElement element, boolean shouldBeChecked) {
+        element.checkbox.setSelected(shouldBeChecked);
+        for (HighElement child : element.children) {
+            setCheckboxes(child, shouldBeChecked);
+        }
     }
 
     private void maybeAddSeparator(List<MenuItem> menu) {
