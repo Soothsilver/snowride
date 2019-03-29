@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.lexer;
 
+import cz.hudecekpetr.snowride.Extensions;
 import javafx.beans.property.SimpleIntegerProperty;
 
 import java.util.ArrayList;
@@ -9,6 +10,13 @@ public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
     public SimpleIntegerProperty lineNumber = new SimpleIntegerProperty(0);
+
+    public static LogicalLine fromEmptyLine(String text) {
+        LogicalLine line = new LogicalLine();
+        text = Extensions.removeFinalNewlineIfAny(text);
+        line.cells.add(new Cell("", text));
+        return line;
+    }
 
     public boolean isStartOfSection() {
         return cells.get(0).contents.startsWith("*");

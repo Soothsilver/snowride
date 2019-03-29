@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.DeferredActions;
+import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -30,6 +31,7 @@ import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
@@ -69,7 +71,7 @@ public class RunTab {
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
-        this.tcpHost = new TcpHost(this);
+        this.tcpHost = new TcpHost(this, mainForm);
         this.tcpHost.start();
         this.temporaryDirectory = createTemporaryDirectory();
         openScriptFileDialog = new FileChooser();
@@ -106,7 +108,8 @@ public class RunTab {
         tbLog = new TextArea("Log goes here.");
         tbLog.setEditable(false);
         tbLog.setFont(MainForm.TEXT_EDIT_FONT);
-        SplitPane splitterOutput = new SplitPane(tbOutput, tbLog);
+        VirtualizedScrollPane<StyledTextArea<String, String>> scrollPane = new VirtualizedScrollPane<>(tbOutput);
+        SplitPane splitterOutput = new SplitPane(scrollPane, tbLog);
         splitterOutput.setOrientation(Orientation.VERTICAL);
         Label lblScript = new Label("Script:");
         tbScript = new TextField(Settings.getInstance().runScript);
@@ -188,6 +191,9 @@ public class RunTab {
     }
 
     public void appendGreenText(String text) {
+        flushIntoTbOutput(text + "\n", "-fx-font-style: italic");
+    }
+    public void appendGreenTextNoNewline(String text) {
         flushIntoTbOutput(text, "-fx-font-style: italic");
     }
 
@@ -201,6 +207,12 @@ public class RunTab {
                     return;
                 }
             }
+            // Back to std. image
+            mainForm.getProjectTree().getRoot().getValue().selfAndDescendantHighElements().forEach((he)->{
+                if (he instanceof Scenario && ((Scenario) he).isTestCase()) {
+                    he.imageView.setImage(Images.testIcon);
+                }
+            });
 
             tbOutput.clear();
             tbLog.clear();
@@ -218,7 +230,7 @@ public class RunTab {
             ProcessBuilder processBuilder = new ProcessBuilder();
             List<String> command = composeScriptAndArguments(testCases);
             tbOutput.clear();
-            appendGreenText("> " + String.join(" ", command));
+            appendGreenTextNoNewline("> " + String.join(" ", command));
             processBuilder.command(command);
             processBuilder.directory(runnerDirectory);
             processBuilder.redirectErrorStream(true);
@@ -287,6 +299,7 @@ public class RunTab {
         this.tbOutput.appendText(text);
         int currentAfter = this.tbOutput.getLength();
         this.tbOutput.setStyle(current, currentAfter, style);
+        this.tbOutput.showParagraphAtBottom(Integer.MAX_VALUE);
     }
 
     private void waitForProcessExit(Process start) {

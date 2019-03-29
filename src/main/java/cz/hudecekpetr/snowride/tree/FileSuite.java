@@ -37,6 +37,16 @@ public class FileSuite extends HighElement {
         }
     }
 
+    @Override
+    public void deleteSelf() {
+        if (this.file.delete()) {
+            this.dead = true;
+            this.parent.dissociateSelfFromChild(this);
+        } else {
+            throw new RuntimeException("Could not delete file '" + this.file.getName() + "'.");
+        }
+    }
+
     public RobotFile getFileParsed() {
         return fileParsed;
     }

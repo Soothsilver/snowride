@@ -101,10 +101,9 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         Cell nameCell = ctx.testCaseName().Cell;
         ///Lines settings = ctx.testCaseSettings().Lines;
         Lines steps = ctx.testCaseSteps().Lines;
-        String emptyLines = ctx.emptyLines() != null ? ctx.emptyLines().Trivia : "";
         List<LogicalLine> newList = new ArrayList<LogicalLine>(steps.getLines());
        // newList.addAll(steps.getLines());
-        ctx.TestCase = new Scenario(nameCell, true, newList, emptyLines);
+        ctx.TestCase = new Scenario(nameCell, true, newList);
     }
 
     @Override
@@ -123,10 +122,17 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     @Override
     public void exitTestCaseSteps(RobotParser.TestCaseStepsContext ctx) {
-        ctx.Lines = new Lines(ctx.step().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
+        ctx.Lines = new Lines(ctx.stepOrEmptyLine().stream().map(x->x.LogicalLine).collect(Collectors.toList()));
     }
 
-
+    @Override
+    public void exitStepOrEmptyLine(RobotParser.StepOrEmptyLineContext ctx) {
+        if (ctx.emptyLine() != null) {
+            ctx.LogicalLine = LogicalLine.fromEmptyLine(ctx.emptyLine().getText());
+        } else {
+            ctx.LogicalLine = ctx.step().LogicalLine;
+        }
+    }
 
     @Override
     public void exitKeywordsSection(RobotParser.KeywordsSectionContext ctx) {
@@ -140,14 +146,36 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitSettingsSection(RobotParser.SettingsSectionContext ctx) {
         SectionHeader header = ctx.settingsHeader().SectionHeader;
-        header.addTrivia(ctx.emptyLines(0));
         List<LogicalLine> pairs = new ArrayList<>();
-        List<RobotParser.KeyValuePairContext> keyValuePairContexts = ctx.keyValuePair();
-        for (RobotParser.KeyValuePairContext context : keyValuePairContexts) {
+        List<RobotParser.OptionalKeyValuePairContext> keyValuePairContexts = ctx.optionalKeyValuePair();
+        for (RobotParser.OptionalKeyValuePairContext context : keyValuePairContexts) {
             pairs.add(context.Line);
         }
-        // TODO the other empty lines
         ctx.Section = new KeyValuePairSection(header, pairs);
+    }
+
+    @Override
+    public void exitEmptyLine(RobotParser.EmptyLineContext ctx) {
+        // Unnecessary. It has no return type.
+    }
+
+    @Override
+    public void exitEndOfLine(RobotParser.EndOfLineContext ctx) {
+        // Unnecessary. Just text is okay.
+    }
+
+    @Override
+    public void exitEveryRule(ParserRuleContext ctx) {
+        // Not used.
+    }
+
+    @Override
+    public void exitOptionalKeyValuePair(RobotParser.OptionalKeyValuePairContext ctx) {
+        if (ctx.emptyLine() != null) {
+            ctx.Line = LogicalLine.fromEmptyLine(ctx.emptyLine().getText());
+        } else {
+            ctx.Line = ctx.keyValuePair().Line;
+        }
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public abstract class HighElement implements IAutocompleteOption {
     public final String shortName;
-    protected final ImageView imageView;
+    public final ImageView imageView;
     public final CheckBox checkbox;
     private HBox graphic;
     public String contents;
@@ -22,6 +22,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public TreeItem<HighElement> treeNode;
     public boolean changedByUser;
     public HighElement parent;
+    public boolean dead;
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
         graphic = new HBox();
@@ -67,5 +68,12 @@ public abstract class HighElement implements IAutocompleteOption {
         } else {
             return parent.getQualifiedName() + "." + shortName;
         }
+    }
+
+    public abstract void deleteSelf();
+
+    protected void dissociateSelfFromChild(HighElement child) {
+        this.children.remove(child);
+        this.treeNode.getChildren().remove(child.treeNode);
     }
 }

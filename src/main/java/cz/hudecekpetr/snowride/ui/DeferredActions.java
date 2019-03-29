@@ -28,6 +28,7 @@ public class DeferredActions {
             sb.append(what);
             what = toLog.poll();
         }
+        // TODO this is slow:
         runTab.tbLog.appendText(sb.toString());
     }
 }

@@ -32,4 +32,20 @@ public class Extensions {
                 TimeUnit.MILLISECONDS.toSeconds(period) % 60,
                 (TimeUnit.MILLISECONDS.toMillis(period) % 1000) / 100);
     }
+
+    public static String removeFinalNewlineIfAny(String text) {
+        if (text.endsWith("\r\n")) {
+            text = text.substring(0, text.length() - 2);
+        } else if (text.endsWith("\n")) {
+            text = text.substring(0, text.length() - 1);
+        }
+        return text;
+    }
+
+    public static String normalizeLineEndings(String str) {
+        // Commit Unix-style:
+        str = str.replace("\r\n", "\n");
+        //str = str.replace("\n", "\r\n");
+        return str;
+    }
 }

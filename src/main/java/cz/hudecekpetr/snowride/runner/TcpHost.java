@@ -3,7 +3,9 @@ package cz.hudecekpetr.snowride.runner;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.DeferredActions;
+import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 
@@ -22,7 +24,7 @@ public class TcpHost {
     private MainForm mainForm;
     private RunTab runTab;
 
-    public TcpHost(RunTab runTab) {
+    public TcpHost(RunTab runTab,MainForm mainForm) {
         this.runTab = runTab;
 
         this.mainForm = mainForm;
@@ -80,7 +82,7 @@ public class TcpHost {
                     }
                 }
             } catch (Exception ex) {
-                logIntoMainOutput("TCP execution exception: " + Extensions.toStringWithTrace(ex) + "\n");
+                logIntoMainOutput("TCP execution exception: " + Extensions.toStringWithTrace(ex));
             }
         });
         t1.setDaemon(true);
@@ -138,7 +140,8 @@ public class TcpHost {
             String command = deserialize.get(0).toString();
             switch (command) {
                 case "pid":
-                    runTab.run.stoppableProcessId.set(arguments.get(0).as(int.class));
+                    Any pid = arguments.get(0);
+                    runTab.run.stoppableProcessId.set(pid.toInt());
                     logIntoLogOutput("Stoppable process PID is: " + runTab.run.stoppableProcessId.getValue());
                     break;
                 case "log_message":
@@ -159,15 +162,19 @@ public class TcpHost {
                 case "start_test":
                     Map<String,Any> auxiliaries = arguments.get(1).asMap();
                     String longname = auxiliaries.get("longname").as(String.class);
+                    mainForm.findTestByFullyQualifiedName(longname).imageView.setImage(Images.running);
                     break;
                 case "end_test":
                     Map<String,Any> auxiliaries2 = arguments.get(1).asMap();
                     String status = auxiliaries2.get("status").as(String.class);
                     String longname2 = auxiliaries2.get("longname").as(String.class);
+                    Scenario endingTest = mainForm.findTestByFullyQualifiedName(longname2);
                     if (status.equals("PASS")){
                         runTab.run.countPassedTests++;
+                        endingTest.imageView.setImage(Images.yes);
                     } else {
                         runTab.run.countFailedTests++;
+                        endingTest.imageView.setImage(Images.no);
                     }
                     runTab.updateResultsPanel();
                     break;

@@ -1,5 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +25,8 @@ public class RobotFile {
         if (errors.size() > 0) {
             throw new RuntimeException("There were parse errors. Editing or saving is not possible.");
         }
-        return sb.toString();
+        String str = Extensions.removeFinalNewlineIfAny(sb.toString());
+        str = Extensions.normalizeLineEndings(str);
+        return str;
     }
 }

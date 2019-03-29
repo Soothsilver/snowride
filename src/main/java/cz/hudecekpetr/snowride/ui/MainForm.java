@@ -157,9 +157,6 @@ public class MainForm {
         });
         treeContextMenu = new ContextMenu();
         treeContextMenu.getItems().add(new MenuItem("A"));
-        treeContextMenu.getItems().add(new MenuItem("A Baron Prasil"));
-        treeContextMenu.getItems().add(new MenuItem("Dodecahedron"));
-        treeContextMenu.getItems().add(new MenuItem("Terrorista Turista"));
 
 
         projectTree.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
@@ -170,9 +167,7 @@ public class MainForm {
                 TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
                 if (focused != null) {
                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
-                    // treeContextMenu.getItems().add(new MenuItem("ahoj " + focused.getValue()));
                 }
-             //  treeContextMenu.show(projectTree, event.getScreenX(), event.getScreenY());
             }
         });
 
@@ -200,7 +195,7 @@ public class MainForm {
         List<MenuItem> menu = new ArrayList<>();
         HighElement element = forWhat.getValue();
         if (element instanceof FolderSuite) {
-            MenuItem new_folder_suite = new MenuItem("New folder suite");
+            MenuItem new_folder_suite = new MenuItem("New folder");
             new_folder_suite.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
@@ -211,7 +206,7 @@ public class MainForm {
                 }
             });
             menu.add(new_folder_suite);
-            MenuItem new_file_suite = new MenuItem("New file suite/resource file");
+            MenuItem new_file_suite = new MenuItem("New file");
             new_file_suite.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
@@ -269,9 +264,27 @@ public class MainForm {
         }
         maybeAddSeparator(menu);
         // TODO
-        menu.add(new MenuItem("Rename"));
-        menu.add(new MenuItem("Delete"));
+        MenuItem rename = new MenuItem("Rename");
+        menu.add(rename);
+        MenuItem delete = new MenuItem("Delete");
+        delete.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                ButtonType deleteAnswer = new ButtonType("Delete");
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
+                        deleteAnswer,
+                        ButtonType.NO);
+                if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
+                    delete(element);
+                }
+            }
+        });
+        menu.add(delete);
         return menu;
+    }
+
+    private void delete(HighElement element) {
+        element.deleteSelf();
     }
 
     private void setCheckboxes(HighElement element, boolean shouldBeChecked) {
@@ -450,6 +463,8 @@ public class MainForm {
                 });
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
         });
 
@@ -489,5 +504,11 @@ public class MainForm {
 
     public TabPane getTabs() {
         return this.tabs;
+    }
+
+    public Scenario findTestByFullyQualifiedName(String longname) {
+        return (Scenario) getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> {
+            return he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase());
+        }).findFirst().get();
     }
 }

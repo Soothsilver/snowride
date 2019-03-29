@@ -37,7 +37,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         });
         addColumn(-1);
         this.getColumns().get(0).setText("Row");
-        this.getColumns().get(0).setPrefWidth(40);
+        this.getColumns().get(0).setPrefWidth(30);
     }
 
     private void addColumn(int cellIndex) {
@@ -55,7 +55,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                         return new Cell(string, "    ");
                     }
                 }));
-        column.setPrefWidth(250);
+        column.setPrefWidth(200);
         this.getColumns().add(column);
         column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
             @Override

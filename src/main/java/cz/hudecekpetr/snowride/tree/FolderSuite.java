@@ -1,6 +1,8 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.ui.Images;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
 
@@ -36,6 +38,29 @@ public class FolderSuite extends HighElement {
         }
         for (HighElement child : children) {
             child.saveAll();
+        }
+    }
+
+    @Override
+    public void deleteSelf() {
+        if (this.directoryPath.delete()) {
+            this.dead = true;
+            this.parent.dissociateSelfFromChild(this);
+        } else {
+            ButtonType deleteType = new ButtonType("Delete folder and all files inside");
+            if (new Alert(Alert.AlertType.CONFIRMATION, "Could not delete folder '" + this.directoryPath.getName() + "' probably because it's not empty." +
+                    "Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
+                     == deleteType) {
+                try {
+                    FileUtils.deleteDirectory(this.directoryPath);
+                    this.selfAndDescendantHighElements().forEach(he -> he.dead = true);
+                    this.children.clear();
+                    this.treeNode.getChildren().clear();
+                    this.parent.dissociateSelfFromChild(this);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

@@ -19,9 +19,8 @@ public class Scenario extends HighElement {
     }
 
     private final List<LogicalLine> lines;
-    private final String postTrivia;
 
-    public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines, String postTrivia) {
+    public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
 
         this.nameCell = nameCell;
@@ -30,12 +29,16 @@ public class Scenario extends HighElement {
         for (int i = 0; i < lines.size(); i++) {
             this.lines.get(i).lineNumber.set(i+1);
         }
-        this.postTrivia = postTrivia;
     }
 
     @Override
     public void saveAll() throws IOException {
         // Saved as part of the file suite.
+    }
+
+    @Override
+    public void deleteSelf() {
+        throw new RuntimeException("Deleting tests and keywords is not yet implemented.");
     }
 
     public void serializeInto(StringBuilder sb) {
@@ -44,7 +47,6 @@ public class Scenario extends HighElement {
         lines.forEach(ll -> {
             ll.serializeInto(sb);
         });
-        sb.append(postTrivia);
     }
 
     public boolean isTestCase() {
