@@ -1,5 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.ui.Images;
+import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -41,5 +43,10 @@ public class FileSuite extends HighElement {
 
     public String serialize() {
         return fileParsed.serialize();
+    }
+
+    @Override
+    public Image getAutocompleteIcon() {
+        return Images.fileIcon;
     }
 }

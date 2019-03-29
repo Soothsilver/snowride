@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
+import javafx.scene.image.Image;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,5 +65,10 @@ public class Scenario extends HighElement {
     @Override
     public String toString() {
         return (isTestCase ? "[test]" : "[keyword]") + " " + shortName;
+    }
+
+    @Override
+    public Image getAutocompleteIcon() {
+        return this.isTestCase ? Images.testIcon : Images.keywordIcon;
     }
 }

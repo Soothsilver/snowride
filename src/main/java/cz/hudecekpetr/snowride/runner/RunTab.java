@@ -25,17 +25,20 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TextExt;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
 
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
@@ -43,13 +46,14 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class RunTab {
+    public static final String INITIAL_STYLE = "-fx-font-family: Consolas; -fx-font-size: 10pt;";
     private MainForm mainForm;
     private FileChooser openScriptFileDialog;
     private TextField tbScript;
     public Run run = new Run();
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
-    private TextArea tbOutput;
+    private StyledTextArea<String, String> tbOutput;
     public TextArea tbLog;
     private Tab tabRun;
     public Label lblKeyword;
@@ -91,9 +95,14 @@ public class RunTab {
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), event -> timer()));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
-        tbOutput = new TextArea("Standard output goes here.");
-        tbOutput.setFont(MainForm.TEXT_EDIT_FONT);
+        tbOutput = new StyledTextArea<String, String>( "", TextFlow::setStyle,
+                INITIAL_STYLE, TextExt::setStyle,
+                new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
+                true);
+        tbOutput.setUseInitialStyleForInsertion(true);
+      //  tbOutput.setFont(MainForm.TEXT_EDIT_FONT);
         tbOutput.setEditable(false);
+        tbOutput.setPadding(new Insets(4));
         tbLog = new TextArea("Log goes here.");
         tbLog.setEditable(false);
         tbLog.setFont(MainForm.TEXT_EDIT_FONT);
@@ -179,7 +188,7 @@ public class RunTab {
     }
 
     public void appendGreenText(String text) {
-        this.tbOutput.appendText(text + "\n");
+        flushIntoTbOutput(text, "-fx-font-style: italic");
     }
 
     public void clickRun(ActionEvent actionEvent) {
@@ -208,7 +217,8 @@ public class RunTab {
 
             ProcessBuilder processBuilder = new ProcessBuilder();
             List<String> command = composeScriptAndArguments(testCases);
-            tbOutput.setText("> " + String.join(" ", command));
+            tbOutput.clear();
+            appendGreenText("> " + String.join(" ", command));
             processBuilder.command(command);
             processBuilder.directory(runnerDirectory);
             processBuilder.redirectErrorStream(true);
@@ -220,7 +230,7 @@ public class RunTab {
 
 
         } catch (Exception ex) {
-            tbOutput.setText(Extensions.toStringWithTrace(ex));
+            tbOutput.replaceText(Extensions.toStringWithTrace(ex));
             new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE).showAndWait();
         }
     }
@@ -251,7 +261,7 @@ public class RunTab {
             while (howManyRead != -1) {
                 String s = new String(buffer, 0, howManyRead);
                 Platform.runLater(()->{
-                    this.appendBlackText(s);
+                    this.appendAnsiText(s);
                 });
                 howManyRead = twilight.read(buffer);
             }
@@ -261,8 +271,22 @@ public class RunTab {
         }
     }
 
-    public void appendBlackText(String text) {
+    AnsiOutputStream ansiOutputStream = new AnsiOutputStream();
+
+    public void appendAnsiText(String text) {
+        ansiOutputStream.add(text);
+        ansiOutputStream.flushInto(this::flushIntoTbOutputPlusDefault);
+    }
+
+    private void flushIntoTbOutputPlusDefault(String text, String additionalStyle) {
+        flushIntoTbOutput(text, INITIAL_STYLE + additionalStyle);
+    }
+
+    private void flushIntoTbOutput(String text, String style) {
+        int current = this.tbOutput.getLength();
         this.tbOutput.appendText(text);
+        int currentAfter = this.tbOutput.getLength();
+        this.tbOutput.setStyle(current, currentAfter, style);
     }
 
     private void waitForProcessExit(Process start) {
@@ -309,11 +333,8 @@ public class RunTab {
         List<String> lines = new ArrayList<String>();
         lines.add("--outputdir");
         lines.add(temporaryDirectory.toString());
-        /*
-        TODO add when we have colorful textbox
         lines.add("-C");
         lines.add("ansi");
-        */
         for(Scenario testCase : testCases) {
             lines.add("--suite");
             lines.add(testCase.parent.getQualifiedName());

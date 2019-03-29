@@ -39,7 +39,7 @@ import javafx.util.StringConverter;
  *
  * @param <T>
  */
-public class AutoCompletionTextFieldBinding<T>  extends AutoCompletionBinding<T>{
+public class AutoCompletionTextFieldBinding<T extends IAutocompleteOption>  extends AutoCompletionBinding<T>{
 
     /***************************************************************************
      *                                                                         *

@@ -35,9 +35,12 @@ public class SearchSuites {
                 super.completeUserInput(completion);
                 if (completion != null) {
                     mainForm.selectProgrammaticallyAndRememberInHistory(completion);
+                    mainForm.getProjectTree().requestFocus();
                 }
             }
         };
+        binding.setMinWidth(500);
         binding.setDelay(0);
+        binding.setVisibleRowCount(25);
     }
 }

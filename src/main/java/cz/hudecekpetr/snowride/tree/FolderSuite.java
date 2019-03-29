@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.ui.Images;
+import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -41,5 +42,10 @@ public class FolderSuite extends HighElement {
 
     public RobotFile getInitFileParsed() {
         return initFileParsed;
+    }
+
+    @Override
+    public Image getAutocompleteIcon() {
+        return Images.folderIcon;
     }
 }

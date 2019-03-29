@@ -1,8 +1,10 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
@@ -10,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
 
-public abstract class HighElement {
+public abstract class HighElement implements IAutocompleteOption {
     public final String shortName;
     protected final ImageView imageView;
     public final CheckBox checkbox;

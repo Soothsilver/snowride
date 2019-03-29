@@ -28,8 +28,6 @@ package cz.hudecekpetr.snowride.fx;
  */
 
 import com.sun.javafx.event.EventHandlerManager;
-import impl.org.controlsfx.skin.AutoCompletePopup;
-import impl.org.controlsfx.skin.AutoCompletePopupSkin;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
@@ -57,7 +55,7 @@ import javafx.beans.property.IntegerProperty;
  * @param <T> Model-Type of the suggestions
  * @see TextFields
  */
-public abstract class AutoCompletionBinding<T> implements EventTarget {
+public abstract class AutoCompletionBinding<T extends IAutocompleteOption> implements EventTarget {
 
 
     /***************************************************************************

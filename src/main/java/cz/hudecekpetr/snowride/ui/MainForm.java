@@ -136,16 +136,18 @@ public class MainForm {
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
         projectTree.setFixedCellSize(16);
-       /* projectTree.setCellFactory(tv -> {
-                TreeCell<HighElement> cell = new TreeCell<HighElement>() {
-                    @Override
-                    protected void updateItem(HighElement item, boolean empty) {
-                       // this.setFont(MainForm.TREE_VIEW_FONT);
-                        super.updateItem(item, empty);
+        projectTree.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.SPACE) {
+                    TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
+                    if (focusedItem != null) {
+                        HighElement element = focusedItem.getValue();
+                        element.checkbox.setSelected(!element.checkbox.isSelected());
                     }
-                };
-                return cell;
-            });*/
+                }
+            }
+        });
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
@@ -155,23 +157,27 @@ public class MainForm {
         });
         treeContextMenu = new ContextMenu();
         treeContextMenu.getItems().add(new MenuItem("A"));
-        treeContextMenu.setOnShowing(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
+        treeContextMenu.getItems().add(new MenuItem("A Baron Prasil"));
+        treeContextMenu.getItems().add(new MenuItem("Dodecahedron"));
+        treeContextMenu.getItems().add(new MenuItem("Terrorista Turista"));
 
-            }
-        });
+
         projectTree.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
             @Override
             public void handle(ContextMenuEvent event) {
+
                 treeContextMenu.getItems().clear();
                 TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
                 if (focused != null) {
-                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                   treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                    // treeContextMenu.getItems().add(new MenuItem("ahoj " + focused.getValue()));
                 }
-                treeContextMenu.show(projectTree, event.getScreenX(), event.getScreenY());
+             //  treeContextMenu.show(projectTree, event.getScreenX(), event.getScreenY());
             }
         });
+
+        projectTree.setContextMenu(treeContextMenu);
+        /*
         projectTree.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -179,7 +185,7 @@ public class MainForm {
                     treeContextMenu.hide();
                 }
             }
-        });
+        });*/
         ProgressBar progressBar = new ProgressBar();
         progressBar.visibleProperty().bind(projectLoad.progress.lessThan(1));
         progressBar.progressProperty().bind(projectLoad.progress);
