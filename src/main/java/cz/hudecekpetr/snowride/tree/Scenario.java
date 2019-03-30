@@ -51,8 +51,7 @@ public class Scenario extends HighElement {
 
     @Override
     public void applyAndValidateText() {
-        // TODO
-        throw new NotImplementedException("Changes to scenarios not supported yet.");
+        this.parent.applyAndValidateText();
     }
 
     public void serializeInto(StringBuilder sb) {

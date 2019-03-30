@@ -53,7 +53,7 @@ public class FolderSuite extends HighElement implements ISuite {
         } else {
             ButtonType deleteType = new ButtonType("Delete folder and all files inside");
             if (new Alert(Alert.AlertType.CONFIRMATION, "Could not delete folder '" + this.directoryPath.getName() + "' probably because it's not empty." +
-                    "Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
+                    " Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
                      == deleteType) {
                 try {
                     FileUtils.deleteDirectory(this.directoryPath);
@@ -70,7 +70,8 @@ public class FolderSuite extends HighElement implements ISuite {
 
     @Override
     public void renameSelfTo(String newName) {
-
+        refreshToString();
+        throw new RuntimeException("Renaming folders not yet implemented.");
     }
 
     @Override

@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,7 +45,6 @@ import java.util.concurrent.Executors;
 public class MainForm {
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
-    private final TextArea tbTextEdit;
     private final SerializingTab serializingTab;
     GateParser gateParser = new GateParser();
     private NavigationStack navigationStack = new NavigationStack();
@@ -61,6 +59,7 @@ public class MainForm {
     private SeparatorMenuItem separatorAfterRecentProjects;
     private DirectoryChooser openFolderDialog;
     private Menu projectMenu;
+    private final TextEditTab textEditTab;
 
     private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
@@ -103,36 +102,9 @@ public class MainForm {
         Tab tabRun = runTab.createTab();
         MenuBar mainMenu = buildMainMenu();
         ToolBar toolBar = buildToolBar();
-        tbTextEdit = new TextArea();
-        tbTextEdit.setPromptText("This will display text...");
-        tbTextEdit.setFont(TEXT_EDIT_FONT);
-        tbTextEdit.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                if (!switchingTextEditContents) {
-                    HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
-                    System.out.println(whatChanged.shortName + " selectedTabChanged.");
-                    whatChanged.unsavedChanges = LastChangeKind.TEXT_CHANGED;
-                    whatChanged.areTextChangesUnapplied = true;
-                    whatChanged.contents = newValue;
-                    whatChanged.treeNode.setValue(null);
-                    whatChanged.treeNode.setValue(whatChanged);
-                    canSave.set(true);
-                }
-            }
-        });
-        Button bApply = new Button("Apply changes");
-        bApply.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
-                whatChanged.applyAndValidateText();
-            }
-        });
-        VBox textVBox = new VBox(bApply, tbTextEdit);
-        VBox.setVgrow(tbTextEdit, Priority.ALWAYS);
-        tabTextEdit = new Tab("Edit entire file as text", textVBox);
-        tabTextEdit.setClosable(false);
+
+        textEditTab = new TextEditTab(this);
+        tabTextEdit = textEditTab.createTab();
         gridTab = new GridTab(this);
         Tab tabGrid = gridTab.createTab();
         serializingTab = new SerializingTab(this);
@@ -163,6 +135,13 @@ public class MainForm {
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake2.png")));
+    }
+
+    public void changeOccurredTo(HighElement whatChanged, LastChangeKind how) {
+        whatChanged.unsavedChanges = how;
+        whatChanged.treeNode.setValue(null);
+        whatChanged.treeNode.setValue(whatChanged);
+        canSave.set(true);
     }
 
     private void mainWindowCoordinatesChanged() {
@@ -282,6 +261,7 @@ public class MainForm {
                     String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
                     if (name != null) {
                         ((FileSuite)element).createNewChild(name, true);
+                        changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
             });
@@ -307,6 +287,7 @@ public class MainForm {
                     String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
                     if (name != null) {
                         ((ISuite)element).createNewChild(name, false);
+                        changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
             });
@@ -411,7 +392,7 @@ public class MainForm {
             }
 
             switchingTextEditContents = true;
-            tbTextEdit.setText(focusedNode.getValue().contents);
+            textEditTab.loadElement(focusedNode.getValue());
             gridTab.loadElement(focusedNode.getValue());
             serializingTab.loadElement(focusedNode.getValue());
             switchingTextEditContents = false;

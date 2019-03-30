@@ -29,6 +29,10 @@ public class SnowrideApplication extends Application {
     public void start(Stage primaryStage) throws Exception {
         MainForm mainForm = new MainForm(primaryStage);
         mainForm.show();
-        mainForm.loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
+        try {
+            mainForm.loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
+        } catch (Exception exception) {
+            mainForm.loadProjectFromFolder(new File("."));
+        }
     }
 }

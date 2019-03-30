@@ -31,9 +31,15 @@ public class FileSuite extends HighElement implements ISuite {
     @Override
     public void saveAll() throws IOException {
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            this.unsavedChanges = LastChangeKind.PRISTINE;
+            this.applyAndValidateText();
             System.out.println("SaveAll: " + this.shortName);
+        } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
+            this.contents = serialize();
+            System.out.println("SaveAll structurally: " + this.shortName);
+        }
+        if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             FileUtils.write(file, contents, "utf-8");
+            this.unsavedChanges = LastChangeKind.PRISTINE;
             refreshToString();
         }
     }
@@ -63,6 +69,7 @@ public class FileSuite extends HighElement implements ISuite {
         } else {
             throw new RuntimeException("Could not rename the file suite '" + this.shortName + "'.");
         }
+        refreshToString();
     }
 
     @Override
