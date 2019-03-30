@@ -1,10 +1,10 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
@@ -13,14 +13,15 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public abstract class HighElement implements IAutocompleteOption {
-    public final String shortName;
+    public String shortName;
     public final ImageView imageView;
     public final CheckBox checkbox;
     private HBox graphic;
     public String contents;
     public final List<HighElement> children;
     public TreeItem<HighElement> treeNode;
-    public boolean changedByUser;
+    public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
+    public boolean areTextChangesUnapplied = false;
     public HighElement parent;
     public boolean dead;
 
@@ -43,8 +44,11 @@ public abstract class HighElement implements IAutocompleteOption {
 
     @Override
     public String toString() {
-        if (changedByUser) {
-            return "[changed] " + shortName;
+        if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
+            return "[text changed] " + shortName;
+        }
+        if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
+            return "[structure changed] " + shortName;
         }
         return shortName;
     }
@@ -76,4 +80,8 @@ public abstract class HighElement implements IAutocompleteOption {
         this.children.remove(child);
         this.treeNode.getChildren().remove(child.treeNode);
     }
+
+    public abstract void renameSelfTo(String newName);
+
+    public abstract void applyAndValidateText();
 }

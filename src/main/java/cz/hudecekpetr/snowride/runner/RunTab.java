@@ -19,6 +19,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -67,6 +68,11 @@ public class RunTab {
     private TextField tbArguments;
     private Path temporaryDirectory;
     private Executor executor = Executors.newFixedThreadPool(4);
+    private VBox vboxWithTags;
+    private CheckBox cbWithoutTags;
+    private TextField tbWithoutTags;
+    private TextField tbWithTags;
+    private CheckBox cbWithTags;
 
 
     public RunTab(MainForm mainForm) {
@@ -160,7 +166,20 @@ public class RunTab {
         lblPassed.setMinWidth(90);
         hboxExecutionLine = new HBox(lblTotalTime, lblFailed, lblPassed, lblKeyword);
         hboxExecutionLine.setAlignment(Pos.CENTER_LEFT);
-        VBox vboxTabRun = new VBox(0, hboxScript, hboxButtons, hboxArguments, hboxExecutionLine, splitterOutput);
+        cbWithTags = new CheckBox("Run only tests with tags:");
+        cbWithTags.setSelected(Settings.getInstance().cbWithTags);
+        tbWithTags = new TextField(Settings.getInstance().tbWithTags);
+        tbWithTags.setFont(MainForm.TEXT_EDIT_FONT);
+        vboxWithTags = new VBox(2, cbWithTags, tbWithTags);
+        cbWithoutTags = new CheckBox("Don't run tests with tags:");
+        cbWithoutTags.setSelected(Settings.getInstance().cbWithoutTags);
+        tbWithoutTags = new TextField(Settings.getInstance().tbWithoutTags);
+        tbWithoutTags.setFont(MainForm.TEXT_EDIT_FONT);
+        VBox vboxWithoutTags = new VBox(2, cbWithoutTags, tbWithoutTags);
+        HBox hboxTags = new HBox(5, vboxWithTags, vboxWithoutTags);
+        HBox.setHgrow(vboxWithTags, Priority.ALWAYS);
+        HBox.setHgrow(vboxWithoutTags, Priority.ALWAYS);
+        VBox vboxTabRun = new VBox(0, hboxScript, hboxButtons, hboxArguments, hboxTags, hboxExecutionLine, splitterOutput);
         VBox.setVgrow(splitterOutput, Priority.ALWAYS);
         tabRun = new Tab("Run", vboxTabRun);
         tabRun.setClosable(false);
@@ -348,6 +367,18 @@ public class RunTab {
         lines.add(temporaryDirectory.toString());
         lines.add("-C");
         lines.add("ansi");
+        if (cbWithTags.isSelected()) {
+            for (String tag : StringUtils.splitByWholeSeparator(tbWithTags.getText(), ",")) {
+                lines.add("--include");
+                lines.add(tag.trim());
+            }
+        }
+        if (cbWithoutTags.isSelected()) {
+            for (String tag : StringUtils.splitByWholeSeparator(tbWithoutTags.getText(), ",")) {
+                lines.add("--exclude");
+                lines.add(tag.trim());
+            }
+        }
         for(Scenario testCase : testCases) {
             lines.add("--suite");
             lines.add(testCase.parent.getQualifiedName());
@@ -364,6 +395,10 @@ public class RunTab {
     private void rememberRunPageSettings() {
         Settings.getInstance().runArguments = tbArguments.getText();
         Settings.getInstance().runScript = tbScript.getText();
+        Settings.getInstance().cbWithoutTags = cbWithoutTags.isSelected();
+        Settings.getInstance().cbWithTags = cbWithTags.isSelected();
+        Settings.getInstance().tbWithoutTags = tbWithoutTags.getText();
+        Settings.getInstance().tbWithTags = tbWithTags.getText();
         Settings.getInstance().save();
     }
 

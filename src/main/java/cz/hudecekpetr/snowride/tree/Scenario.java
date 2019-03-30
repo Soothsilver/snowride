@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +39,20 @@ public class Scenario extends HighElement {
 
     @Override
     public void deleteSelf() {
+        // TODO element deletion
         throw new RuntimeException("Deleting tests and keywords is not yet implemented.");
+    }
+
+    @Override
+    public void renameSelfTo(String newName) {
+        // TODO element renam
+        throw new NotImplementedException("Deleting tests not yet implemented.");
+    }
+
+    @Override
+    public void applyAndValidateText() {
+        // TODO
+        throw new NotImplementedException("Changes to scenarios not supported yet.");
     }
 
     public void serializeInto(StringBuilder sb) {

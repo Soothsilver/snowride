@@ -18,6 +18,10 @@ public class Settings {
     public List<String> lastOpenedProjects = new ArrayList<String>();
     public String runScript = "";
     public String runArguments = "";
+    public String tbWithoutTags = "";
+    public String tbWithTags = "";
+    public boolean cbWithoutTags = false;
+    public boolean cbWithTags = false;
 
     public static Settings getInstance() {
         if (instance == null) {

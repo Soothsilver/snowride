@@ -1,13 +1,11 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
+import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.*;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -100,7 +98,8 @@ public class MainForm {
                 if (!switchingTextEditContents) {
                     HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
                     System.out.println(whatChanged.shortName + " changed.");
-                    whatChanged.changedByUser = true;
+                    whatChanged.unsavedChanges = LastChangeKind.TEXT_CHANGED;
+                    whatChanged.areTextChangesUnapplied = true;
                     whatChanged.contents = newValue;
                     whatChanged.treeNode.setValue(null);
                     whatChanged.treeNode.setValue(whatChanged);
@@ -108,7 +107,17 @@ public class MainForm {
                 }
             }
         });
-        tabTextEdit = new Tab("Edit entire file as text", tbTextEdit);
+        Button bApply = new Button("Apply changes");
+        bApply.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
+                whatChanged.applyAndValidateText();
+            }
+        });
+        VBox textVBox = new VBox(bApply, tbTextEdit);
+        VBox.setVgrow(tbTextEdit, Priority.ALWAYS);
+        tabTextEdit = new Tab("Edit entire file as text", textVBox);
         tabTextEdit.setClosable(false);
         gridTab = new GridTab(this);
         Tab tabGrid = gridTab.createTab();
@@ -224,8 +233,17 @@ public class MainForm {
         }
         maybeAddSeparator(menu);
         if (element instanceof FileSuite) {
-            // TODO
-            menu.add(new MenuItem("New test case"));
+            MenuItem new_test_case = new MenuItem("New test case");
+            new_test_case.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
+                    if (name != null) {
+                        ((FileSuite)element).createNewChild(name, true);
+                    }
+                }
+            });
+            menu.add(new_test_case);
             MenuItem open_in_external_editor = new MenuItem("Open in external editor");
             open_in_external_editor.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
@@ -239,9 +257,18 @@ public class MainForm {
             });
             menu.add(open_in_external_editor);
         }
-        if (element instanceof FolderSuite || element instanceof FileSuite) {
-            // TODO
-            menu.add(new MenuItem("New user keyword"));
+        if (element instanceof ISuite) {
+            MenuItem new_user_keyword = new MenuItem("New user keyword");
+            new_user_keyword.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
+                    if (name != null) {
+                        ((ISuite)element).createNewChild(name, false);
+                    }
+                }
+            });
+            menu.add(new_user_keyword);
         }
         maybeAddSeparator(menu);
         if (element instanceof FolderSuite || element instanceof FileSuite) {
@@ -263,8 +290,16 @@ public class MainForm {
             menu.add(deselect_all_tests);
         }
         maybeAddSeparator(menu);
-        // TODO
         MenuItem rename = new MenuItem("Rename");
+        rename.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.shortName);
+                if (newName != null) {
+                    element.renameSelfTo(newName);
+                }
+            }
+        });
         menu.add(rename);
         MenuItem delete = new MenuItem("Delete");
         delete.setOnAction(new EventHandler<ActionEvent>() {

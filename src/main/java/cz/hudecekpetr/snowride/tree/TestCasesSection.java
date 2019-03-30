@@ -22,4 +22,8 @@ public class TestCasesSection extends RobotSection {
     public List<? extends  HighElement> getHighElements() {
         return testCases;
     }
+
+    public void addScenario(Scenario scenario) {
+        testCases.add(scenario);
+    }
 }

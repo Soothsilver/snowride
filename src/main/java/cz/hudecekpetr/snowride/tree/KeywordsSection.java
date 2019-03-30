@@ -23,4 +23,8 @@ public class KeywordsSection extends RobotSection {
     public List<? extends HighElement> getHighElements() {
         return keywords;
     }
+
+    public void addScenario(Scenario scenario) {
+        keywords.add(scenario);
+    }
 }

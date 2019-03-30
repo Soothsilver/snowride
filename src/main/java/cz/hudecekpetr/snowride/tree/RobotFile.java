@@ -29,4 +29,26 @@ public class RobotFile {
         str = Extensions.normalizeLineEndings(str);
         return str;
     }
+
+    public TestCasesSection findOrCreateTestCasesSection() {
+        for (RobotSection section : sections) {
+            if (section.header.sectionKind == SectionKind.TEST_CASES) {
+                return (TestCasesSection) section;
+            }
+        }
+        TestCasesSection newSection = new TestCasesSection(new SectionHeader(SectionKind.TEST_CASES, "*** Test Cases ***\n"), new ArrayList<>());
+        sections.add(newSection);
+        return newSection;
+    }
+
+    public KeywordsSection findOrCreateKeywordsSection() {
+        for (RobotSection section : sections) {
+            if (section.header.sectionKind == SectionKind.KEYWORDS) {
+                return (KeywordsSection) section;
+            }
+        }
+        KeywordsSection newSection = new KeywordsSection(new SectionHeader(SectionKind.KEYWORDS, "*** Keywords ***\n"), new ArrayList<>());
+        sections.add(newSection);
+        return newSection;
+    }
 }
