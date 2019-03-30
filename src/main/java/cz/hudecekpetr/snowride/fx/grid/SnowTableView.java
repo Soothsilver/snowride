@@ -4,16 +4,15 @@ import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Skin;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.collections.ObservableList;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -28,6 +27,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        this.setStyle("-fx-selection-bar: lightyellow;");
         this.skinProperty().addListener(new ChangeListener<Skin<?>>() {
             @Override
             public void changed(ObservableValue<? extends Skin<?>> observable, Skin<?> oldValue, Skin<?> newValue) {
@@ -44,17 +44,12 @@ public class SnowTableView extends TableView<LogicalLine> {
         TableColumn<LogicalLine, Cell> column = new TableColumn<>();
         column.setSortable(false);
         column.setMinWidth(40);
-        column.setCellFactory(TextFieldTableCell.forTableColumn(new StringConverter<Cell>() {
-                    @Override
-                    public String toString(Cell object) {
-                        return object.contents;
-                    }
-
-                    @Override
-                    public Cell fromString(String string) {
-                        return new Cell(string, "    ");
-                    }
-                }));
+        column.setCellFactory(new Callback<TableColumn<LogicalLine, Cell>, TableCell<LogicalLine, Cell>>() {
+            @Override
+            public TableCell<LogicalLine, Cell> call(TableColumn<LogicalLine, Cell> param) {
+                return new IceCell(param, cellIndex);
+            }
+        });
         column.setPrefWidth(200);
         this.getColumns().add(column);
         column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
@@ -73,9 +68,9 @@ public class SnowTableView extends TableView<LogicalLine> {
         });
     }
 
-    public void loadLines(List<LogicalLine> lines) {
-        // Clear data
-        this.getItems().clear();
+    public void loadLines(ObservableList<LogicalLine> lines) {
+        // Renew data
+        this.setItems(lines);
         // Column count
         int maxCellCount = lines.size() == 0 ? -1 : Extensions.max(lines, (LogicalLine line) -> line.cells.size()) - 1; // -1 for the first blank cell
         int columnCount = Math.max(maxCellCount + 1 , 4) + 1; // +1 for "number of row"
@@ -86,7 +81,5 @@ public class SnowTableView extends TableView<LogicalLine> {
                 addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)
             }
         }
-        // Add data
-        this.getItems().setAll(lines);
     }
 }

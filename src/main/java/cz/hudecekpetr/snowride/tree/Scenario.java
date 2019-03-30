@@ -3,6 +3,8 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -15,18 +17,18 @@ public class Scenario extends HighElement {
     private final Cell nameCell;
     private boolean isTestCase;
 
-    public List<LogicalLine> getLines() {
+    public ObservableList<LogicalLine> getLines() {
         return lines;
     }
 
-    private final List<LogicalLine> lines;
+    private final ObservableList<LogicalLine> lines;
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
 
         this.nameCell = nameCell;
         this.setTestCase(isTestCase);
-        this.lines = lines;
+        this.lines = FXCollections.observableList(lines);
         for (int i = 0; i < lines.size(); i++) {
             this.lines.get(i).lineNumber.set(i+1);
         }

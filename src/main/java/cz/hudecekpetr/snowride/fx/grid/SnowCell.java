@@ -1,3 +1,4 @@
+
 package cz.hudecekpetr.snowride.fx.grid;
 
 import javafx.beans.value.ChangeListener;
@@ -13,32 +14,28 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import javafx.util.converter.DefaultStringConverter;
 /*
-public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
-     private TextField textField;
+public class SnowCell<S, T> extends TextFieldTableCell<S, T> {
+
+    private TextField textField;
     private boolean escapePressed = false;
-    private TablePosition< S,
-            ? > tablePos = null;
-    public EditCell(final StringConverter< T > converter) {
+    private TablePosition<S, ?> tablePos = null;
+
+    public SnowCell(final StringConverter<T> converter) {
         super(converter);
     }
-    public static < S > Callback<TableColumn< S,
-            String >,
-            TableCell< S,
-                    String >> forTableColumn() {
+
+    public static <S> Callback<TableColumn<S, String>, TableCell<S, String>> forTableColumn() {
         return forTableColumn(new DefaultStringConverter());
     }
-    public static < S,
-            T > Callback < TableColumn < S,
-            T > ,
-            TableCell < S,
-                    T >> forTableColumn(
-            final StringConverter < T > converter) {
-        return list -> new EditCell < S, T > (converter);
+
+    public static <S,T> Callback<TableColumn<S, T>, TableCell<S, T>> forTableColumn(
+            final StringConverter<T> converter) {
+        return list -> new SnowCell<>(converter);
     }
+
     @Override
     public void startEdit() {
-        if (!isEditable() || !getTableView().isEditable() ||
-                !getTableColumn().isEditable()) {
+        if (!isEditable() || !getTableView().isEditable() || !getTableColumn().isEditable()) {
             return;
         }
         super.startEdit();
@@ -48,19 +45,20 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
             }
             escapePressed = false;
             startEdit(textField);
-            final TableView< S > table = getTableView();
+            final TableView<S> table = getTableView();
             tablePos = table.getEditingCell();
         }
     }
+
     @Override
     public void commitEdit(T newValue) {
-        if (!isEditing())
+        if (!isEditing()) {
             return;
-        final TableView < S > table = getTableView();
+        }
+        final TableView<S> table = getTableView();
         if (table != null) {
             // Inform the TableView of the edit being ready to be committed.
-            TableColumn.CellEditEvent editEvent = new TableColumn.CellEditEvent(table, tablePos,
-                    TableColumn.editCommitEvent(), newValue);
+            TableColumn.CellEditEvent editEvent = new TableColumn.CellEditEvent(table, tablePos, TableColumn.editCommitEvent(), newValue);
             Event.fireEvent(getTableColumn(), editEvent);
         }
         // we need to setEditing(false):
@@ -74,6 +72,7 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
             table.edit(-1, null);
         }
     }
+
     @Override
     public void cancelEdit() {
         if (escapePressed) {
@@ -89,11 +88,13 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
         }
         setGraphic(null); // stop editing with TextField
     }
+
     @Override
     public void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
         updateItem();
     }
+
     private TextField getTextField() {
         final TextField textField = new TextField(getItemText());
         textField.setOnAction(new EventHandler<ActionEvent>() {
@@ -110,9 +111,9 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
             this.commitEdit(getConverter().fromString(textField.getText()));
             event.consume();
         });
-        textField.focusedProperty().addListener(new ChangeListener< Boolean >() {
+        textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
-            public void changed(ObservableValue< ? extends Boolean > observable,
+            public void changed(ObservableValue<? extends Boolean> observable,
                                 Boolean oldValue, Boolean newValue) {
                 if (!newValue) {
                     commitEdit(getConverter().fromString(textField.getText()));
@@ -120,10 +121,7 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
             }
         });
         textField.setOnKeyPressed(t -> {
-            if (t.getCode() == KeyCode.ESCAPE)
-                escapePressed = true;
-            else
-                escapePressed = false;
+            escapePressed = t.getCode() == KeyCode.ESCAPE;
         });
         textField.setOnKeyReleased(t -> {
             if (t.getCode() == KeyCode.ESCAPE) {
@@ -153,11 +151,13 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
         });
         return textField;
     }
+
     private String getItemText() {
         return getConverter() == null ?
                 getItem() == null ? "" : getItem().toString() :
                 getConverter().toString(getItem());
     }
+
     private void updateItem() {
         if (isEmpty()) {
             setText(null);
@@ -175,6 +175,7 @@ public class SnowCell<S,T> extends TextFieldTableCell<S,T> {
             }
         }
     }
+
     private void startEdit(final TextField textField) {
         if (textField != null) {
             textField.setText(getItemText());
