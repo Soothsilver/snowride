@@ -37,7 +37,7 @@ public class Filesystem {
         if (!asFile.createNewFile()) {
             throw new RuntimeException("File already exists.");
         }
-        FileSuite fs = new FileSuite(asFile, newFileWithoutExtension, "", new RobotFile());
+        FileSuite fs = new FileSuite(asFile, newFileWithoutExtension, "");
         parentFolder.children.add(fs);
         parentFolder.treeNode.getChildren().add(fs.treeNode);
         fs.parent = parentFolder;

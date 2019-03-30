@@ -77,7 +77,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         // Clear data
         this.getItems().clear();
         // Column count
-        int maxCellCount = Extensions.max(lines, (LogicalLine line) -> line.cells.size()) - 1; // -1 for the first blank cell
+        int maxCellCount = lines.size() == 0 ? -1 : Extensions.max(lines, (LogicalLine line) -> line.cells.size()) - 1; // -1 for the first blank cell
         int columnCount = Math.max(maxCellCount + 1 , 4) + 1; // +1 for "number of row"
         if (this.getColumns().size() > columnCount) {
             this.getColumns().remove(columnCount, this.getColumns().size());

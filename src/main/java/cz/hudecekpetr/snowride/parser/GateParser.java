@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GateParser {
-    private AntlrGate gate = new AntlrGate();
+    private static AntlrGate gate = new AntlrGate();
 
     public FolderSuite loadDirectory(File directoryPath, LongRunningOperation partOfOperation, double partOfProgress) {
         try {
@@ -58,7 +58,11 @@ public class GateParser {
     private FileSuite loadFile(File inFile) throws IOException {
         String name = FilenameUtils.removeExtension(inFile.getName());
         String contents = FileUtils.readFileToString(inFile, "utf-8");
-        return new FileSuite(inFile, name, contents, gate.parse(contents));
+        FileSuite fs = new FileSuite(inFile, name, contents);
+        return fs;
+    }
 
+    public static RobotFile parse(String contents) {
+        return gate.parse(contents);
     }
 }

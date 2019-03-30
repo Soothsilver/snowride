@@ -22,6 +22,11 @@ public class Settings {
     public String tbWithTags = "";
     public boolean cbWithoutTags = false;
     public boolean cbWithTags = false;
+    public double x = -1;
+    public double y = -1;
+    public double width = 800;
+    public double height = 700;
+    public boolean maximized = false;
 
     public static Settings getInstance() {
         if (instance == null) {

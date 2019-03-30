@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -36,9 +37,17 @@ public abstract class HighElement implements IAutocompleteOption {
         treeNode = new TreeItem<>(this, this.graphic);
         this.shortName = shortName;
         this.contents = contents;
-        this.children = children;
+        this.children = new ArrayList<>();
+        addChildren(children);
+    }
+
+    public void addChildren(List<HighElement> children) {
+        this.children.addAll(children);
         for (HighElement child : children) {
             treeNode.getChildren().add(child.treeNode);
+            if (child instanceof Scenario) {
+                child.parent = this;
+            }
         }
     }
 

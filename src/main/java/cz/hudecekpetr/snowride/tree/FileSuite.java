@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
@@ -13,17 +14,13 @@ import java.util.ArrayList;
 
 public class FileSuite extends HighElement implements ISuite {
     public File file;
-    private final RobotFile fileParsed;
+    public RobotFile fileParsed;
 
-    public FileSuite(File file, String name, String contents,  RobotFile fileParsed) {
-        super(name, contents, fileParsed.getHighElements());
+    public FileSuite(File file, String name, String contents) {
+        super(name, contents, new ArrayList<>());
         this.file = file;
-        this.fileParsed = fileParsed;
-        for (HighElement scenario : fileParsed.getHighElements()) {
-            if (scenario instanceof Scenario) {
-                ((Scenario)scenario).parent = this;
-            }
-        }
+        this.fileParsed = GateParser.parse(contents);
+        this.addChildren(fileParsed.getHighElements());
     }
 
     @Override
@@ -83,8 +80,11 @@ public class FileSuite extends HighElement implements ISuite {
     }
 
     public void reparse() {
-        // TODO
-        throw new NotImplementedException("Not yet donee");
+        this.children.clear();
+        this.treeNode.getChildren().clear();
+        RobotFile parsed = GateParser.parse(contents);
+        this.fileParsed = parsed;
+        this.addChildren(parsed.getHighElements());
     }
 
     public RobotFile getFileParsed() {

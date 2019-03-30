@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -60,6 +61,19 @@ public class MainForm {
     private SeparatorMenuItem separatorAfterRecentProjects;
     private DirectoryChooser openFolderDialog;
     private Menu projectMenu;
+
+    private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+        if (oldValue == tabTextEdit) {
+            getFocusedElement().applyAndValidateText();
+        }
+        if (newValue == gridTab.getTabGrid()) {
+            gridTab.loadElement(getFocusedElement());
+        }
+    }
+
+    public HighElement getFocusedElement() {
+        return getProjectTree().getFocusModel().getFocusedItem().getValue();
+    }
 
     public TreeView<HighElement> getProjectTree() {
         return projectTree;
@@ -97,7 +111,7 @@ public class MainForm {
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 if (!switchingTextEditContents) {
                     HighElement whatChanged = projectTree.getFocusModel().getFocusedItem().getValue();
-                    System.out.println(whatChanged.shortName + " changed.");
+                    System.out.println(whatChanged.shortName + " selectedTabChanged.");
                     whatChanged.unsavedChanges = LastChangeKind.TEXT_CHANGED;
                     whatChanged.areTextChangesUnapplied = true;
                     whatChanged.contents = newValue;
@@ -125,17 +139,39 @@ public class MainForm {
         Tab tabSerializing = serializingTab.createTab();
         tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
-        VBox searchableTree = createLeftPane();
+        tabs.getSelectionModel().selectedItemProperty().addListener(this::selectedTabChanged);
+                VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
         SplitPane.setResizableWithParent(searchableTree, false);
         treeAndGrid.setDividerPosition(0,0.3);
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
-        Scene scene = new Scene(vBox, 800, 700);
+        Scene scene = new Scene(vBox, Settings.getInstance().width, Settings.getInstance().height);
         scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
         stage.setScene(scene);
+        if (Settings.getInstance().x != -1) {
+            stage.setX(Settings.getInstance().x);
+        }
+        if (Settings.getInstance().y != -1) {
+            stage.setY(Settings.getInstance().y);
+        }
+        stage.setMaximized(Settings.getInstance().maximized);
+        stage.xProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
+        stage.yProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
+        stage.widthProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
+        stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
+        stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake2.png")));
+    }
+
+    private void mainWindowCoordinatesChanged() {
+        Settings.getInstance().x = stage.getX();
+        Settings.getInstance().y = stage.getY();
+        Settings.getInstance().width = stage.getWidth();
+        Settings.getInstance().height = stage.getHeight();
+        Settings.getInstance().maximized = stage.isMaximized();
+        Settings.getInstance().save();
     }
 
     private VBox createLeftPane() {
@@ -160,7 +196,7 @@ public class MainForm {
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
-
+                onfocusTreeNode(oldValue);
                 focusTreeNode(newValue);
             }
         });
@@ -198,6 +234,12 @@ public class MainForm {
         VBox vBox = new VBox(tbSearchTests, stackPane);
         VBox.setVgrow(stackPane, Priority.ALWAYS);
         return vBox;
+    }
+
+    private void onfocusTreeNode(TreeItem<HighElement> oldValue) {
+        if (oldValue != null) {
+            oldValue.getValue().applyAndValidateText();
+        }
     }
 
     private List<MenuItem> createContextMenuFor(TreeItem<HighElement> forWhat) {
@@ -391,13 +433,6 @@ public class MainForm {
     private MenuBar buildMainMenu() {
         MenuBar mainMenu = new MenuBar();
         projectMenu = new Menu("Project");
-        MenuItem bLoadCurrentDir = new MenuItem("Load project from current directory");
-        bLoadCurrentDir.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                loadProjectFromCurrentDir();
-            }
-        });
-
 
         MenuItem bLoadArbitrary = new MenuItem("Load directory...");
         bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
@@ -410,14 +445,10 @@ public class MainForm {
         bSaveAll.disableProperty().bind(canSave.not());
 
         MenuItem bExit = new MenuItem("Exit Snowride");
-        bExit.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                System.exit(0);
-            }
-        });
+        bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
-        projectMenu.getItems().addAll(bLoadCurrentDir, bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
+        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
         refreshRecentlyOpenMenu();
 
         MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
@@ -471,10 +502,6 @@ public class MainForm {
         expandUpTo.setExpanded(true);
     }
 
-    public void loadProjectFromCurrentDir() {
-        loadProjectFromFolder(new File("."));
-    }
-
     private LongRunningOperation projectLoad = new LongRunningOperation();
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
 
@@ -512,12 +539,7 @@ public class MainForm {
         List<MenuItem> newItems = new ArrayList<>();
         for (String whatShouldBeThere : Settings.getInstance().lastOpenedProjects) {
             MenuItem newItem = new MenuItem(whatShouldBeThere);
-            newItem.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    loadProjectFromFolder(new File(whatShouldBeThere));
-                }
-            });
+            newItem.setOnAction(event -> loadProjectFromFolder(new File(whatShouldBeThere)));
             newItems.add(newItem);
         }
         projectMenu.getItems().addAll(startAt, newItems);
