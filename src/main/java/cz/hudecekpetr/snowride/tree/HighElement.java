@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
@@ -93,4 +94,8 @@ public abstract class HighElement implements IAutocompleteOption {
     public abstract void renameSelfTo(String newName);
 
     public abstract void applyAndValidateText();
+
+    public abstract void markAsStructurallyChanged(MainForm mainForm);
+
+    protected abstract void optimizeStructure();
 }

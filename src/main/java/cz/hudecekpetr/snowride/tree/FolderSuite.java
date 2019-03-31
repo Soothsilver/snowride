@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.ui.Images;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
@@ -86,6 +87,16 @@ public class FolderSuite extends HighElement implements ISuite {
         if (initFileParsed != null && initFileParsed.errors.size() > 0) {
             throw new RuntimeException("There are parse errors.");
         }
+    }
+
+    @Override
+    public void markAsStructurallyChanged(MainForm mainForm) {
+        throw new NotImplementedException("not yet");
+    }
+
+    @Override
+    protected void optimizeStructure() {
+        // not yet
     }
 
     public void reparse() {

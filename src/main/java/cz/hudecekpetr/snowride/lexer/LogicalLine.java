@@ -1,7 +1,13 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.Extensions;
-import javafx.beans.property.SimpleIntegerProperty;
+import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,17 +15,15 @@ import java.util.List;
 public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
-    public SimpleIntegerProperty lineNumber = new SimpleIntegerProperty(0);
+    private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
+    public HighElement belongsToScenario;
+    public PositionInListProperty lineNumber;
 
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
         text = Extensions.removeFinalNewlineIfAny(text);
         line.cells.add(new Cell("", text));
         return line;
-    }
-
-    public boolean isStartOfSection() {
-        return cells.get(0).contents.startsWith("*");
     }
 
     public LogicalLine prepend(String cellspace, String cell) {
@@ -35,10 +39,67 @@ public class LogicalLine {
     }
 
     public void serializeInto(StringBuilder sb) {
-        cells.forEach(cell -> {
+        int lastNonVirtualCell = getLastNonVirtualCell();
+
+        for (int i = 0; i < lastNonVirtualCell + 1; i++) {
+            Cell cell = cells.get(i);
             sb.append(cell.contents);
-            sb.append(cell.postTrivia);
-        });
+            if (i != lastNonVirtualCell || !StringUtils.isBlank(cell.postTrivia)) {
+                sb.append(cell.postTrivia);
+            }
+        }
         sb.append("\n");
+    }
+
+    private int getLastNonVirtualCell() {
+        int lastNonVirtualCell = -1;
+        for (int i = cells.size() - 1; i >= 0; i--) {
+            if (!cells.get(i).virtual && (!StringUtils.isBlank(cells.get(i).postTrivia) || !StringUtils.isBlank(cells.get(i).contents))) {
+                lastNonVirtualCell = i;
+                break;
+            }
+        }
+        return lastNonVirtualCell;
+    }
+
+
+    public ObservableValue<Cell> getCellAsStringProperty(int cellIndex, MainForm mainForm) {
+        while (cells.size() <= cellIndex) {
+            if (cells.size() > 0) {
+                cells.get(cells.size() - 1).postTrivia = "    ";
+            }
+            Cell cell = new Cell("", "    ");
+            cell.virtual = true;
+            cells.add(cell);
+        }
+        while (cells.size() > wrappers.size()) {
+            int index = wrappers.size();
+            SimpleObjectProperty<Cell> wrapper = new SimpleObjectProperty<>();
+            wrapper.addListener(new ChangeListener<Cell>() {
+                @Override
+                public void changed(ObservableValue<? extends Cell> observable, Cell oldValue, Cell newValue) {
+                    String previousValue = cells.get(index).contents;
+                    cells.set(index, newValue);
+                    if (belongsToScenario != null && !previousValue.equals(newValue.contents)) {
+                        belongsToScenario.markAsStructurallyChanged(mainForm);
+                    }
+                }
+            });
+            wrappers.add(wrapper);
+        }
+        wrappers.get(cellIndex).set(cells.get(cellIndex));
+        return wrappers.get(cellIndex);
+    }
+
+    public boolean isFullyVirtual() {
+
+        int lastNonVirtualCell = getLastNonVirtualCell();
+        if (lastNonVirtualCell == -1) {
+            // It's a virtual row.
+            return true;
+        } else {
+            return false;
+        }
+
     }
 }

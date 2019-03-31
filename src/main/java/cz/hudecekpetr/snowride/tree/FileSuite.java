@@ -4,9 +4,11 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.ui.Images;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import sun.applet.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,11 +37,16 @@ public class FileSuite extends HighElement implements ISuite {
             System.out.println("SaveAll: " + this.shortName);
         } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
             this.contents = serialize();
+            this.optimizeStructure();
             System.out.println("SaveAll structurally: " + this.shortName);
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             FileUtils.write(file, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
+            for (HighElement child : children) {
+                child.unsavedChanges = LastChangeKind.PRISTINE;
+                child.refreshToString();
+            }
             refreshToString();
         }
     }
@@ -83,6 +90,19 @@ public class FileSuite extends HighElement implements ISuite {
         // Validate
         if (fileParsed != null && fileParsed.errors.size() > 0) {
             throw new RuntimeException("There are parse errors.");
+        }
+    }
+
+    @Override
+    public void markAsStructurallyChanged(MainForm mainForm) {
+        mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
+    }
+
+    @Override
+    protected void optimizeStructure() {
+        // not yet
+        for (HighElement child : children) {
+            child.optimizeStructure();
         }
     }
 

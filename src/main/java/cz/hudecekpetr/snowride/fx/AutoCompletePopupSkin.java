@@ -6,7 +6,10 @@ package cz.hudecekpetr.snowride.fx;
 //
 
 
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
@@ -32,6 +35,16 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
         this.suggestionList.prefWidthProperty().bind(control.prefWidthProperty());
         this.suggestionList.maxWidthProperty().bind(control.maxWidthProperty());
         this.suggestionList.minWidthProperty().bind(control.minWidthProperty());
+        this.suggestionList.getFocusModel().focusedItemProperty().addListener(new ChangeListener<T>() {
+            @Override
+            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue) {
+                if (newValue == null) {
+               //     MainForm.popOver.hide();
+                } else {
+               //     MainForm.popOver.show(suggestionList);
+                }
+            }
+        });
         this.registerEventListener();
     }
 

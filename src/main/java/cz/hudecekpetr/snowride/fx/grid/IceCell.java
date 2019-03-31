@@ -7,6 +7,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
@@ -16,6 +17,11 @@ import javafx.scene.text.TextAlignment;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
     private TableColumn<LogicalLine, Cell> column;
+
+    public int getCellIndex() {
+        return cellIndex;
+    }
+
     private int cellIndex;
     private TextField textField;
 
@@ -34,38 +40,59 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     public void startEdit() {
         super.startEdit();
         if (this.isEditing()) {
-            this.setGraphic(ensureTextField());
-            textField.setText(this.getText());
+            // Order matters:
+            String text = this.getText();
+            TextField textField = ensureTextField();
+            textField.setText(text);
             this.setText(null);
-            textField.selectAll();
-            textField.requestFocus();
+            this.setGraphic(textField);
+            this.textField.selectAll();
+            this.textField.requestFocus();
         }
+    }
+
+    @Override
+    public void commitEdit(Cell newValue) {
+        super.commitEdit(newValue);
+        if (getScene().getFocusOwner() == textField) {
+             column.getTableView().requestFocus();
+        }
+    }
+
+    public void commit() {
+        String oldTrivia = this.getItem().postTrivia;
+        if (!oldTrivia.contains("\t") && !oldTrivia.contains("  ")) {
+            oldTrivia = "    ";
+        }
+        // non-virtual:
+        commitEdit(new Cell(textField.getText(), oldTrivia));
     }
 
     private TextField ensureTextField() {
         if (textField == null) {
             textField = new TextField();
+            textField.parentProperty().addListener(new ChangeListener<Parent>() {
+                @Override
+                public void changed(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newValue) {
+                    System.out.println("Parent now: " + newValue);
+                }
+            });
             textField.setStyle("-fx-text-box-border: transparent; -fx-background-insets: 0; -fx-focus-color: transparent; -fx-border-width: 0;");
             textField.setPadding(new Insets(0));
             textField.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
-                    commitEdit(new Cell(textField.getText(), "    "));
+                    commit();
+                    event.consume();
                 }
             });
+            CodeCompletionBinding codeCompletionBinding = new CodeCompletionBinding(textField, this);
             textField.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
                     if (event.getCode() == KeyCode.ESCAPE) {
                         cancelEdit();
-                    }
-                }
-            });
-            textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    if (!newValue) {
-                        commitEdit(new Cell(textField.getText(), "    "));
+                        event.consume();
                     }
                 }
             });
@@ -74,28 +101,38 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     }
 
     @Override
+    public void cancelEdit() {
+        super.cancelEdit();
+        setGraphic(null);
+        updateStyle();
+        setText(this.getItem().contents);
+    }
+
+    @Override
     protected void updateItem(Cell item, boolean empty) {
         super.updateItem(item, empty);
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
+            setStyle(null);
         } else {
-            String style = "";
-            TextAlignment alignment = TextAlignment.LEFT;
-            if (cellIndex == 0) {
-                style += "-fx-text-fill: lavender;  ";
-                alignment = TextAlignment.CENTER;
-            }
-            if (cellIndex == 1) {
-                if (item.contents.startsWith("[") && item.contents.endsWith("]")) {
-                    style += "-fx-text-fill: darkmagenta; ";
-                }
-                style += "-fx-font-weight: bold; ";
-            }
-            setStyle(style);
-            setTextAlignment(alignment);
-            setGraphic(null);
+            updateStyle();
             setText(item.contents);
+            setGraphic(null);
         }
+    }
+
+    private void updateStyle() {
+        String style = "";
+        if (cellIndex <= 0) {
+            style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
+        }
+        if (cellIndex == 1) {
+            if (getItem().contents.startsWith("[") && getItem().contents.endsWith("]")) {
+                style += "-fx-text-fill: darkmagenta; ";
+            }
+            style += "-fx-font-weight: bold; ";
+        }
+        setStyle(style);
     }
 }

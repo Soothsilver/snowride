@@ -75,7 +75,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     @Override
     public void exitTestCaseName(RobotParser.TestCaseNameContext ctx) {
-        ctx.Cell = new Cell(ctx.ANY_CELL().getText(), ctx.restOfRow().getText());
+        ctx.Cell = new Cell(ctx.ANY_CELL().getText(), ""); // TODO template and stuff
     }
 
     @Override

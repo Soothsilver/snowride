@@ -46,14 +46,11 @@ import javafx.beans.property.IntegerProperty;
 /**
  * The AutoCompletionBinding is the abstract base class of all auto-completion bindings.
  * This class is the core logic for the auto-completion feature but highly customizable.
- *
- * <p>To use the autocompletion functionality, refer to the {@link TextFields} class.
- *
+ **
  * The popup size can be modified through its {@link #setVisibleRowCount(int) }
  * for the height and all the usual methods for the width.
  *
  * @param <T> Model-Type of the suggestions
- * @see TextFields
  */
 public abstract class AutoCompletionBinding<T extends IAutocompleteOption> implements EventTarget {
 
@@ -68,7 +65,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     private final Object suggestionsTaskLock = new Object();
 
     private AutoCompletionBinding.FetchSuggestionsTask suggestionsTask = null;
-    private Callback<AutoCompletionBinding.ISuggestionRequest, Collection<T>> suggestionProvider = null;
+    private Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> suggestionProvider = null;
     private boolean ignoreInputChanges = false;
     private long delay = 250;
 
@@ -87,7 +84,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * @param converter The converter to be used to convert suggestions to strings 
      */
     protected AutoCompletionBinding(Node completionTarget,
-                                    Callback<AutoCompletionBinding.ISuggestionRequest, Collection<T>> suggestionProvider,
+                                    Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> suggestionProvider,
                                     StringConverter<T> converter){
 
         this.completionTarget = completionTarget;
@@ -401,7 +398,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
         @Override
         protected Void call() throws Exception {
-            Callback<AutoCompletionBinding.ISuggestionRequest, Collection<T>> provider = suggestionProvider;
+            Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> provider = suggestionProvider;
             if(provider != null){
                 long startTime = System.currentTimeMillis();
                 long sleepTime = startTime + delay - System.currentTimeMillis();
@@ -409,7 +406,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
                     Thread.sleep(sleepTime);
                 }
                 if(!isCancelled()){
-                    final Collection<T> fetchedSuggestions = provider.call(this);
+                    final Collection<? extends T> fetchedSuggestions = provider.call(this);
                     Platform.runLater(() -> {
                         if(fetchedSuggestions != null && !fetchedSuggestions.isEmpty()){
                             autoCompletionPopup.getSuggestions().setAll(fetchedSuggestions);

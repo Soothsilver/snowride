@@ -1,8 +1,11 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
@@ -30,7 +33,8 @@ public class Scenario extends HighElement {
         this.setTestCase(isTestCase);
         this.lines = FXCollections.observableList(lines);
         for (int i = 0; i < lines.size(); i++) {
-            this.lines.get(i).lineNumber.set(i+1);
+            this.lines.get(i).lineNumber = new PositionInListProperty<>(this.lines.get(i), this.lines);
+            this.lines.get(i).belongsToScenario = this;
         }
     }
 
@@ -56,9 +60,36 @@ public class Scenario extends HighElement {
         this.parent.applyAndValidateText();
     }
 
+    @Override
+    public void markAsStructurallyChanged(MainForm mainForm) {
+        mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
+        this.parent.markAsStructurallyChanged(mainForm);
+    }
+
+    @Override
+    protected void optimizeStructure() {
+        int lineIndex = lines.size() - 1;
+        boolean permitOne = true;
+        while (lineIndex >= 0) {
+            LogicalLine line = lines.get(lineIndex);
+            if (line.isFullyVirtual()) {
+                if (!permitOne) {
+                    lines.remove(lineIndex);
+                } else {
+                    lineIndex--;
+                }
+                permitOne = false;
+            } else {
+                permitOne = false;
+                lineIndex--;
+            }
+        }
+    }
+
     public void serializeInto(StringBuilder sb) {
         sb.append(nameCell.contents);
         sb.append(nameCell.postTrivia);
+        sb.append("\n");
         lines.forEach(ll -> {
             ll.serializeInto(sb);
         });
@@ -81,7 +112,7 @@ public class Scenario extends HighElement {
 
     @Override
     public String toString() {
-        return (isTestCase ? "[test]" : "[keyword]") + " " + shortName;
+        return (isTestCase ? "[test]" : "[keyword]") + " " + (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED ? "[changed] ": "") + shortName;
     }
 
     @Override

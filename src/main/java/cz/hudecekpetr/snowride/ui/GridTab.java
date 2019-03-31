@@ -32,7 +32,7 @@ public class GridTab {
     public GridTab(MainForm mainForm) {
         this.mainForm = mainForm;
         lblParseError = new Label("No file loaded yet.");
-        spreadsheetView = new SnowTableView();
+        spreadsheetView = new SnowTableView(mainForm);
     }
 
     public Tab createTab() {
@@ -55,6 +55,7 @@ public class GridTab {
             setParseErrors(((FileSuite)value).getFileParsed().errors);
         } else if (value instanceof Scenario) {
             tabGrid.setContent(spreadsheetView);
+            spreadsheetView.setScenario(value);
             spreadsheetView.loadLines(((Scenario)value).getLines());
         } else {
             lblParseError.setText("Unknown high element.");

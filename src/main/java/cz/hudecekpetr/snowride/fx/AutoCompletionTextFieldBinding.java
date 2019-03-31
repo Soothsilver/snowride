@@ -85,7 +85,7 @@ public class AutoCompletionTextFieldBinding<T extends IAutocompleteOption>  exte
      * @param suggestionProvider
      */
     public AutoCompletionTextFieldBinding(final TextField textField,
-                                          Callback<ISuggestionRequest, Collection<T>> suggestionProvider) {
+                                          Callback<ISuggestionRequest, Collection<? extends T>> suggestionProvider) {
 
         this(textField, suggestionProvider, AutoCompletionTextFieldBinding.<T>defaultStringConverter());
     }
@@ -98,7 +98,7 @@ public class AutoCompletionTextFieldBinding<T extends IAutocompleteOption>  exte
      * @param suggestionProvider
      */
     public AutoCompletionTextFieldBinding(final TextField textField,
-                                          Callback<ISuggestionRequest, Collection<T>> suggestionProvider,
+                                          Callback<ISuggestionRequest, Collection<? extends T>> suggestionProvider,
                                           final StringConverter<T> converter) {
 
         super(textField, suggestionProvider, converter);

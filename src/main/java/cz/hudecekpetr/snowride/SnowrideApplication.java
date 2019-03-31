@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride;
 
+import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Application;
@@ -23,6 +24,7 @@ public class SnowrideApplication extends Application {
             }
         });
         Settings.load();
+        String a = ExternalLibrary.builtIn.toString();
         launch(args);
     }
 

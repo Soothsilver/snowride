@@ -32,6 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.stage.Window;
+import org.controlsfx.control.PopOver;
 
 import java.awt.*;
 import java.io.File;
@@ -43,6 +44,8 @@ import java.util.concurrent.Executors;
 
 
 public class MainForm {
+    public static MainForm INSTANCE = null;
+    public static DocumentationPopOver popOver;
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
     private final SerializingTab serializingTab;
@@ -87,6 +90,8 @@ public class MainForm {
     private GridTab gridTab;
 
     public MainForm(Stage stage) {
+        MainForm.INSTANCE = this;
+        popOver = new DocumentationPopOver();
         this.stage = stage;
         filesystem = new Filesystem(this);
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
