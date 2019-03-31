@@ -1,12 +1,9 @@
 *** Test Cases ***
-
-Horror Case
-    : FOR    ${i}     IN RANGE       1        10000
-    \       Log     ahoj
-    Kill This     5
-    Kill This    really kill it
-	Log Many	I	really		mean     	  	 it
+Summation Test
+    ${result}=    Return sum of numbers    2    4
+    Should Be Equal As Integers    6    ${result}
 *** Keywords ***
-Kill This
-	[Arguments]		${five}
-	Log	${five}
+Return sum of numbers
+	[Arguments]	${a}	${b}
+    ${result}    Evaluate    ${a}+${b}
+    [Return]    ${result}

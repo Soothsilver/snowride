@@ -1,8 +1,9 @@
-package cz.hudecekpetr.snowride.fx.grid;
+package cz.hudecekpetr.snowride.semantics.codecompletion;
 
 import cz.hudecekpetr.snowride.fx.AutoCompletionBinding;
 import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.grid.IceCell;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.tree.FileSuite;
@@ -38,7 +39,7 @@ public class CodeCompletionBinding {
         String text = request.getUserText().toLowerCase();
         Stream<IAutocompleteOption> allOptions = Stream.concat(TestCaseSettingOption.allOptions.stream(),
                 ((FileSuite)iceCell.getItem().partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite()).filter(option -> {
-            return option.toString().toLowerCase().contains(text);
+            return option.getAutocompleteText().toLowerCase().contains(text);
         });
         return allOptions.collect(Collectors.toList());
     }

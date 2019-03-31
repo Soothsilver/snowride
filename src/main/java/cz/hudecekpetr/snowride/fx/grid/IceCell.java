@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.fx.grid;
 
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -13,7 +14,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.text.TextAlignment;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
     private TableColumn<LogicalLine, Cell> column;

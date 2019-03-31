@@ -128,7 +128,7 @@ public class AutoCompletionTextFieldBinding<T extends IAutocompleteOption>  exte
 
     /** {@inheritDoc} */
     @Override protected void completeUserInput(T completion){
-        String newText = converter.toString(completion);
+        String newText = completion.getAutocompleteText();
         getCompletionTarget().setText(newText);
         getCompletionTarget().positionCaret(newText.length());
     }

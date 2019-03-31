@@ -21,7 +21,7 @@ public class SearchSuites {
         HighElement root = mainForm.getProjectTree().getRoot().getValue();
         List<HighElement> validElements = new ArrayList<>();
         root.selfAndDescendantHighElements().forEachOrdered((highElement -> {
-            if (highElement.toString().toLowerCase().contains(requestText)) {
+            if (highElement.getAutocompleteText().toLowerCase().contains(requestText)) {
                 validElements.add(highElement);
             }
         }));
