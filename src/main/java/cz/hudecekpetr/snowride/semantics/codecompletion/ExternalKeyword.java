@@ -21,7 +21,7 @@ public class ExternalKeyword implements IKnownKeyword {
     }
 
     @Override
-    public String toString() {
+    public String getAutocompleteText() {
         return this.canonicalName;
     }
 }

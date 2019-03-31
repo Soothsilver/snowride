@@ -29,11 +29,6 @@ public class FileSuite extends HighElement implements ISuite {
     }
 
     @Override
-    public String toString() {
-        return "[file] " + super.toString();
-    }
-
-    @Override
     public void saveAll() throws IOException {
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED) {
             this.applyAndValidateText();
@@ -139,6 +134,11 @@ public class FileSuite extends HighElement implements ISuite {
     @Override
     public Image getAutocompleteIcon() {
         return Images.fileIcon;
+    }
+
+    @Override
+    public String getAutocompleteText() {
+        return "[file] " + toString();
     }
 
     @Override

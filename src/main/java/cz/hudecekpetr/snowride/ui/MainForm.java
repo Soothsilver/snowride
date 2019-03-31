@@ -82,7 +82,7 @@ public class MainForm {
     }
 
     boolean humanInControl = true;
-    BooleanProperty canSave = new SimpleBooleanProperty(false);
+    public BooleanProperty canSave = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     private ContextMenu treeContextMenu;
@@ -364,11 +364,13 @@ public class MainForm {
     }
 
     private ToolBar buildToolBar() {
-        Button bNavigateBack = new Button("Navigate back", loadIcon("GoLeft.png"));
-        Button bNavigateForwards = new Button("Navigate forwards", loadIcon("GoRight.png"));
-        Button bSaveAll = new Button("Save all");
-        Button bRun = new Button("Run");
-        Button bStop = new Button("Stop");
+        Button bNavigateBack = new Button(null,loadIcon(Images.goLeft));
+        bNavigateBack.setTooltip(new Tooltip("Navigate back"));
+        Button bNavigateForwards = new Button(null, loadIcon(Images.goRight));
+        bNavigateForwards.setTooltip(new Tooltip("Navigate forwards"));
+        Button bSaveAll = new Button("Save all", loadIcon(Images.save));
+        Button bRun = new Button("Run", loadIcon(Images.play));
+        Button bStop = new Button("Stop", loadIcon(Images.stop));
         bNavigateBack.disableProperty().bind(canNavigateBack.not());
         bNavigateBack.setOnAction(this::goBack);
         bNavigateForwards.disableProperty().bind(canNavigateForwards.not());
@@ -379,15 +381,12 @@ public class MainForm {
         bRun.setOnAction(runTab::clickRun);
         bStop.disableProperty().bind(runTab.canStop.not());
         bStop.setOnAction(runTab::clickStop);
-        ToolBar toolBar = new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
-        return toolBar;
+        return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
     }
 
     // Hello
-    private ImageView loadIcon(String path) {
-        Image image = new Image(getClass().getResourceAsStream("/icons/" + path), 16, 16, false, false);
-        ImageView imageView = new ImageView(image);
-        return imageView;
+    private ImageView loadIcon(Image image) {
+        return new ImageView(image);
     }
 
     private void focusTreeNode(TreeItem<HighElement> focusedNode) {
@@ -407,7 +406,7 @@ public class MainForm {
         }
     }
 
-    private void saveAll(ActionEvent event) {
+    public void saveAll(ActionEvent event) {
         try {
             projectTree.getRoot().getValue().saveAll();
         } catch (IOException e) {
@@ -418,35 +417,48 @@ public class MainForm {
 
     private MenuBar buildMainMenu() {
         MenuBar mainMenu = new MenuBar();
+        // --------- Project
         projectMenu = new Menu("Project");
 
-        MenuItem bLoadArbitrary = new MenuItem("Load directory...");
+        MenuItem bLoadArbitrary = new MenuItem("Load directory...", loadIcon(Images.open));
         bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
         bLoadArbitrary.setOnAction(this::openDirectory);
         openFolderDialog = new DirectoryChooser();
 
-        MenuItem bSaveAll = new MenuItem("Save all");
+        MenuItem bSaveAll = new MenuItem("Save all", loadIcon(Images.save));
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         bSaveAll.setOnAction(this::saveAll);
         bSaveAll.disableProperty().bind(canSave.not());
 
-        MenuItem bExit = new MenuItem("Exit Snowride");
+        MenuItem bExit = new MenuItem("Exit Snowride", loadIcon(Images.exit));
         bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
         projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
         refreshRecentlyOpenMenu();
 
-        MenuItem back = new MenuItem("Navigate back", loadIcon("GoLeft.png"));
+        MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
         back.disableProperty().bind(canNavigateBack.not());
         back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
         back.setOnAction(this::goBack);
-        MenuItem forwards = new MenuItem("Navigate forwards", loadIcon("GoRight.png"));
+
+        MenuItem forwards = new MenuItem("Navigate forwards", loadIcon(Images.goRight));
         forwards.setOnAction(this::goForwards);
         forwards.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.CONTROL_DOWN));
         forwards.disableProperty().bind(canNavigateForwards.not());
+
         Menu navigateMenu = new Menu("Navigate", null, back, forwards);
-        mainMenu.getMenus().addAll(projectMenu, navigateMenu);
+
+        MenuItem run = new MenuItem("Run", loadIcon(Images.play));
+        run.setAccelerator(new KeyCodeCombination(KeyCode.F5));
+        run.disableProperty().bind(runTab.canRun.not());
+        run.setOnAction(runTab::clickRun);
+        MenuItem stop = new MenuItem("Stop", loadIcon(Images.stop));
+        stop.disableProperty().bind(runTab.canStop.not());
+        stop.setOnAction(runTab::clickStop);
+        Menu runMenu = new Menu("Run", null, run, stop);
+
+        mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu);
         return mainMenu;
     }
 

@@ -29,11 +29,6 @@ public class FolderSuite extends HighElement implements ISuite {
     }
 
     @Override
-    public String toString() {
-        return "[folder] " + super.toString();
-    }
-
-    @Override
     public void saveAll() throws IOException {
         if (initFile != null && unsavedChanges == LastChangeKind.TEXT_CHANGED) {
             unsavedChanges = LastChangeKind.PRISTINE;
@@ -112,6 +107,11 @@ public class FolderSuite extends HighElement implements ISuite {
     @Override
     public Image getAutocompleteIcon() {
         return Images.folderIcon;
+    }
+
+    @Override
+    public String getAutocompleteText() {
+        return "[folder] " + toString();
     }
 
     @Override

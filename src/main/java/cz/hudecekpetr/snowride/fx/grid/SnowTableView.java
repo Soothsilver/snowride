@@ -67,7 +67,8 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.getSelectionModel().selectNext();
             keyEvent.consume();
         }
-        else if ((keyEvent.getCode().isLetterKey() || keyEvent.getCode().isDigitKey()) && !keyEvent.isControlDown()) {
+        else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
+                && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()) {
             TablePosition<LogicalLine, ?> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             keyEvent.consume();
@@ -90,7 +91,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             @Override
             public ObservableValue<Cell> call(TableColumn.CellDataFeatures<LogicalLine, Cell> param) {
                 if (cellIndex == -1) {
-                    return new IntToCellBinding(param.getValue().lineNumber);
+                    return new IntToCellBinding(param.getValue().lineNumber.add(1));
                 }
                 if (param.getValue() != null) {
                     return param.getValue().getCellAsStringProperty(cellIndex, mainForm);

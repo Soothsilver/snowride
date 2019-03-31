@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.runner.RunTab;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -12,6 +11,7 @@ public class DeferredActions {
     public static void runLater(Runnable what) {
         actions.add(what);
     }
+
     public static void logLater(String what) {
         toLog.add(what);
     }
@@ -29,7 +29,7 @@ public class DeferredActions {
             sb.append(what);
             what = toLog.poll();
         }
-        // TODO this is slow:
+
         if (sb.length() > 0) {
             runTab.tbLog.appendText(sb.toString());
         }

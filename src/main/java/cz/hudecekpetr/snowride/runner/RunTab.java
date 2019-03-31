@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextFlow;
@@ -57,7 +58,7 @@ public class RunTab {
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
     private StyledTextArea<String, String> tbOutput;
-    public TextArea tbLog;
+    public StyledTextArea<String, String> tbLog;
     private Tab tabRun;
     public Label lblKeyword;
     private Label lblPassed;
@@ -90,8 +91,7 @@ public class RunTab {
 
     private Path createTemporaryDirectory() {
         try {
-            Path tempDirectory = Files.createTempDirectory("Snowride");
-            return tempDirectory;
+            return Files.createTempDirectory("Snowride");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,14 +108,15 @@ public class RunTab {
                 new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
                 true);
         tbOutput.setUseInitialStyleForInsertion(true);
-      //  tbOutput.setFont(MainForm.TEXT_EDIT_FONT);
         tbOutput.setEditable(false);
         tbOutput.setPadding(new Insets(4));
-        tbLog = new TextArea("Log goes here.");
+        tbLog = new StyledTextArea<String, String>( "", TextFlow::setStyle,
+                INITIAL_STYLE, TextExt::setStyle,
+                new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
+                true);
         tbLog.setEditable(false);
-        tbLog.setFont(MainForm.TEXT_EDIT_FONT);
         VirtualizedScrollPane<StyledTextArea<String, String>> scrollPane = new VirtualizedScrollPane<>(tbOutput);
-        SplitPane splitterOutput = new SplitPane(scrollPane, tbLog);
+        SplitPane splitterOutput = new SplitPane(scrollPane, new VirtualizedScrollPane<>(tbLog));
         splitterOutput.setOrientation(Orientation.VERTICAL);
         Label lblScript = new Label("Script:");
         tbScript = new TextField(Settings.getInstance().runScript);
@@ -125,13 +126,13 @@ public class RunTab {
         hboxScript.setPadding(new Insets(2));
         hboxScript.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tbScript, Priority.ALWAYS);
-        Button bRun = new Button("Run");
+        Button bRun = new Button("Run", new ImageView(Images.play));
         bRun.setOnAction(this::clickRun);
         bRun.disableProperty().bind(canRun.not());
-        Button bStop = new Button("Stop");
+        Button bStop = new Button("Stop", new ImageView(Images.stop));
         bStop.setOnAction(this::clickStop);
         bStop.disableProperty().bind(canStop.not());
-        Button bLog = new Button("Log");
+        Button bLog = new Button("Log", new ImageView(Images.log));
         bLog.disableProperty().bind(Bindings.isNull(run.logFile));
         bLog.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -139,7 +140,7 @@ public class RunTab {
                 openFile(RunTab.this.run.logFile.getValue());
             }
         });
-        Button bReport = new Button("Report");
+        Button bReport = new Button("Report", new ImageView(Images.report));
         bReport.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -222,6 +223,24 @@ public class RunTab {
             if (testCases.size() == 0) {
                 Optional<ButtonType> buttonType = new Alert(Alert.AlertType.CONFIRMATION, "You didn't choose any test case. Do you want to run the entire suite?", ButtonType.YES, ButtonType.NO).showAndWait();
                 if (buttonType.orElse(ButtonType.NO) == ButtonType.NO) {
+                    // cancel
+                    return;
+                }
+            }
+            if (mainForm.canSave.get()) {
+                ButtonType save_all = new ButtonType("Save all");
+                ButtonType run_without_saving = new ButtonType("Run without saving");
+                ButtonType cancel = new ButtonType("Cancel");
+                ButtonType decision = new Alert(Alert.AlertType.CONFIRMATION,
+                        "There are unsaved changes. Save all before running?",
+                        save_all,
+                        run_without_saving,
+                        cancel).showAndWait().orElse(cancel);
+                if (decision == save_all) {
+                    mainForm.saveAll(null);
+                } else if (decision == run_without_saving) {
+                    // Proceed as normal.
+                } else {
                     // cancel
                     return;
                 }

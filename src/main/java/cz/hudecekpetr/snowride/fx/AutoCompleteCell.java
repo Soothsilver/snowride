@@ -17,7 +17,7 @@ public class AutoCompleteCell<T extends IAutocompleteOption> extends ListCell<T>
                 setGraphic(null);
             } else {
                 setGraphic(new ImageView(item.getAutocompleteIcon()));
-                setText(item.toString());
+                setText(item.getAutocompleteText());
             }
     }
 }

@@ -32,6 +32,11 @@ public class TestCaseSettingOption implements IAutocompleteOption {
     }
 
     @Override
+    public String getAutocompleteText() {
+        return toString();
+    }
+
+    @Override
     public String toString() {
         return "[" + setting + "]";
     }

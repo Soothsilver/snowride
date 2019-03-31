@@ -14,6 +14,15 @@ public class Images {
     public static Image brackets = staticImage("brackets16.png");
     public static Image python = staticImage("python16.png");
     public static Image java = staticImage("java16.png");
+    public static Image exit = staticImage("exit16.png");
+    public static Image log = staticImage("log16.png");
+    public static Image report = staticImage("report16.png");
+    public static Image open = staticImage("open16.png");
+    public static Image stop = staticImage("stop16.png");
+    public static Image play = staticImage("play16.png");
+    public static Image save = staticImage("save16.png");
+    public static Image goLeft = staticImage("GoLeft.png");
+    public static Image goRight = staticImage("GoRight.png");
 
     private static Image staticImage(final String filename) {
         return new Image(Images.class.getResourceAsStream("/icons/" + filename), 16, 16, false, false);

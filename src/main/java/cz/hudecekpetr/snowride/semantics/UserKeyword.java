@@ -22,7 +22,7 @@ public class UserKeyword implements IKnownKeyword {
     }
 
     @Override
-    public String toString() {
+    public String getAutocompleteText() {
         return name;
     }
 }

@@ -109,12 +109,12 @@ public class Scenario extends HighElement {
     }
 
     @Override
-    public String toString() {
-        return (isTestCase ? "[test]" : "[keyword]") + " " + (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED ? "[changed] ": "") + shortName;
+    public Image getAutocompleteIcon() {
+        return this.isTestCase ? Images.testIcon : Images.keywordIcon;
     }
 
     @Override
-    public Image getAutocompleteIcon() {
-        return this.isTestCase ? Images.testIcon : Images.keywordIcon;
+    public String getAutocompleteText() {
+        return (this.isTestCase ? "[test] " : "[keyword] ") + toString();
     }
 }
