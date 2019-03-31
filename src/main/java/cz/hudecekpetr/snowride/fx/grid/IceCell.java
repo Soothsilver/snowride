@@ -65,7 +65,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             oldTrivia = "    ";
         }
         // non-virtual:
-        commitEdit(new Cell(textField.getText(), oldTrivia));
+        commitEdit(new Cell(textField.getText(), oldTrivia, getItem().partOfLine));
     }
 
     private TextField ensureTextField() {
@@ -94,6 +94,15 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                         cancelEdit();
                         event.consume();
                     }
+                }
+            });
+            textField.widthProperty().addListener(new ChangeListener<Number>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    int oldCaret = textField.getCaretPosition();
+                    int oldAnchor = textField.getAnchor();
+                    textField.selectRange(0,0);
+                    textField.selectRange(oldAnchor, oldCaret);
                 }
             });
         }

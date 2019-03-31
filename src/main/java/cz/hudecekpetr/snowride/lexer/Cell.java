@@ -9,12 +9,13 @@ public class Cell {
 
     public final String contents;
     public String postTrivia;
+    public LogicalLine partOfLine;
     public boolean virtual;
 
-    public Cell(String contents, String postTrivia) {
-
+    public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
         this.contents = contents;
         this.postTrivia = postTrivia;
+        this.partOfLine = partOfLine;
     }
 
     @Override

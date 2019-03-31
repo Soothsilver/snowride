@@ -22,18 +22,18 @@ public class LogicalLine {
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
         text = Extensions.removeFinalNewlineIfAny(text);
-        line.cells.add(new Cell("", text));
+        line.cells.add(new Cell("", text, line));
         return line;
     }
 
     public LogicalLine prepend(String cellspace, String cell) {
-        cells.add(0, new Cell("", cellspace));
-        cells.add(1, new Cell(cell, this.preTrivia));
+        cells.add(0, new Cell("", cellspace, this));
+        cells.add(1, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
         return this;
     }
     public LogicalLine prepend(String cell) {
-        cells.add(0, new Cell(cell, this.preTrivia));
+        cells.add(0, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
         return this;
     }
@@ -68,7 +68,7 @@ public class LogicalLine {
             if (cells.size() > 0) {
                 cells.get(cells.size() - 1).postTrivia = "    ";
             }
-            Cell cell = new Cell("", "    ");
+            Cell cell = new Cell("", "    ", this);
             cell.virtual = true;
             cells.add(cell);
         }

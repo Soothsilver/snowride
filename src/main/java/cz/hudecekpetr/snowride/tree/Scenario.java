@@ -75,14 +75,12 @@ public class Scenario extends HighElement {
             if (line.isFullyVirtual()) {
                 if (!permitOne) {
                     lines.remove(lineIndex);
-                } else {
-                    lineIndex--;
                 }
                 permitOne = false;
             } else {
                 permitOne = false;
-                lineIndex--;
             }
+            lineIndex--;
         }
     }
 

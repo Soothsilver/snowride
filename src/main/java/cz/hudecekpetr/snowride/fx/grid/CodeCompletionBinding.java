@@ -5,6 +5,8 @@ import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
+import cz.hudecekpetr.snowride.tree.FileSuite;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.scene.control.TextField;
 import javafx.util.Callback;
 import org.controlsfx.control.PopOver;
@@ -35,7 +37,7 @@ public class CodeCompletionBinding {
     private Collection<? extends IAutocompleteOption> getSuggestions(AutoCompletionBinding.ISuggestionRequest request) {
         String text = request.getUserText().toLowerCase();
         Stream<IAutocompleteOption> allOptions = Stream.concat(TestCaseSettingOption.allOptions.stream(),
-                ExternalLibrary.builtIn.keywords.stream()).filter(option -> {
+                ((FileSuite)iceCell.getItem().partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite()).filter(option -> {
             return option.toString().toLowerCase().contains(text);
         });
         return allOptions.collect(Collectors.toList());

@@ -123,7 +123,7 @@ public class FolderSuite extends HighElement implements ISuite {
         if (this.initFile == null) {
             throw new NotImplementedException("This folder doesn't have an initfile yet and creating one isn't implemented yet.");
         }
-        Scenario newKeyword = new Scenario(new Cell(name, ""), false, new ArrayList<>());
+        Scenario newKeyword = new Scenario(new Cell(name, "", null), false, new ArrayList<>());
         this.initFileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);
         this.children.add(newKeyword);
         this.treeNode.getChildren().add(newKeyword.treeNode);

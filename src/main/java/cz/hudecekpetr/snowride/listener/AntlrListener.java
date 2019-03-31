@@ -49,7 +49,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitUnknownSection(RobotParser.UnknownSectionContext ctx) {
         LogicalLine ll = new LogicalLine();
-        ll.cells.add(new Cell("nondef",""));
+        ll.cells.add(new Cell("nondef","", ll));
         ctx.Section = new TextOnlyRobotSection(new SectionHeader(ll), "");
     }
 
@@ -75,7 +75,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     @Override
     public void exitTestCaseName(RobotParser.TestCaseNameContext ctx) {
-        ctx.Cell = new Cell(ctx.ANY_CELL().getText(), ""); // TODO template and stuff
+        ctx.Cell = new Cell(ctx.ANY_CELL().getText(), "", null); // TODO template and stuff
     }
 
     @Override
@@ -85,9 +85,9 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         LogicalLine line = new LogicalLine();
         for (int i =0; i < cells.size(); i++) {
             if (spaces.size() > i+1) {
-                line.cells.add(new Cell(cells.get(i).getText(), spaces.get(i+1).getText()));
+                line.cells.add(new Cell(cells.get(i).getText(), spaces.get(i+1).getText(), line));
             } else {
-                line.cells.add(new Cell(cells.get(i).getText(), ""));
+                line.cells.add(new Cell(cells.get(i).getText(), "", line));
             }
         }
         if (spaces.size() >= 1) {

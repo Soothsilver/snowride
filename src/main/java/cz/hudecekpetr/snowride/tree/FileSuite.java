@@ -3,16 +3,19 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.parser.GateParser;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.UserKeyword;
+import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.NotImplementedException;
-import sun.applet.Main;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class FileSuite extends HighElement implements ISuite {
     public File file;
@@ -79,6 +82,17 @@ public class FileSuite extends HighElement implements ISuite {
         refreshToString();
     }
 
+    public Stream<UserKeyword> getSelfKeywords() {
+        return this.children.stream().filter(he -> (he instanceof Scenario) && !((Scenario)he).isTestCase())
+                .map(he -> {
+                   Scenario s = (Scenario)he;
+                   return UserKeyword.fromScenario(s);
+                });
+    }
+    public Stream<IKnownKeyword> getKeywordsPermissibleInSuite() {
+        return Stream.concat(getSelfKeywords(), ExternalLibrary.builtIn.keywords.stream());
+    }
+
     @Override
     public void applyAndValidateText() {
         // Apply
@@ -130,7 +144,7 @@ public class FileSuite extends HighElement implements ISuite {
     @Override
     public void createNewChild(String name, boolean asTestCase) {
         this.applyAndValidateText();
-        Scenario scenario = new Scenario(new Cell(name, ""), asTestCase, new ArrayList<>());
+        Scenario scenario = new Scenario(new Cell(name, "", null), asTestCase, new ArrayList<>());
         scenario.parent = this;
         if (asTestCase) {
             this.fileParsed.findOrCreateTestCasesSection().addScenario(scenario);

@@ -95,7 +95,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 if (param.getValue() != null) {
                     return param.getValue().getCellAsStringProperty(cellIndex, mainForm);
                 } else {
-                    return new ReadOnlyObjectWrapper<>(new Cell("(non-existing line)", ""));
+                    return new ReadOnlyObjectWrapper<>(new Cell("(non-existing line)", "", null));
                 }
             }
         });

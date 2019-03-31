@@ -1,20 +1,13 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
 import cz.hudecekpetr.snowride.XmlFacade;
-import cz.hudecekpetr.snowride.semantics.codecompletion.externallibrary.keywordspec;
-import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
-import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -22,6 +15,7 @@ import java.util.List;
 
 public class ExternalLibrary {
     public static ExternalLibrary builtIn = ExternalLibrary.loadFromBuiltInXmlFile("BuiltIn.xml");
+    public List<ExternalKeyword> keywords = new ArrayList<>();
 
     private static ExternalLibrary loadFromBuiltInXmlFile(String filename) {
         try {
@@ -43,8 +37,6 @@ public class ExternalLibrary {
         }
         return externalLibrary;
     }
-
-    public List<ExternalKeyword> keywords = new ArrayList<>();
 
     public Image getIcon() {
         return Images.b;
