@@ -1,1 +1,10 @@
 language: java
+deploy:
+  provider: bintray
+  file: bintray.json
+  user: Soothsilver
+  key:
+    secure: 
+       "BTgopBGv7+1v0Yx2m2WGY7z0+JCGp3oWeYgbv9RKYk3prbs9Jg+tXmWc8xIYeQdclXr8z4VVl9LWzW7jYYNDgMl8cf8Z8H2uq684RP/jLjpKdJf6ncLj2uQzcLZb2/ppH5XoRrxqP2JjpG1NXcffCen9Db1xlP9BGK+0odA5FkgRnS6fz558m7o4QcIQbE1raKCYzkiFjn4yO8xflZFdlQ/lBteKnj62/UaIiSTjZPI2LUVVW6CfMNd7r1NJfVsBPVJM6SLTvV5QLgBJhQtHaNM3voxi59YEevMwRIneAbMgdusRUBQhJSFxSB9giVMzADP6wzTsUddDccVT06FNqeJaEVurz9NNbRN9+Zf7oUi5kJfRa2GY2tJBjv8VtjRgfF1jscJhEFmjf2ZP5r7260QnWz54pBP/HbtwnCI0YsQmSb45fhEKrPTm8psUCXoDH+G68H3YOZTGN4URWy8R7QKAk/PZ65gkX96vHyfW4mfp322sh+5CDDjNShRhA/NUxoubZfQnbSDV6JpExTFenIjbX6/dzfLcGdE/GO9rhpa/0hUuowEiQV73d0hcrwcJAozDhap/Tk8WcyIU/csaSucv/XJwTgaCbO6m9Vv3evvH7Nq2hDvlP4gdG5aQ8mH49p9IA0EsXyNMZFwNIpUxkcfqCZtDYH4iRVlaJEkNcqE="
+  
+  skip_cleanup: true
