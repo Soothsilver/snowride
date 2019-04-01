@@ -14,7 +14,7 @@ Planned advantages over other IDEs like RIDE or Intellij IDEA or text editors li
 * Search Anything-style autocompletion
 * Inspections
 * Fast test runner
-* Skeuomorphically pretty
+* Skeuomorphically pretty ^^
 * Single file executable
 
 Test runner screenshot:
