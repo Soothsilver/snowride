@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.listener;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.antlr.RobotBaseListener;
 import cz.hudecekpetr.snowride.antlr.RobotParser;
 import cz.hudecekpetr.snowride.lexer.Cell;
@@ -93,6 +94,9 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         if (spaces.size() >= 1) {
             line.preTrivia = spaces.get(0).getText();
         }
+        if (ctx.COMMENT() != null) {
+            line.cells.add(new Cell(Extensions.removeFinalNewlineIfAny(ctx.COMMENT().getText()), "", line));
+        }
         ctx.Line = line;
     }
 
@@ -181,13 +185,11 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitVariablesSection(RobotParser.VariablesSectionContext ctx) {
         SectionHeader header = ctx.variablesHeader().SectionHeader;
-        header.addTrivia(ctx.emptyLines(0));
         List<LogicalLine> pairs = new ArrayList<>();
-        List<RobotParser.KeyValuePairContext> keyValuePairContexts = ctx.keyValuePair();
-        for (RobotParser.KeyValuePairContext context : keyValuePairContexts) {
+        List<RobotParser.OptionalKeyValuePairContext> keyValuePairContexts = ctx.optionalKeyValuePair();
+        for (RobotParser.OptionalKeyValuePairContext context : keyValuePairContexts) {
             pairs.add(context.Line);
         }
-        // TODO the other empty lines
         ctx.Section = new KeyValuePairSection(header, pairs);
     }
 

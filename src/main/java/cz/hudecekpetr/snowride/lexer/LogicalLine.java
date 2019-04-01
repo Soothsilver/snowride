@@ -22,7 +22,16 @@ public class LogicalLine {
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
         text = Extensions.removeFinalNewlineIfAny(text);
-        line.cells.add(new Cell("", text, line));
+        if (text.trim().startsWith("#")) {
+            // TODO not perfect, probably better dealt with at grammar/lexer level:
+            if (text.startsWith("  ") || text.startsWith("\t") || text.startsWith(" \t")) {
+                line.cells.add(new Cell("", text.substring(0, text.indexOf('#')), line));
+            }
+            line.cells.add(new Cell(text.trim(), "", line));
+        }
+        else {
+            line.cells.add(new Cell("", text, line));
+        }
         return line;
     }
 
@@ -63,7 +72,7 @@ public class LogicalLine {
     }
 
 
-    public ObservableValue<Cell> getCellAsStringProperty(int cellIndex, MainForm mainForm) {
+    public SimpleObjectProperty<Cell> getCellAsStringProperty(int cellIndex, MainForm mainForm) {
         while (cells.size() <= cellIndex) {
             if (cells.size() > 0) {
                 cells.get(cells.size() - 1).postTrivia = "    ";

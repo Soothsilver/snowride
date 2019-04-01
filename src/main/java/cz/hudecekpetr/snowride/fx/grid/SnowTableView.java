@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.fx.grid;
 
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.TableClipboard;
 import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.Cell;
@@ -9,10 +10,12 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
@@ -48,20 +51,39 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
             // Insert
             int whatFocused = this.getFocusModel().getFocusedIndex();
-            LogicalLine newLine = new LogicalLine();
-            newLine.belongsToScenario = scenario;
-            newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
-            this.getItems().add(whatFocused, newLine);
+            this.getItems().add(whatFocused, createNewLine());
         }
         else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             // Append
             int whatFocused = this.getFocusModel().getFocusedIndex();
-            LogicalLine newLine = new LogicalLine();
-            newLine.belongsToScenario = scenario;
-            newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
-            this.getItems().add(whatFocused + 1, newLine);
+            this.getItems().add(whatFocused + 1, createNewLine());
             keyEvent.consume();
         }
+        else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
+            this.getSelectionModel().getSelectedCells().forEach(tablePosition -> {
+                SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
+                cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+            });
+            keyEvent.consume();
+        }
+        else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
+            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+            TableClipboard.store(cell.getValue().contents);
+            keyEvent.consume();
+        }
+        else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
+            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+            TableClipboard.store(cell.getValue().contents);
+            cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+            keyEvent.consume();
+        }
+        else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
+            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+            cell.set(new Cell(Clipboard.getSystemClipboard().getString(), cell.getValue().postTrivia, cell.getValue().partOfLine));
+            keyEvent.consume();
+        }
+
+
         else if (keyEvent.getCode() == KeyCode.TAB) {
             this.getSelectionModel().clearSelection();
             this.getSelectionModel().selectNext();
@@ -75,6 +97,13 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
+    private LogicalLine createNewLine() {
+        LogicalLine newLine = new LogicalLine();
+        newLine.belongsToScenario = scenario;
+        newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
+        return newLine;
+    }
+
     private void addColumn(int cellIndex) {
         TableColumn<LogicalLine, Cell> column = new TableColumn<>();
         column.setSortable(false);
@@ -82,7 +111,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         column.setCellFactory(new Callback<TableColumn<LogicalLine, Cell>, TableCell<LogicalLine, Cell>>() {
             @Override
             public TableCell<LogicalLine, Cell> call(TableColumn<LogicalLine, Cell> param) {
-                return new IceCell(param, cellIndex);
+                return new IceCell(param, cellIndex, SnowTableView.this);
             }
         });
         column.setPrefWidth(200);
@@ -115,10 +144,32 @@ public class SnowTableView extends TableView<LogicalLine> {
                 addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)
             }
         }
+        this.considerAddingVirtualRowsAndColumns();
     }
 
     public void setScenario(HighElement scenario) {
 
         this.scenario = scenario;
+    }
+
+    public SimpleObjectProperty<Cell> tablePositionToCell(TablePosition<LogicalLine, Cell> position) {
+        return (SimpleObjectProperty<Cell>)this.getItems().get(position.getRow()).getCellAsStringProperty(position.getColumn(), mainForm);
+    }
+
+    public void considerAddingVirtualRowsAndColumns() {
+        int virtualRows = 0;
+        for (int i = getItems().size() - 1; i >= 0; i--) {
+            LogicalLine line = getItems().get(i);
+            if (line.isFullyVirtual()) {
+                virtualRows++;
+            }
+            if (virtualRows >= 1) {
+                // That's enough. That's fine. We don't need more.
+                return;
+            }
+        }
+        if (virtualRows < 1) {
+            getItems().add(createNewLine());
+        }
     }
 }
