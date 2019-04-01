@@ -1,6 +1,8 @@
 # Snowride
 A faster RIDE-like IDE for Robot Framework test suites
 
+[![Build Status](https://travis-ci.com/Soothsilver/snowride.svg?branch=master)](https://travis-ci.com/Soothsilver/snowride)
+
 Snowride is in early alpha. Many features aren't implemented yet. Many other features are unstable. Use at own risk.
 
 It looks like this:
