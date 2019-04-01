@@ -22,3 +22,5 @@ Planned advantages over other IDEs like RIDE or Intellij IDEA or text editors li
 Test runner screenshot:
 
 ![Screenshot 2](screenshots/Alpha2.PNG)
+
+I recommend [RIDE](https://github.com/robotframework/RIDE) as currently the best editor for Robot Framework.
