@@ -12,7 +12,7 @@ unknownSection returns [TextOnlyRobotSection Section]: 'nondef';
 // Configuration sections
 settingsSection returns [KeyValuePairSection Section] : settingsHeader optionalKeyValuePair*;
 settingsHeader returns [SectionHeader SectionHeader]: SETTINGS_CELL restOfRow;
-variablesSection returns [KeyValuePairSection Section] : variablesHeader emptyLines?  keyValuePair* emptyLines?;
+variablesSection returns [KeyValuePairSection Section] : variablesHeader optionalKeyValuePair*;
 variablesHeader returns [SectionHeader SectionHeader]: VARIABLES_CELL restOfRow;
 keyValuePair returns [LogicalLine Line]: ANY_CELL restOfRow;
 optionalKeyValuePair returns [LogicalLine Line]: keyValuePair | emptyLine;
@@ -44,14 +44,18 @@ fragment BEFORE_SECTION_HEADER:'*'[* ]*;
 fragment AFTER_SECTION_HEADER:(([* ]*'*')|);
 fragment BASIC_CELLSPACE: ('  '[ \t]*)  |   ('\t'[ \t]*) | (' ''\t'[ \t]*);
 fragment ELLIPSIS: '...';
+fragment LN_FRAGMENT: ('\n'|'\r\n');
 
 COMMENT: '#'.*? LINE_SEPARATOR;
 TEST_CASES_CELL: BEFORE_SECTION_HEADER'Test Cases'AFTER_SECTION_HEADER;
 KEYWORDS_CELL: BEFORE_SECTION_HEADER'Keywords'AFTER_SECTION_HEADER;
 SETTINGS_CELL: BEFORE_SECTION_HEADER'Settings'AFTER_SECTION_HEADER;
 VARIABLES_CELL: BEFORE_SECTION_HEADER'Variables'AFTER_SECTION_HEADER;
-LINE_SEPARATOR: ('\n'|'\r\n');
-CELLSPACE: BASIC_CELLSPACE | BASIC_CELLSPACE LINE_SEPARATOR ELLIPSIS BASIC_CELLSPACE | BASIC_CELLSPACE LINE_SEPARATOR BASIC_CELLSPACE ELLIPSIS BASIC_CELLSPACE;
+CELLSPACE:
+    BASIC_CELLSPACE |
+    (BASIC_CELLSPACE? LN_FRAGMENT ELLIPSIS)+ BASIC_CELLSPACE |
+    (BASIC_CELLSPACE? LN_FRAGMENT BASIC_CELLSPACE ELLIPSIS)+ BASIC_CELLSPACE;
+LINE_SEPARATOR: LN_FRAGMENT;
 //TEST_CASE_SETTING_CELL: '[' TEXT ']';
 ANY_CELL: TEXT;
 SINGLE_SPACE: ' ';

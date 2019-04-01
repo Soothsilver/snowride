@@ -23,11 +23,13 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     }
 
     private int cellIndex;
+    private final SnowTableView snowTableView;
     private TextField textField;
 
-    public IceCell(TableColumn<LogicalLine, Cell> column, int cellIndex) {
+    public IceCell(TableColumn<LogicalLine, Cell> column, int cellIndex, SnowTableView snowTableView) {
         this.column = column;
         this.cellIndex = cellIndex;
+        this.snowTableView = snowTableView;
         this.setPadding(new Insets(0));
         this.setStyle("-fx-padding: 0; -fx-background-insets: 0.0;");
         if (cellIndex < 1) {
@@ -66,6 +68,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         }
         // non-virtual:
         commitEdit(new Cell(textField.getText(), oldTrivia, getItem().partOfLine));
+        snowTableView.considerAddingVirtualRowsAndColumns();
     }
 
     private TextField ensureTextField() {
@@ -136,11 +139,18 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         if (cellIndex <= 0) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
         }
+        String contents = getItem().contents;
         if (cellIndex == 1) {
-            if (getItem().contents.startsWith("[") && getItem().contents.endsWith("]")) {
+            if (contents.startsWith("[") && contents.endsWith("]")) {
                 style += "-fx-text-fill: darkmagenta; ";
             }
             style += "-fx-font-weight: bold; ";
+        }
+        if (contents.startsWith("#")) {
+            style += "-fx-text-fill: brown; ";
+        }
+        if (contents.contains("${") || contents.contains("@{") || contents.contains("&{")) {
+            style += "-fx-text-fill: green; ";
         }
         setStyle(style);
     }
