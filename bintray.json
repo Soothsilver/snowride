@@ -15,7 +15,7 @@
 
     "files":
         [
-             {"includePattern": "target/snowride.*", "uploadPattern": ""}
+             {"includePattern": "target/snowride(.*)", "uploadPattern": "snowride/$1"}
         ],
     "publish": true
 }
