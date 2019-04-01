@@ -1,0 +1,21 @@
+{
+    "package": {
+        "name": "snowride",
+        "repo": "snowride",
+        "subject": "soothsilver",
+        "vcs_url": "https://github.com/Soothsilver/snowride.git",
+        "licenses": ["GPL-3.0"]
+    },
+
+    "version": {
+        "name": "0.1",
+        "desc": "Bintray test",
+        "gpgSign": false
+    },
+
+    "files":
+        [
+             {"includePattern": "target/snowride.*", "uploadPattern": ""}
+        ],
+    "publish": true
+}
