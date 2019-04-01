@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class FileSuite extends HighElement implements ISuite {
+public class FileSuite extends Suite implements ISuite {
     public File file;
     public RobotFile fileParsed;
 
@@ -77,16 +77,6 @@ public class FileSuite extends HighElement implements ISuite {
         refreshToString();
     }
 
-    public Stream<UserKeyword> getSelfKeywords() {
-        return this.children.stream().filter(he -> (he instanceof Scenario) && !((Scenario)he).isTestCase())
-                .map(he -> {
-                   Scenario s = (Scenario)he;
-                   return UserKeyword.fromScenario(s);
-                });
-    }
-    public Stream<IKnownKeyword> getKeywordsPermissibleInSuite() {
-        return Stream.concat(getSelfKeywords(), ExternalLibrary.builtIn.keywords.stream());
-    }
 
     @Override
     public void applyAndValidateText() {
@@ -120,6 +110,7 @@ public class FileSuite extends HighElement implements ISuite {
         this.treeNode.getChildren().clear();
         RobotFile parsed = GateParser.parse(contents);
         this.fileParsed = parsed;
+        reparseResources(this.fileParsed);
         this.addChildren(parsed.getHighElements());
     }
 

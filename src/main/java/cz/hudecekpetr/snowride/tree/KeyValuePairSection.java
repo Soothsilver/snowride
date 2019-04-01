@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.semantics.Setting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,5 +26,15 @@ public class KeyValuePairSection extends RobotSection {
     @Override
     public List<? extends HighElement> getHighElements() {
         return new ArrayList<>();
+    }
+
+    public List<Setting> createSettings() {
+        List<Setting> settings = new ArrayList<>();
+        for (LogicalLine line : pairs) {
+            if (line.cells.size() >= 2) {
+                settings.add(new Setting(line.cells.get(0).contents, line.cells.get(1).contents));
+            }
+        }
+        return settings;
     }
 }

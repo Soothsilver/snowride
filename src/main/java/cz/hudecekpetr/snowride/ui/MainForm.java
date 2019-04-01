@@ -116,6 +116,7 @@ public class MainForm {
         Tab tabSerializing = serializingTab.createTab();
         tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
+        tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(this::selectedTabChanged);
                 VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);

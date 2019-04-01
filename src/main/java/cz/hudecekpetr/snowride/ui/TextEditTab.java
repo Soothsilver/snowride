@@ -26,6 +26,7 @@ public class TextEditTab {
     private final Node warningPane;
     private MainForm mainForm;
     private Tab tabTextEdit;
+    private HighElement lastLoaded;
 
     public TextEditTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -82,11 +83,18 @@ public class TextEditTab {
     }
 
     public void loadElement(HighElement value) {
+        this.lastLoaded = value;
         if (value instanceof Scenario) {
             tabTextEdit.setContent(warningPane);
         } else {
             tbTextEdit.setText(value.contents);
             tabTextEdit.setContent(editorPane);
+        }
+    }
+
+    public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+        if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
+            mainForm.selectProgrammatically(lastLoaded.parent);
         }
     }
 }

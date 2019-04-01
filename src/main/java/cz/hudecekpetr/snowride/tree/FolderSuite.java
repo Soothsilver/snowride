@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.Alert;
@@ -15,10 +16,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FolderSuite extends HighElement implements ISuite {
+public class FolderSuite extends Suite implements ISuite {
     public final File directoryPath;
     private File initFile;
-    private final RobotFile initFileParsed;
+    private RobotFile initFileParsed;
 
     public FolderSuite(File directoryPath, File initFile, RobotFile initFileParsed, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
@@ -30,14 +31,25 @@ public class FolderSuite extends HighElement implements ISuite {
 
     @Override
     public void saveAll() throws IOException {
-        if (initFile != null && unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            unsavedChanges = LastChangeKind.PRISTINE;
+        if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
+            if (initFile == null) {
+                initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
+                initFile.createNewFile();
+                initFileParsed = new RobotFile();
+            }
+            this.applyAndValidateText();
+        }
+        if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.shortName);
             FileUtils.write(initFile, contents, "utf-8");
+            this.unsavedChanges = LastChangeKind.PRISTINE;
+            for (HighElement child : children) {
+                // Order matters:
+                child.saveAll();
+                child.unsavedChanges = LastChangeKind.PRISTINE;
+                child.refreshToString();
+            }
             refreshToString();
-        }
-        for (HighElement child : children) {
-            child.saveAll();
         }
     }
 
@@ -95,8 +107,14 @@ public class FolderSuite extends HighElement implements ISuite {
     }
 
     public void reparse() {
-        // TODO reparse not yet implemented
-        throw new RuntimeException("Not yet done.");
+        if (contents != null) {
+            this.children.removeIf(he -> he instanceof Scenario);
+            this.treeNode.getChildren().removeIf(ti -> ti.getValue() instanceof Scenario);
+            RobotFile parsed = GateParser.parse(contents);
+            this.initFileParsed = parsed;
+            this.reparseResources(parsed);
+            this.addChildren(parsed.getHighElements());
+        }
     }
 
 

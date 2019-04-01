@@ -11,11 +11,31 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExternalLibrary {
     public static ExternalLibrary builtIn = ExternalLibrary.loadFromBuiltInXmlFile("BuiltIn.xml");
+    public static Map<String, ExternalLibrary> otherPackedInLibraries = new HashMap<>();
     public List<ExternalKeyword> keywords = new ArrayList<>();
+
+    static {
+        declarePackedLibrary("BuiltIn");
+        declarePackedLibrary("Collections");
+        declarePackedLibrary("DateTime");
+        declarePackedLibrary("Dialogs");
+        declarePackedLibrary("OperatingSystem");
+        declarePackedLibrary("Process");
+        declarePackedLibrary("Screenshot");
+        declarePackedLibrary("String");
+        declarePackedLibrary("Telnet");
+        declarePackedLibrary("XML");
+    }
+
+    private static void declarePackedLibrary(String libraryName) {
+        otherPackedInLibraries.put(libraryName, ExternalLibrary.loadFromBuiltInXmlFile(libraryName + ".xml"));
+    }
 
     private static ExternalLibrary loadFromBuiltInXmlFile(String filename) {
         try {

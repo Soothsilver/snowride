@@ -21,7 +21,7 @@ public class GateParser {
     public FolderSuite loadDirectory(File directoryPath, LongRunningOperation partOfOperation, double partOfProgress) {
         try {
             String name = directoryPath.getName();
-            String contents = "";
+            String contents = null;
             File initFile = null;
             RobotFile initFileParsed = null;
             List<HighElement> fileSuites = new ArrayList<>();
