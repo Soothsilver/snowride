@@ -1,4 +1,5 @@
 language: java
+script: mvn package -B
 deploy:
   provider: bintray
   file: bintray.json
