@@ -1,8 +1,8 @@
 {
     "package": {
-        "name": "auto-upload",
+        "name": "snowride",
         "repo": "snowride",
-        "subject": "Soothsilver",
+        "subject": "soothsilver",
         "vcs_url": "https://github.com/Soothsilver/snowride.git",
         "licenses": ["GPL-3.0"]
     },
