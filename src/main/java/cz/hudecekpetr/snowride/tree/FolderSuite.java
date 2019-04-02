@@ -133,6 +133,16 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
+    public String getFullDocumentation() {
+        return this.directoryPath.getAbsolutePath();
+    }
+
+    @Override
+    public String getItalicsSubheading() {
+        return "Folder";
+    }
+
+    @Override
     public void createNewChild(String name, boolean asTestCase) {
         this.applyAndValidateText();
         if (asTestCase) {

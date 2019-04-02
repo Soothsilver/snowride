@@ -98,4 +98,6 @@ public abstract class HighElement implements IAutocompleteOption {
     public abstract void markAsStructurallyChanged(MainForm mainForm);
 
     protected abstract void optimizeStructure();
+
+
 }

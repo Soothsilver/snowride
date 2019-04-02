@@ -117,4 +117,16 @@ public class Scenario extends HighElement {
     public String getAutocompleteText() {
         return (this.isTestCase ? "[test] " : "[keyword] ") + toString();
     }
+
+    @Override
+    public String getFullDocumentation() {
+        return
+                "In suite: " + this.parent.getQualifiedName() + "\n" +
+                "Documentation not yet invented";
+    }
+
+    @Override
+    public String getItalicsSubheading() {
+        return isTestCase ? "Test case" : "Keyword";
+    }
 }

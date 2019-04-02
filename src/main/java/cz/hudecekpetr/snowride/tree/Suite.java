@@ -7,6 +7,7 @@ import cz.hudecekpetr.snowride.semantics.UserKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import javafx.collections.ObservableList;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -49,7 +50,6 @@ public abstract class Suite extends HighElement {
     }
 
     private Stream<IKnownKeyword> getImportedKeywords() {
-        return importedResources.stream().flatMap(ir -> ir.getImportedKeywords());
+        return importedResources.stream().flatMap(ir -> ir.getImportedKeywords(this));
     }
-
 }

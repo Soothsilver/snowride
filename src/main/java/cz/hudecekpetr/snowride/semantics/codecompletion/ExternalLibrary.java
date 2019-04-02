@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.semantics.codecompletion;
 import cz.hudecekpetr.snowride.XmlFacade;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -33,6 +34,8 @@ public class ExternalLibrary {
         declarePackedLibrary("XML");
     }
 
+    private String name;
+
     private static void declarePackedLibrary(String libraryName) {
         otherPackedInLibraries.put(libraryName, ExternalLibrary.loadFromBuiltInXmlFile(libraryName + ".xml"));
     }
@@ -51,9 +54,16 @@ public class ExternalLibrary {
         Document document = XmlFacade.loadXmlFromFile(file);
         NodeList keywords = document.getElementsByTagName("kw");
         ExternalLibrary externalLibrary = new ExternalLibrary();
+        externalLibrary.name = document.getDocumentElement().getAttribute("name");
         for (int i = 0; i < keywords.getLength(); i++) {
             Element kw = (Element) keywords.item(i);
-            externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), externalLibrary));
+            NodeList docs = kw.getElementsByTagName("doc");
+            String doc = "(documentation not provided)";
+            if (docs.getLength() == 1) {
+                Element doce = (Element) docs.item(0);
+                doc = doce.getTextContent();
+            }
+            externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), doc, externalLibrary));
         }
         return externalLibrary;
     }
@@ -62,5 +72,8 @@ public class ExternalLibrary {
         return Images.b;
     }
 
-
+    @Override
+    public String toString() {
+        return name;
+    }
 }

@@ -133,6 +133,16 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
+    public String getFullDocumentation() {
+        return this.file.getAbsolutePath();
+    }
+
+    @Override
+    public String getItalicsSubheading() {
+        return "File suite or resource file";
+    }
+
+    @Override
     public void createNewChild(String name, boolean asTestCase) {
         this.applyAndValidateText();
         Scenario scenario = new Scenario(new Cell(name, "", null), asTestCase, new ArrayList<>());

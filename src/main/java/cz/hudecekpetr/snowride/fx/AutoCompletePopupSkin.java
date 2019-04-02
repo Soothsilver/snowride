@@ -6,7 +6,9 @@ package cz.hudecekpetr.snowride.fx;
 //
 
 
+import com.sun.javafx.PlatformUtil;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -17,6 +19,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Window;
 import javafx.util.Callback;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 
@@ -24,6 +27,7 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
     private final AutoCompletePopup<T> control;
     private final ListView<T> suggestionList;
     final int LIST_CELL_HEIGHT = 24;
+    private int suppressUpTo = 0;
 
     public AutoCompletePopupSkin(AutoCompletePopup<T> control) {
         this.control = control;
@@ -39,9 +43,23 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
             @Override
             public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue) {
                 if (newValue == null) {
-               //     MainForm.popOver.hide();
+                    suppressUpTo++;
+                    int[] suppressing = new int[] { suppressUpTo };
+                    Platform.runLater(() -> {
+                        if (suppressUpTo == suppressing[0]) {
+                            MainForm.documentationPopup.hide();
+                        }
+                    });
                 } else {
-               //     MainForm.popOver.show(suggestionList);
+                    suppressUpTo++;
+                    Window parent = suggestionList.getScene().getWindow();
+                    MainForm.documentationPopup.setData(newValue);
+                    MainForm.documentationPopup.show(parent,
+                            parent.getX() + suggestionList.localToScene(0.0D, 0.0D).getX() +
+                                    suggestionList.getScene().getX() + suggestionList.getWidth(),
+                            parent.getY() + suggestionList.localToScene(0.0D, 0.0D).getY() +
+                                    suggestionList.getScene().getY() + suggestionList.getSelectionModel().getSelectedIndex() * 24);
+
                 }
             }
         });
