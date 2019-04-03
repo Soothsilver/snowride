@@ -46,6 +46,7 @@ public class GateParser {
                 }
             }
             FolderSuite folderSuite = new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
+            folderSuite.reparse();
             for(HighElement fs : fileSuites) {
                 fs.parent = folderSuite;
             }

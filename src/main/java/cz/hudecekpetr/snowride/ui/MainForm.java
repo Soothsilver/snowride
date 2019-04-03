@@ -63,6 +63,7 @@ public class MainForm {
     private Menu projectMenu;
     private final TextEditTab textEditTab;
     public static DocumentationPopup documentationPopup = new DocumentationPopup();
+    private TextField tbSearchTests;
 
     private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
@@ -160,7 +161,7 @@ public class MainForm {
     }
 
     private VBox createLeftPane() {
-        TextField tbSearchTests = new TextField();
+        tbSearchTests = new TextField();
         tbSearchTests.setPromptText("Search for tests or suites...");
         searchSuitesAutoCompletion = new SearchSuites(this);
         searchSuitesAutoCompletion.bind(tbSearchTests);
@@ -513,7 +514,7 @@ public class MainForm {
                 Platform.runLater(()-> {
                     projectLoad.progress.set(1);
                     projectTree.setRoot(folderSuite.treeNode);
-                    projectTree.requestFocus();
+                    tbSearchTests.requestFocus();
                     projectTree.getSelectionModel().select(0);
                     projectTree.getFocusModel().focus(0);
 

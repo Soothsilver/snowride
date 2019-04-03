@@ -17,6 +17,7 @@ import javafx.scene.input.KeyEvent;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
     private TableColumn<LogicalLine, Cell> column;
+    private CodeCompletionBinding codeCompletionBinding;
 
     public int getCellIndex() {
         return cellIndex;
@@ -50,6 +51,9 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             this.setGraphic(textField);
             this.textField.selectAll();
             this.textField.requestFocus();
+            if (this.snowTableView.triggerAutocompletionNext) {
+                this.codeCompletionBinding.trigger();
+            }
         }
     }
 
@@ -89,7 +93,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                     event.consume();
                 }
             });
-            CodeCompletionBinding codeCompletionBinding = new CodeCompletionBinding(textField, this);
+            codeCompletionBinding = new CodeCompletionBinding(textField, this);
             textField.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
@@ -138,20 +142,11 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         String style = "";
         if (cellIndex <= 0) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
+            setStyle(style);
+        } else {
+            setStyle(getItem().getStyle());
         }
-        String contents = getItem().contents;
-        if (cellIndex == 1) {
-            if (contents.startsWith("[") && contents.endsWith("]")) {
-                style += "-fx-text-fill: darkmagenta; ";
-            }
-            style += "-fx-font-weight: bold; ";
-        }
-        if (contents.startsWith("#")) {
-            style += "-fx-text-fill: brown; ";
-        }
-        if (contents.contains("${") || contents.contains("@{") || contents.contains("&{")) {
-            style += "-fx-text-fill: green; ";
-        }
-        setStyle(style);
+
+
     }
 }

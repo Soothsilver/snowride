@@ -4,13 +4,8 @@ import cz.hudecekpetr.snowride.fx.AutoCompletionBinding;
 import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.grid.IceCell;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
-import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.lexer.Cell;
 import javafx.scene.control.TextField;
-import javafx.util.Callback;
-import org.controlsfx.control.PopOver;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -19,9 +14,10 @@ import java.util.stream.Stream;
 public class CodeCompletionBinding {
     private final TextField textField;
     private final IceCell iceCell;
+    private final AutoCompletionTextFieldBinding<? extends IAutocompleteOption> binding;
 
     public CodeCompletionBinding(TextField textField, IceCell iceCell) {
-        AutoCompletionTextFieldBinding<? extends IAutocompleteOption> binding = new AutoCompletionTextFieldBinding<IAutocompleteOption>(textField, this::getSuggestions) {
+        binding = new AutoCompletionTextFieldBinding<IAutocompleteOption>(textField, this::getSuggestions) {
             @Override
             protected void completeUserInput(IAutocompleteOption completion) {
                 super.completeUserInput(completion);
@@ -37,10 +33,14 @@ public class CodeCompletionBinding {
 
     private Collection<? extends IAutocompleteOption> getSuggestions(AutoCompletionBinding.ISuggestionRequest request) {
         String text = request.getUserText().toLowerCase();
-        Stream<IAutocompleteOption> allOptions = Stream.concat(TestCaseSettingOption.allOptions.stream(),
-                ((FileSuite)iceCell.getItem().partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite()).filter(option -> {
+        Cell cell = iceCell.getItem();
+        Stream<IAutocompleteOption> allOptions = cell.getCompletionOptions().filter(option -> {
             return option.getAutocompleteText().toLowerCase().contains(text);
         });
         return allOptions.collect(Collectors.toList());
+    }
+
+    public void trigger() {
+        this.binding.setUserInput("");
     }
 }

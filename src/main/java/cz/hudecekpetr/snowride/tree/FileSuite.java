@@ -112,6 +112,7 @@ public class FileSuite extends Suite implements ISuite {
         this.fileParsed = parsed;
         reparseResources(this.fileParsed);
         this.addChildren(parsed.getHighElements());
+        this.analyzeSemantics();
     }
 
     public RobotFile getFileParsed() {

@@ -63,7 +63,7 @@ public class TextEditTab {
             }
         });
         Button bApply = new Button("Apply changes");
-        Label lblInfo = new Label("Changes are applied automatically if you switch to another tab, test case, or suite.");
+        Label lblInfo = new Label("Changes are applied automatically if you switch to another tab, test case, or suite; or if you save.");
         bApply.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {

@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 public class DocumentationTextArea extends StyledTextArea<String, String> {
     public static final String DOC_STYLE = "-fx-font-size: 8pt; ";
     public static final String BOLD_STYLE = DOC_STYLE + "-fx-font-weight: bold; ";
+    public static final String CODE_STYLE = DOC_STYLE + "-fx-font-family: Consolas; ";
 
     public DocumentationTextArea() {
         super("", TextFlow::setStyle,
@@ -32,10 +33,13 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
 
     public void setDocumentation(String fullDocumentation) {
         this.clear();
+        if (fullDocumentation == null) {
+            return;
+        }
         int startFromIndex = 0;
         while (startFromIndex < fullDocumentation.length()) {
             int earliestAsterisk = fullDocumentation.indexOf('*', startFromIndex);
-            int earliestUnderscore = fullDocumentation.indexOf('*', startFromIndex);
+            int earliestUnderscore = fullDocumentation.indexOf('_', startFromIndex);
             int earliestCode = fullDocumentation.indexOf("``", startFromIndex);
             int minimumSpecial = minNonMinusOne(earliestAsterisk, earliestUnderscore, earliestCode);
             if (minimumSpecial == -1) {
@@ -53,10 +57,20 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
                         startFromIndex = finalAsterisk +1;
                         continue;
                     }
+                } else if (minimumSpecial == earliestCode) {
+                    int finalCode  = fullDocumentation.indexOf("``", earliestCode+2);
+                    if (finalCode != -1) {
+                        int then = this.getLength();
+                        appendText(fullDocumentation.substring(earliestCode+2, finalCode));
+                        int now = this.getLength();
+                        setStyle(then, now, CODE_STYLE);
+                        startFromIndex = finalCode + 2;
+                        continue;
+                    }
                 }
+                appendText(Character.toString(fullDocumentation.charAt(minimumSpecial)));
+                startFromIndex = minimumSpecial + 1;
             }
-            appendText(Character.toString(fullDocumentation.charAt(startFromIndex)));
-            startFromIndex++;
         }
     }
 

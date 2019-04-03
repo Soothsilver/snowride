@@ -63,6 +63,8 @@ public class ExternalLibrary {
                 Element doce = (Element) docs.item(0);
                 doc = doce.getTextContent();
             }
+            doc = doc.replace(" +", " ").replace("\n \n", "\n\n").replace("\n\n","[[DOUBLENEWLINE]]")
+                    .replace("\n", " ").replace(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n");
             externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), doc, externalLibrary));
         }
         return externalLibrary;

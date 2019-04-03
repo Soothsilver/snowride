@@ -118,6 +118,7 @@ public class FolderSuite extends Suite implements ISuite {
             this.initFileParsed = parsed;
             this.reparseResources(parsed);
             this.addChildren(parsed.getHighElements());
+            this.analyzeSemantics();
         }
     }
 

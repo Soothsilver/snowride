@@ -25,6 +25,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private HighElement scenario;
     private MainForm mainForm;
+    public boolean triggerAutocompletionNext;
 
     public SnowTableView(MainForm mainForm) {
         super();
@@ -57,6 +58,13 @@ public class SnowTableView extends TableView<LogicalLine> {
             // Append
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused + 1, createNewLine());
+            keyEvent.consume();
+        }
+        else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
+            TablePosition<LogicalLine, ?> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
+            this.triggerAutocompletionNext = true;
+            this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
+            this.triggerAutocompletionNext = false;
             keyEvent.consume();
         }
         else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
