@@ -32,6 +32,7 @@ public class DeferredActions {
 
         if (sb.length() > 0) {
             runTab.tbLog.appendText(sb.toString());
+            runTab.tbLog.showParagraphAtBottom(Integer.MAX_VALUE);
         }
     }
 }

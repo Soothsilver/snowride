@@ -26,6 +26,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public boolean areTextChangesUnapplied = false;
     public HighElement parent;
     public boolean dead;
+    protected String semanticsDocumentation;
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
         graphic = new HBox();
@@ -100,4 +101,7 @@ public abstract class HighElement implements IAutocompleteOption {
     protected abstract void optimizeStructure();
 
 
+    public String getDocumentation() {
+        return semanticsDocumentation;
+    }
 }

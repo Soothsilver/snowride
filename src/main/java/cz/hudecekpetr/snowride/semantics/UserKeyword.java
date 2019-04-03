@@ -9,15 +9,17 @@ import javafx.scene.image.Image;
 
 public class UserKeyword implements IKnownKeyword {
     private String name;
+    private String documentation;
     private Suite owningSuite;
 
-    public UserKeyword(String name, Suite owningSuite) {
+    public UserKeyword(String name, String documentation, Suite owningSuite) {
         this.name = name;
+        this.documentation = documentation;
         this.owningSuite = owningSuite;
     }
 
     public static UserKeyword fromScenario(Scenario s) {
-        return new UserKeyword(s.shortName, (Suite) s.parent);
+        return new UserKeyword(s.shortName, s.getDocumentation(), (Suite) s.parent);
     }
 
     @Override
@@ -32,7 +34,7 @@ public class UserKeyword implements IKnownKeyword {
 
     @Override
     public String getFullDocumentation() {
-        return "Documentation not yet provided";
+        return documentation;
     }
 
     @Override

@@ -39,15 +39,19 @@ public class FolderSuite extends Suite implements ISuite {
             }
             this.applyAndValidateText();
         }
+        // Save folders and suites below
+        for (HighElement child : children) {
+            child.saveAll();
+        }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.shortName);
             FileUtils.write(initFile, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
-                // Order matters:
-                child.saveAll();
-                child.unsavedChanges = LastChangeKind.PRISTINE;
-                child.refreshToString();
+                if (child instanceof Scenario) {
+                    child.unsavedChanges = LastChangeKind.PRISTINE;
+                    child.refreshToString();
+                }
             }
             refreshToString();
         }
@@ -156,5 +160,11 @@ public class FolderSuite extends Suite implements ISuite {
         this.children.add(newKeyword);
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
+    }
+
+    public void analyzeSemantics() {
+        if (this.initFileParsed != null) {
+            this.initFileParsed.analyzeSemantics(this);
+        }
     }
 }

@@ -8,12 +8,15 @@ import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
+import org.apache.commons.io.Charsets;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.Queue;
@@ -89,7 +92,7 @@ public class TcpHost {
         t1.start();
         try {
             InputStream inputStream = client.getInputStream();
-            InputStreamReader reader = new InputStreamReader(inputStream);
+            InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.US_ASCII);
             while (true) {
                 int actualSize = reader.read(buffer, 0, buffersize);
                 if (actualSize <= 0) {
@@ -124,6 +127,9 @@ public class TcpHost {
                 int number = Integer.parseInt(theNumber);
                 if (incomingBuffer.length() >= pipeIndex + 1 + number) {
                     String data = incomingBuffer.substring(pipeIndex + 1, pipeIndex + 1 + number);
+                    if (data.contains("ahoj")) {
+                        System.out.println("A");
+                    }
                     performJsonCommand(data);
                     incomingBuffer.delete(0, pipeIndex + 1 + number);
                     analyzeBuffer(incomingBuffer);

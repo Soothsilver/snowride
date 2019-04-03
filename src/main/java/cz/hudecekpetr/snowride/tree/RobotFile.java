@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.semantics.Setting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,5 +51,26 @@ public class RobotFile {
         KeywordsSection newSection = new KeywordsSection(new SectionHeader(SectionKind.KEYWORDS, "*** Keywords ***\n"), new ArrayList<>());
         sections.add(newSection);
         return newSection;
+    }
+
+    public void analyzeSemantics(Suite suite) {
+        KeyValuePairSection settings = this.findSettingsSection();
+        if (settings != null) {
+            for (Setting s : settings.createSettings()) {
+                if (s.key.equalsIgnoreCase("Documentation")) {
+                    suite.semanticsDocumentation = s.firstValue; // TODO make it all values concatenated
+                }
+            }
+        }
+        // TODO for test cases
+    }
+
+    private KeyValuePairSection findSettingsSection() {
+        for (RobotSection section : sections) {
+            if (section.header.sectionKind == SectionKind.SETTINGS) {
+                return (KeyValuePairSection) section;
+            }
+        }
+        return null;
     }
 }

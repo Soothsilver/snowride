@@ -134,7 +134,7 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public String getFullDocumentation() {
-        return this.file.getAbsolutePath();
+        return "*Qualified name:* " + this.getQualifiedName() + "\n" + "*Documentation:* " + this.semanticsDocumentation;
     }
 
     @Override
@@ -154,5 +154,9 @@ public class FileSuite extends Suite implements ISuite {
         }
         this.children.add(scenario);
         this.treeNode.getChildren().add(scenario.treeNode);
+    }
+
+    public void analyzeSemantics() {
+        this.fileParsed.analyzeSemantics(this);
     }
 }

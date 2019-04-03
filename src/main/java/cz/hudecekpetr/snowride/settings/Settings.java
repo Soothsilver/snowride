@@ -54,7 +54,8 @@ public class Settings {
             Settings settings = (Settings) xStream.fromXML(getFile());
             instance = settings;
         } catch (Exception exception) {
-            exception.printStackTrace();
+            System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
+                    "you launch Snowride, this is fine and ignore this message. Actual exception: " + exception.getMessage());
             instance = new Settings();
         }
     }
