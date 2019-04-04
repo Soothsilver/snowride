@@ -1,8 +1,10 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.parser.GateParser;
+import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.Alert;
@@ -17,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FolderSuite extends Suite implements ISuite {
-    public final File directoryPath;
+    public File directoryPath;
     private File initFile;
     private RobotFile initFileParsed;
 
@@ -58,7 +60,7 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void deleteSelf() {
+    public void deleteSelf(MainForm mainForm) {
         if (this.directoryPath.delete()) {
             this.dead = true;
             this.parent.dissociateSelfFromChild(this);
@@ -66,7 +68,7 @@ public class FolderSuite extends Suite implements ISuite {
             ButtonType deleteType = new ButtonType("Delete folder and all files inside");
             if (new Alert(Alert.AlertType.CONFIRMATION, "Could not delete folder '" + this.directoryPath.getName() + "' probably because it's not empty." +
                     " Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
-                     == deleteType) {
+                    == deleteType) {
                 try {
                     FileUtils.deleteDirectory(this.directoryPath);
                     this.selfAndDescendantHighElements().forEach(he -> he.dead = true);
@@ -81,9 +83,22 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void renameSelfTo(String newName) {
+    public void renameSelfTo(String newName, MainForm mainForm) {
+        File oldFile = this.directoryPath;
+        File newFile = this.directoryPath.getParentFile().toPath().resolve(newName).toFile();
+        if (this.directoryPath.renameTo(newFile)) {
+            this.shortName = newName;
+            this.directoryPath = newFile;
+            if (this.initFile != null) {
+                this.initFile = Extensions.changeAncestorTo(initFile, oldFile, newFile);
+            }
+            for (HighElement child : this.children) {
+                child.ancestorRenamed(oldFile, newFile);
+            }
+        } else {
+            throw new RuntimeException("Renaming failed.");
+        }
         refreshToString();
-        throw new RuntimeException("Renaming folders not yet implemented.");
     }
 
     @Override
@@ -108,6 +123,14 @@ public class FolderSuite extends Suite implements ISuite {
     @Override
     protected void optimizeStructure() {
         // not yet
+    }
+
+    @Override
+    protected void ancestorRenamed(File oldFile, File newFile) {
+        this.directoryPath = Extensions.changeAncestorTo(this.directoryPath, oldFile, newFile);
+        if (this.initFile != null) {
+            this.initFile = Extensions.changeAncestorTo(this.initFile, oldFile, newFile);
+        }
     }
 
     public void reparse() {

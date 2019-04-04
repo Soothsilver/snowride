@@ -11,13 +11,14 @@ import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Scenario extends HighElement {
 
-    private final Cell nameCell;
+    private Cell nameCell;
     private boolean isTestCase;
 
     public ObservableList<LogicalLine> getLines() {
@@ -44,15 +45,17 @@ public class Scenario extends HighElement {
     }
 
     @Override
-    public void deleteSelf() {
-        // TODO element deletion
-        throw new RuntimeException("Deleting tests and keywords is not yet implemented.");
+    public void deleteSelf(MainForm mainForm) {
+        this.parent.dissociateSelfFromChild(this);
+        this.parent.markAsStructurallyChanged(mainForm);
     }
 
     @Override
-    public void renameSelfTo(String newName) {
-        // TODO element renam
-        throw new NotImplementedException("Deleting tests not yet implemented.");
+    public void renameSelfTo(String newName, MainForm mainForm) {
+        this.nameCell = new Cell(newName, nameCell.postTrivia, null);
+        this.shortName = newName;
+        this.refreshToString();
+        this.markAsStructurallyChanged(mainForm);
     }
 
     @Override
@@ -82,6 +85,11 @@ public class Scenario extends HighElement {
             }
             lineIndex--;
         }
+    }
+
+    @Override
+    protected void ancestorRenamed(File oldFile, File newFile) {
+        // don't care, this is for files
     }
 
     public void serializeInto(StringBuilder sb) {

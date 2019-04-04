@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.semantics.CellKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.tree.FileSuite;
+import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -51,7 +52,11 @@ public class Cell {
             style += "-fx-font-weight: bold; ";
             Optional<IKnownKeyword> first = permissibleKeywords.stream().filter(kk -> kk.getAutocompleteText().toLowerCase().equals(this.contents.toLowerCase())).findFirst();
             if (first.isPresent()) {
-                style += "-fx-text-fill: darkblue; ";
+                if (first.get().getScenarioIfPossible() != null) {
+                    style += "-fx-text-fill: blue; ";
+                } else {
+                    style += "-fx-text-fill: dodgerblue; ";
+                }
             }
         } else if (contents.contains("${") || contents.contains("@{") || contents.contains("&{")) {
             style += "-fx-text-fill: green; ";
@@ -80,7 +85,7 @@ public class Cell {
             } else if (!pastTheKeyword) {
                 // This is the keyword.
                 isKeyword = true;
-                permissibleKeywords = ((FileSuite) partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite().collect(Collectors.toList());
+                permissibleKeywords = ((Suite) partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite().collect(Collectors.toList());
                 pastTheKeyword = true;
             }
             if (cell == this) {
@@ -100,5 +105,18 @@ public class Cell {
             options = Stream.concat(options, permissibleKeywords.stream());
         }
         return options;
+    }
+
+    public IKnownKeyword getKeywordInThisCell() {
+        updateSemanticsStatus();
+        if (isKeyword) {
+            Optional<IKnownKeyword> first = permissibleKeywords.stream()
+                    .filter(kk -> kk.getAutocompleteText().toLowerCase().equals(this.contents.toLowerCase()))
+                    .findFirst();
+            if (first.isPresent()) {
+                return first.get();
+            }
+        }
+        return null;
     }
 }

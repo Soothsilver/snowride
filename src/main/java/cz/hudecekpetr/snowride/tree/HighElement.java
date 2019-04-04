@@ -1,14 +1,19 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import sun.applet.Main;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +23,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public String shortName;
     public final ImageView imageView;
     public final CheckBox checkbox;
+    public ObservableList<SnowrideError> allErrorsRecursive = FXCollections.observableArrayList();
     private HBox graphic;
     public String contents;
     public final List<HighElement> children;
@@ -85,14 +91,14 @@ public abstract class HighElement implements IAutocompleteOption {
         }
     }
 
-    public abstract void deleteSelf();
+    public abstract void deleteSelf(MainForm mainForm);
 
     protected void dissociateSelfFromChild(HighElement child) {
         this.children.remove(child);
         this.treeNode.getChildren().remove(child.treeNode);
     }
 
-    public abstract void renameSelfTo(String newName);
+    public abstract void renameSelfTo(String newName, MainForm mainForm);
 
     public abstract void applyAndValidateText();
 
@@ -104,4 +110,6 @@ public abstract class HighElement implements IAutocompleteOption {
     public String getDocumentation() {
         return semanticsDocumentation;
     }
+
+    protected abstract void ancestorRenamed(File oldFile, File newFile);
 }

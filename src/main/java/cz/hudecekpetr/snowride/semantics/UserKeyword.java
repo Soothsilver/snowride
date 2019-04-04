@@ -11,15 +11,17 @@ public class UserKeyword implements IKnownKeyword {
     private String name;
     private String documentation;
     private Suite owningSuite;
+    private Scenario scenario;
 
-    public UserKeyword(String name, String documentation, Suite owningSuite) {
+    public UserKeyword(String name, String documentation, Suite owningSuite, Scenario scenario) {
         this.name = name;
         this.documentation = documentation;
         this.owningSuite = owningSuite;
+        this.scenario = scenario;
     }
 
     public static UserKeyword fromScenario(Scenario s) {
-        return new UserKeyword(s.shortName, s.getDocumentation(), (Suite) s.parent);
+        return new UserKeyword(s.shortName, s.getDocumentation(), (Suite) s.parent, s);
     }
 
     @Override
@@ -40,5 +42,10 @@ public class UserKeyword implements IKnownKeyword {
     @Override
     public String getItalicsSubheading() {
         return "User keyword (from " + owningSuite.shortName + ")";
+    }
+
+    @Override
+    public Scenario getScenarioIfPossible() {
+        return scenario;
     }
 }

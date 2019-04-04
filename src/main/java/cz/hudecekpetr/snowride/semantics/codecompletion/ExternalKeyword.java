@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.semantics.codecompletion;
 
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.scene.image.Image;
 
 public class ExternalKeyword implements IKnownKeyword {
@@ -35,5 +36,10 @@ public class ExternalKeyword implements IKnownKeyword {
     @Override
     public String getItalicsSubheading() {
         return "External keyword (library " + library + ")";
+    }
+
+    @Override
+    public Scenario getScenarioIfPossible() {
+        return null;
     }
 }

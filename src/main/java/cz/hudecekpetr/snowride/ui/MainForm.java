@@ -32,6 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.stage.Window;
+import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.PopOver;
 
 import java.awt.*;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
@@ -48,6 +51,7 @@ public class MainForm {
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
     private final SerializingTab serializingTab;
+    private final ErrorsTab errorsTab;
     GateParser gateParser = new GateParser();
     private NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
@@ -64,6 +68,7 @@ public class MainForm {
     private final TextEditTab textEditTab;
     public static DocumentationPopup documentationPopup = new DocumentationPopup();
     private TextField tbSearchTests;
+    private final NotificationPane notificationPane;
 
     private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
@@ -115,18 +120,21 @@ public class MainForm {
         Tab tabGrid = gridTab.createTab();
         serializingTab = new SerializingTab(this);
         Tab tabSerializing = serializingTab.createTab();
-        tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing);
+        VBox searchableTree = createLeftPane();
+        errorsTab = new ErrorsTab(this);
+        Tab tabErrors = errorsTab.tab;
+        tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing, tabErrors);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(this::selectedTabChanged);
-                VBox searchableTree = createLeftPane();
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
         SplitPane.setResizableWithParent(searchableTree, false);
         treeAndGrid.setDividerPosition(0,0.3);
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
+        notificationPane = new NotificationPane(vBox);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
-        Scene scene = new Scene(vBox, Settings.getInstance().width, Settings.getInstance().height);
+        Scene scene = new Scene(notificationPane, Settings.getInstance().width, Settings.getInstance().height);
         scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
         stage.setScene(scene);
         if (Settings.getInstance().x != -1) {
@@ -326,7 +334,7 @@ public class MainForm {
             public void handle(ActionEvent event) {
                 String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.shortName);
                 if (newName != null) {
-                    element.renameSelfTo(newName);
+                    element.renameSelfTo(newName, MainForm.this);
                 }
             }
         });
@@ -349,7 +357,7 @@ public class MainForm {
     }
 
     private void delete(HighElement element) {
-        element.deleteSelf();
+        element.deleteSelf(this);
     }
 
     private void setCheckboxes(HighElement element, boolean shouldBeChecked) {
@@ -568,4 +576,22 @@ public class MainForm {
             return he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase());
         }).findFirst().get();
     }
+
+    private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
+    private String notificationShowingWhat = null;
+    public void toast(String toastMessage) {
+        notificationShowingWhat = toastMessage;
+        notificationPane.show(toastMessage);
+        endTheToastExecutor.schedule(() -> endTheToast(toastMessage), 5, TimeUnit.SECONDS);
+    }
+
+    private void endTheToast(String toastMessage) {
+        Platform.runLater(() ->{
+            //noinspection StringEquality -- reference comparison on purpose
+            if (this.notificationShowingWhat == toastMessage) {
+                notificationPane.hide();
+            }
+        });
+    }
+
 }

@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -47,5 +48,16 @@ public class Extensions {
         str = str.replace("\r\n", "\n");
         //str = str.replace("\n", "\r\n");
         return str;
+    }
+
+    public static File changeAncestorTo(File changeAncestorOfThisFile, File oldFile, File newFile) {
+        String pathInQuestion = changeAncestorOfThisFile.getPath();
+        String oldName = oldFile.getPath();
+        String newName = newFile.getPath();
+        if (pathInQuestion.startsWith(oldName)) {
+            return new File(newName + pathInQuestion.substring(oldName.length()));
+        } else {
+            throw new RuntimeException("The file '" + newFile + "' doesn't contain '" + oldFile + "' as a prefix.");
+        }
     }
 }

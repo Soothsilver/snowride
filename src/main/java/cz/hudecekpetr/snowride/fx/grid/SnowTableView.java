@@ -7,7 +7,9 @@ import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -18,6 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 
 
@@ -46,6 +49,28 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.getColumns().get(0).setPrefWidth(30);
         this.getColumns().get(0).setStyle("-fx-alignment: center;");
         this.setOnKeyPressed(this::onKeyPressed);
+        this.setOnMouseClicked(this::onMouseClicked);
+    }
+
+    private void onMouseClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.isControlDown()) {
+            Cell cell = getFocusedCell();
+            IKnownKeyword keyword = cell.getKeywordInThisCell();
+            if (keyword != null) {
+                Scenario highElement = keyword.getScenarioIfPossible();
+                if (highElement != null) {
+                    mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
+                } else {
+                    mainForm.toast("Keyword '"  + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
+                }
+            }
+        }
+    }
+
+    private Cell getFocusedCell() {
+        TablePosition<LogicalLine, Cell> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
+        SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
+        return cellSimpleObjectProperty.getValue();
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {

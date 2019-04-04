@@ -33,7 +33,7 @@ public class DocumentationPopup extends PopupWindow {
         keyword_name = new Label("No Operation");
         keyword_name.setStyle("-fx-font-size: 12pt; -fx-font-weight: bold;");
         keyword_source = new Label("Built-in keyword (library BuiltIn)");
-        keyword_source.setStyle("-fx-font-style: italic;");
+        keyword_source.setStyle("-fx-font-style: italic; -fx-font-size: 8pt;");
         keyword_documentation = new DocumentationTextArea();
         keyword_documentation.setWrapText(true);
         icon = new ImageView(Images.stop);
@@ -42,10 +42,10 @@ public class DocumentationPopup extends PopupWindow {
                 new HBox(5, icon, keyword_source), vPane);
         VBox.setVgrow(vPane, Priority.ALWAYS);
         documentationPane.setStyle("-fx-background-color: whitesmoke;");
-        documentationPane.setMinWidth(300);
-        documentationPane.setMinHeight(200);
-        documentationPane.setMaxWidth(300);
-        documentationPane.setMaxHeight(600);
+        documentationPane.setMinWidth(400);
+        documentationPane.setMinHeight(350);
+        documentationPane.setMaxWidth(400);
+        documentationPane.setMaxHeight(350);
         documentationPane.setPadding(new Insets(6));
         this.setConsumeAutoHidingEvents(false);
         this.getContent().add(documentationPane);

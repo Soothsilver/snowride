@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.parser.GateParser;
@@ -10,6 +11,7 @@ import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
+import sun.applet.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,8 +26,7 @@ public class FileSuite extends Suite implements ISuite {
     public FileSuite(File file, String name, String contents) {
         super(name, contents, new ArrayList<>());
         this.file = file;
-        this.fileParsed = GateParser.parse(contents);
-        this.addChildren(fileParsed.getHighElements());
+        this.reparse();
     }
 
     @Override
@@ -50,7 +51,7 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void deleteSelf() {
+    public void deleteSelf(MainForm mainForm) {
         if (this.file.delete()) {
             this.dead = true;
             this.parent.dissociateSelfFromChild(this);
@@ -64,7 +65,7 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void renameSelfTo(String newName) {
+    public void renameSelfTo(String newName, MainForm mainForm) {
         File selfsParent = getParentAsFolder().directoryPath;
         File currentFile = this.file;
         File newFile = selfsParent.toPath().resolve(newName + ".robot").toFile();
@@ -103,6 +104,11 @@ public class FileSuite extends Suite implements ISuite {
         for (HighElement child : children) {
             child.optimizeStructure();
         }
+    }
+
+    @Override
+    protected void ancestorRenamed(File oldFile, File newFile) {
+        this.file = Extensions.changeAncestorTo(this.file, oldFile, newFile);
     }
 
     public void reparse() {
