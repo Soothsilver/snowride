@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.*;
+import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -21,7 +22,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -33,7 +33,6 @@ import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.stage.Window;
 import org.controlsfx.control.NotificationPane;
-import org.controlsfx.control.PopOver;
 
 import java.awt.*;
 import java.io.File;
@@ -136,6 +135,7 @@ public class MainForm {
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
         Scene scene = new Scene(notificationPane, Settings.getInstance().width, Settings.getInstance().height);
         scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
+        addGlobalShortcuts(scene);
         stage.setScene(scene);
         if (Settings.getInstance().x != -1) {
             stage.setX(Settings.getInstance().x);
@@ -150,6 +150,24 @@ public class MainForm {
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake2.png")));
+    }
+
+    private void addGlobalShortcuts(Scene scene) {
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.F5) {
+                    runTab.clickRun(null);
+                    event.consume();
+                } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
+                    goBack(null);
+                    event.consume();
+                } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
+                    goForwards(null);
+                    event.consume();
+                }
+            }
+        });
     }
 
     public void changeOccurredTo(HighElement whatChanged, LastChangeKind how) {
@@ -275,7 +293,7 @@ public class MainForm {
                 public void handle(ActionEvent event) {
                     String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
                     if (name != null) {
-                        ((FileSuite)element).createNewChild(name, true);
+                        ((FileSuite)element).createNewChild(name, true, MainForm.this);
                         changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
@@ -301,7 +319,7 @@ public class MainForm {
                 public void handle(ActionEvent event) {
                     String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
                     if (name != null) {
-                        ((ISuite)element).createNewChild(name, false);
+                        ((ISuite)element).createNewChild(name, false, MainForm.this);
                         changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
@@ -440,11 +458,28 @@ public class MainForm {
         bSaveAll.setOnAction(this::saveAll);
         bSaveAll.disableProperty().bind(canSave.not());
 
+        MenuItem bSettings = new MenuItem("Settings", loadIcon(Images.keywordIcon));
+        bSettings.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
+                settingsWindow.show();
+            }
+        });
+
+        MenuItem bReload = new MenuItem("Reload external libraries");
+        bReload.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                reloadExternalLibraries();
+            }
+        });
+
         MenuItem bExit = new MenuItem("Exit Snowride", loadIcon(Images.exit));
         bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
-        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bExit);
+        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReload, bExit);
         refreshRecentlyOpenMenu();
 
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
@@ -500,6 +535,7 @@ public class MainForm {
         humanInControl = false;
         projectTree.getFocusModel().focus(index);
         projectTree.getSelectionModel().select(index);
+        projectTree.scrollTo(index);
         humanInControl = true;
     }
 
@@ -594,4 +630,7 @@ public class MainForm {
         });
     }
 
+    public void reloadExternalLibraries() {
+
+    }
 }

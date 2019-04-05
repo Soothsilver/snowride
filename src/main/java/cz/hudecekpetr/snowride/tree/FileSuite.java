@@ -150,7 +150,7 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void createNewChild(String name, boolean asTestCase) {
+    public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
         this.applyAndValidateText();
         Scenario scenario = new Scenario(new Cell(name, "", null), asTestCase, new ArrayList<>());
         scenario.parent = this;
@@ -161,6 +161,7 @@ public class FileSuite extends Suite implements ISuite {
         }
         this.children.add(scenario);
         this.treeNode.getChildren().add(scenario.treeNode);
+        mainForm.selectProgrammaticallyAndRememberInHistory(scenario);
     }
 
     public void analyzeSemantics() {

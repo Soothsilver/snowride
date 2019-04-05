@@ -5,5 +5,12 @@
       <option name="m_reportEmptyBlocks" value="true" />
       <option name="commentsAreContent" value="true" />
     </inspection_tool>
+    <inspection_tool class="WeakerAccess" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="false" />
+      <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="false" />
+      <option name="SUGGEST_PRIVATE_FOR_INNERS" value="false" />
+      <option name="SUGGEST_FOR_CONSTANTS" value="false" />
+      <disabledExtension id="moduleInfo" />
+    </inspection_tool>
   </profile>
 </component>

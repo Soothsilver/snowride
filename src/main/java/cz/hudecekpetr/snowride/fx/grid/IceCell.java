@@ -101,6 +101,10 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                         cancelEdit();
                         event.consume();
                     }
+                    else if (event.getCode() == KeyCode.RIGHT) {
+                        commit();
+                        // No consume. May work?
+                    }
                 }
             });
             textField.widthProperty().addListener(new ChangeListener<Number>() {

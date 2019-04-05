@@ -171,7 +171,7 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void createNewChild(String name, boolean asTestCase) {
+    public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
         this.applyAndValidateText();
         if (asTestCase) {
             throw new RuntimeException("Folders can't contain test cases.");
@@ -184,6 +184,7 @@ public class FolderSuite extends Suite implements ISuite {
         this.children.add(newKeyword);
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
+        mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
     }
 
     public void analyzeSemantics() {

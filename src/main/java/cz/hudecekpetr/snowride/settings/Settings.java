@@ -27,6 +27,7 @@ public class Settings {
     public double width = 800;
     public double height = 700;
     public boolean maximized = false;
+    public String additionalXmlFiles = "";
 
     public static Settings getInstance() {
         if (instance == null) {

@@ -31,7 +31,10 @@ public class ImportedResource {
             case RESOURCE:
                 Path path = Paths.get(name);
                 HighElement suite = owningSuite;
-                for (Path section : path) {
+                if (suite instanceof FileSuite) {
+                    suite = suite.parent;
+                }
+                outerFor: for (Path section : path) {
                     String s = section.toString();
                     if (s.equals(".")) {
                         continue;
@@ -45,18 +48,23 @@ public class ImportedResource {
                     }
                     else {
                         for (HighElement child : suite.children) {
-                            if (child.shortName.equals(section)) {
+                            if (child.shortName.equals(section.toString())) {
                                 // TODO canonicalizing names
                                 suite = child;
                                 continue;
                             }
+                            if ((child.shortName + ".robot").equals(section.toString())) {
+                                suite = child;
+                                break outerFor;
+                            }
                         }
                     }
                     return Stream.empty();
+
                 }
                 if (suite instanceof Suite) {
                     Suite asSuite = (Suite)suite;
-                    return asSuite.getSelfKeywords();
+                    return asSuite.getKeywordsPermissibleInSuite();
                 } else {
                     return Stream.empty();
                 }

@@ -127,9 +127,6 @@ public class TcpHost {
                 int number = Integer.parseInt(theNumber);
                 if (incomingBuffer.length() >= pipeIndex + 1 + number) {
                     String data = incomingBuffer.substring(pipeIndex + 1, pipeIndex + 1 + number);
-                    if (data.contains("ahoj")) {
-                        System.out.println("A");
-                    }
                     performJsonCommand(data);
                     incomingBuffer.delete(0, pipeIndex + 1 + number);
                     analyzeBuffer(incomingBuffer);
