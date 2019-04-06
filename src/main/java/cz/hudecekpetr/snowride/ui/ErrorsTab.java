@@ -22,7 +22,7 @@ public class ErrorsTab {
         tableErrors = new TableView<>();
         TableColumn<SnowrideError, HighElement> locationColumn = new TableColumn<>("Location");
         locationColumn.setCellValueFactory(param -> param.getValue().where);
-        locationColumn.setPrefWidth(100);
+        locationColumn.setPrefWidth(150);
 
         locationColumn.setCellFactory(new Callback<TableColumn<SnowrideError, HighElement>, TableCell<SnowrideError, HighElement>>() {
             @Override
@@ -69,7 +69,7 @@ public class ErrorsTab {
                 };
             }
         });
-        severityColumn.setPrefWidth(50);
+        severityColumn.setPrefWidth(100);
         tableErrors.getColumns().add(severityColumn);
         TableColumn<SnowrideError, ErrorKind> typeColumn = new TableColumn<>("Type");
         typeColumn.setCellValueFactory(param -> param.getValue().type);
