@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui.settings;
 
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
@@ -14,6 +15,7 @@ public class TitledTextArea extends VBox {
         area = new TextArea(defaultValue);
         area.setPrefWidth(Double.MAX_VALUE);
         area.setPrefHeight(70);
+        area.setFont(MainForm.TEXT_EDIT_FONT);
         this.getChildren().add(area);
     }
 

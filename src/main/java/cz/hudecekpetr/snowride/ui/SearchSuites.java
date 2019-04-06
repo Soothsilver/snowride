@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.AutoCompletionBinding;
 import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -17,11 +18,11 @@ public class SearchSuites {
     }
 
     private Collection<HighElement> callback(AutoCompletionBinding.ISuggestionRequest request) {
-        String requestText = request.getUserText().toLowerCase();
+        String requestText = Extensions.toInvariant(request.getUserText());
         HighElement root = mainForm.getProjectTree().getRoot().getValue();
         List<HighElement> validElements = new ArrayList<>();
         root.selfAndDescendantHighElements().forEachOrdered((highElement -> {
-            if (highElement.getAutocompleteText().toLowerCase().contains(requestText)) {
+            if (Extensions.toInvariant(highElement.getAutocompleteText()).contains(requestText)) {
                 validElements.add(highElement);
             }
         }));

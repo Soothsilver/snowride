@@ -8,11 +8,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
 
-public class DocumentationPopup extends PopupWindow {
+public class DocumentationPopup extends Popup {
 
     private final Label keyword_name;
     private final Label keyword_source;

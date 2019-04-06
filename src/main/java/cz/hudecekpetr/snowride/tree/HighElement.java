@@ -2,16 +2,18 @@ package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.AggregatedObservableArrayList;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import sun.applet.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +25,12 @@ public abstract class HighElement implements IAutocompleteOption {
     public String shortName;
     public final ImageView imageView;
     public final CheckBox checkbox;
-    public ObservableList<SnowrideError> allErrorsRecursive = FXCollections.observableArrayList();
+    public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
+    public ObservableList<SnowrideError> allErrorsRecursive;
+    private AggregatedObservableArrayList<SnowrideError> allErrorsRecursiveSource = new AggregatedObservableArrayList<>();
     private HBox graphic;
     public String contents;
-    public final List<HighElement> children;
+    public final ObservableList<HighElement> children;
     public TreeItem<HighElement> treeNode;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
@@ -45,7 +49,22 @@ public abstract class HighElement implements IAutocompleteOption {
         treeNode = new TreeItem<>(this, this.graphic);
         this.shortName = shortName;
         this.contents = contents;
-        this.children = new ArrayList<>();
+        this.children = FXCollections.observableArrayList();
+        this.children.addListener(new ListChangeListener<HighElement>() {
+            @Override
+            public void onChanged(Change<? extends HighElement> c) {
+                while (c.next()) {
+                    for (HighElement added : c.getAddedSubList()) {
+                        allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
+                    }
+                    for (HighElement removed : c.getRemoved()) {
+                        allErrorsRecursiveSource.removeList(removed.allErrorsRecursive);
+                    }
+                }
+            }
+        });
+        allErrorsRecursiveSource.appendList(this.selfErrors);
+        allErrorsRecursive = allErrorsRecursiveSource.getAggregatedList();
         addChildren(children);
     }
 

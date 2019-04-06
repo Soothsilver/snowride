@@ -6,7 +6,15 @@ import javafx.beans.property.SimpleStringProperty;
 import org.controlsfx.validation.Severity;
 
 public class SnowrideError {
-    public SimpleObjectProperty<HighElement> where;
-    public SimpleStringProperty description;
-    public SimpleObjectProperty<Severity> severity;
+    public SimpleObjectProperty<HighElement> where = new SimpleObjectProperty<>();
+    public SimpleStringProperty description = new SimpleStringProperty();
+    public SimpleObjectProperty<Severity> severity = new SimpleObjectProperty<>();
+    public SimpleObjectProperty<ErrorKind> type = new SimpleObjectProperty<>();
+
+    public SnowrideError(HighElement where, ErrorKind type, Severity severity, String description) {
+        this.where.setValue(where);
+        this.description.setValue(description);
+        this.severity.set(severity);
+        this.type.set(type);
+    }
 }

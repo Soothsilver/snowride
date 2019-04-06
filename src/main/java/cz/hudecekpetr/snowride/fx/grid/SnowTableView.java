@@ -28,11 +28,13 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private HighElement scenario;
     private MainForm mainForm;
+    public SnowTableKind snowTableKind;
     public boolean triggerAutocompletionNext;
 
-    public SnowTableView(MainForm mainForm) {
+    public SnowTableView(MainForm mainForm, SnowTableKind snowTableKind) {
         super();
         this.mainForm = mainForm;
+        this.snowTableKind = snowTableKind;
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -53,7 +55,7 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     private void onMouseClicked(MouseEvent mouseEvent) {
-        if (mouseEvent.isControlDown()) {
+        if (mouseEvent.isControlDown() && snowTableKind.isScenario()) {
             Cell cell = getFocusedCell();
             IKnownKeyword keyword = cell.getKeywordInThisCell();
             if (keyword != null) {
@@ -174,7 +176,11 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.getColumns().remove(columnCount, this.getColumns().size());
         } else {
             while (this.getColumns().size() < columnCount) {
-                addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)
+                if (snowTableKind.isScenario()) {
+                    addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)
+                } else {
+                    addColumn(this.getColumns().size() - 1);
+                }
             }
         }
         this.considerAddingVirtualRowsAndColumns();

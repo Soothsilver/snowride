@@ -21,14 +21,15 @@ import java.util.List;
 public class FolderSuite extends Suite implements ISuite {
     public File directoryPath;
     private File initFile;
-    private RobotFile initFileParsed;
 
-    public FolderSuite(File directoryPath, File initFile, RobotFile initFileParsed, String name, String contents, List<HighElement> children) {
+    public FolderSuite(File directoryPath, File initFile, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
         this.imageView.setImage(Images.folderIcon);
         this.directoryPath = directoryPath;
         this.initFile = initFile;
-        this.initFileParsed = initFileParsed;
+        if (this.initFile != null) {
+            reparse();
+        }
     }
 
     @Override
@@ -37,7 +38,7 @@ public class FolderSuite extends Suite implements ISuite {
             if (initFile == null) {
                 initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
                 initFile.createNewFile();
-                initFileParsed = new RobotFile();
+                fileParsed = new RobotFile();
             }
             this.applyAndValidateText();
         }
@@ -87,7 +88,7 @@ public class FolderSuite extends Suite implements ISuite {
         File oldFile = this.directoryPath;
         File newFile = this.directoryPath.getParentFile().toPath().resolve(newName).toFile();
         if (this.directoryPath.renameTo(newFile)) {
-            this.shortName = newName;
+            this.shortName = Extensions.toPrettyName(newName);
             this.directoryPath = newFile;
             if (this.initFile != null) {
                 this.initFile = Extensions.changeAncestorTo(initFile, oldFile, newFile);
@@ -101,23 +102,11 @@ public class FolderSuite extends Suite implements ISuite {
         refreshToString();
     }
 
-    @Override
-    public void applyAndValidateText() {
-        // Apply
-        if (this.areTextChangesUnapplied) {
-            reparse();
-            this.areTextChangesUnapplied = false;
-        }
-
-        // Validate
-        if (initFileParsed != null && initFileParsed.errors.size() > 0) {
-            throw new RuntimeException("There are parse errors.");
-        }
-    }
 
     @Override
     public void markAsStructurallyChanged(MainForm mainForm) {
-        throw new NotImplementedException("not yet");
+        this.recheckSerialization();
+        mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
     }
 
     @Override
@@ -133,21 +122,8 @@ public class FolderSuite extends Suite implements ISuite {
         }
     }
 
-    public void reparse() {
-        if (contents != null) {
-            this.children.removeIf(he -> he instanceof Scenario);
-            this.treeNode.getChildren().removeIf(ti -> ti.getValue() instanceof Scenario);
-            RobotFile parsed = GateParser.parse(contents);
-            this.initFileParsed = parsed;
-            this.reparseResources(parsed);
-            this.addChildren(parsed.getHighElements());
-            this.analyzeSemantics();
-        }
-    }
-
-
     public RobotFile getInitFileParsed() {
-        return initFileParsed;
+        return fileParsed;
     }
 
     @Override
@@ -161,9 +137,10 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public String getFullDocumentation() {
-        return this.directoryPath.getAbsolutePath();
+    public String getQuickDocumentationCaption() {
+        return toString();
     }
+
 
     @Override
     public String getItalicsSubheading() {
@@ -180,16 +157,10 @@ public class FolderSuite extends Suite implements ISuite {
             throw new NotImplementedException("This folder doesn't have an initfile yet and creating one isn't implemented yet.");
         }
         Scenario newKeyword = new Scenario(new Cell(name, "", null), false, new ArrayList<>());
-        this.initFileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);
+        this.fileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);
         this.children.add(newKeyword);
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
         mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
-    }
-
-    public void analyzeSemantics() {
-        if (this.initFileParsed != null) {
-            this.initFileParsed.analyzeSemantics(this);
-        }
     }
 }

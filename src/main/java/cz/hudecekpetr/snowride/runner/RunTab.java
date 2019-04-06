@@ -19,10 +19,12 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
@@ -148,7 +150,16 @@ public class RunTab {
             }
         });
         bReport.disableProperty().bind(Bindings.isNull(run.reportFile));
-        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport);
+        Button bRunAdvanced = new Button("Advanced run...", new ImageView(Images.play));
+        bRunAdvanced.disableProperty().bind(canRun.not());
+        ContextMenu advancedRunContextMenu = buildAdvancedRunContextMenu();
+        bRunAdvanced.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                advancedRunContextMenu.show(bRunAdvanced, Side.RIGHT, 0, 0);
+            }
+        });
+        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport, bRunAdvanced);
         hboxButtons.setPadding(new Insets(2));
         Label labelArguments = new Label("Arguments:");
         tbArguments = new TextField(Settings.getInstance().runArguments);
@@ -185,6 +196,23 @@ public class RunTab {
         tabRun = new Tab("Run", vboxTabRun);
         tabRun.setClosable(false);
         return tabRun;
+    }
+
+    private ContextMenu buildAdvancedRunContextMenu() {
+        // TODO make it do something:
+        MenuItem untilFailureOrStop = new MenuItem("...until failure");
+        MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
+        untilFailureOrStop.disableProperty().bind(canRun.not());
+        runOnlyFailedTests.disableProperty().bind(canRun.not());
+        runOnlyFailedTests.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                mainForm.selectFailedTests(mainForm.getProjectTree().getRoot().getValue());
+                clickRun(event);
+            }
+        });
+        ContextMenu menu = new ContextMenu(untilFailureOrStop, runOnlyFailedTests);
+        return menu;
     }
 
     private void timer() {
@@ -248,7 +276,7 @@ public class RunTab {
             // Back to std. image
             mainForm.getProjectTree().getRoot().getValue().selfAndDescendantHighElements().forEach((he)->{
                 if (he instanceof Scenario && ((Scenario) he).isTestCase()) {
-                    he.imageView.setImage(Images.testIcon);
+                    ((Scenario)he).markTestStatus(TestResult.NOT_YET_RUN);
                 }
             });
 
@@ -403,6 +431,13 @@ public class RunTab {
             lines.add(testCase.parent.getQualifiedName());
             lines.add("--test");
             lines.add(testCase.getQualifiedName());
+        }
+        if (Settings.getInstance().additionalFolders != null) {
+            String[] folders = StringUtils.splitByWholeSeparator(Settings.getInstance().additionalFolders, "\n");
+            for (String folder : folders) {
+                lines.add("--pythonpath");
+                lines.add(folder.trim());
+            }
         }
         FileUtils.writeLines(argfile, lines);
     }

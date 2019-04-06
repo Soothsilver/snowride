@@ -1,9 +1,11 @@
 package cz.hudecekpetr.snowride.ui;
 
+import com.sun.deploy.ui.AboutDialog;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
+import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.*;
 import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
@@ -46,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
+    public static final Font BIGGER_FONT = new Font("System Regular", 14);
     public static MainForm INSTANCE = null;
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
     private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
@@ -149,7 +152,7 @@ public class MainForm {
         stage.widthProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake2.png")));
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake3.png")));
     }
 
     private void addGlobalShortcuts(Scene scene) {
@@ -336,6 +339,16 @@ public class MainForm {
                 }
             });
             menu.add(select_all_tests);
+            if (element.selfAndDescendantHighElements().anyMatch(he -> he instanceof Scenario && ((Scenario)he).lastTestResult == TestResult.FAILED)) {
+                MenuItem select_failed_tests = new MenuItem("Select failed tests only");
+                select_failed_tests.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        selectFailedTests(element);
+                    }
+                });
+                menu.add(select_failed_tests);
+            }
             MenuItem deselect_all_tests = new MenuItem("Deselect all tests");
             deselect_all_tests.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
@@ -372,6 +385,13 @@ public class MainForm {
         });
         menu.add(delete);
         return menu;
+    }
+
+    public void selectFailedTests(HighElement element) {
+        element.checkbox.setSelected(element instanceof Scenario && ((Scenario)element).lastTestResult == TestResult.FAILED);
+        for (HighElement child : element.children) {
+            selectFailedTests(child);
+        }
     }
 
     private void delete(HighElement element) {
@@ -503,7 +523,16 @@ public class MainForm {
         stop.setOnAction(runTab::clickStop);
         Menu runMenu = new Menu("Run", null, run, stop);
 
-        mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu);
+        MenuItem about = new MenuItem("About");
+        about.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                AboutSnowride aboutSnowride = new AboutSnowride();
+                aboutSnowride.show();
+            }
+        });
+        Menu helpMenu = new Menu("Help", null, about);
+        mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, helpMenu);
         return mainMenu;
     }
 

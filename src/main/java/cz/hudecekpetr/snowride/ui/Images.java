@@ -23,6 +23,9 @@ public class Images {
     public static Image save = staticImage("save16.png");
     public static Image goLeft = staticImage("GoLeft.png");
     public static Image goRight = staticImage("GoRight.png");
+    public static Image warning = staticImage("warning16.png");
+    public static Image error = staticImage("error16.png");
+    public static Image snowflake = new Image(Images.class.getResourceAsStream("/icons/Snowflake3.png"));
 
     private static Image staticImage(final String filename) {
         return new Image(Images.class.getResourceAsStream("/icons/" + filename), 16, 16, false, false);

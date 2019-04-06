@@ -24,7 +24,7 @@ public class Filesystem {
         if (!asFile.mkdir()) {
             throw new RuntimeException("Failed to create the folder.");
         }
-        FolderSuite folderSuite = new FolderSuite(asFile, null, null, newFolder, null, new ArrayList<>());
+        FolderSuite folderSuite = new FolderSuite(asFile, null, newFolder, null, new ArrayList<>());
         parentFolder.children.add(folderSuite);
         parentFolder.treeNode.getChildren().add(folderSuite.treeNode);
         folderSuite.parent = parentFolder;

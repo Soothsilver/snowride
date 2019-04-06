@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.Setting;
 
 import java.util.ArrayList;
@@ -62,12 +63,47 @@ public class RobotFile {
                 }
             }
         }
-        // TODO for test cases
+        for (HighElement sc : getHighElements()) {
+            if (sc instanceof Scenario) {
+                Scenario scc = (Scenario) sc;
+                for (LogicalLine line : scc.getLines()) {
+                    if (line.cells.size() >= 3) {
+                        if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
+                            scc.semanticsDocumentation = line.cells.get(2).contents; // TODO make it all values concatenated
+                        }
+                    }
+                }
+            }
+        }
     }
 
+    public KeyValuePairSection findOrCreateSettingsSection() {
+        KeyValuePairSection settings = findSettingsSection();
+        if (settings == null) {
+            settings = new KeyValuePairSection(new SectionHeader(SectionKind.SETTINGS, "*** Settings ***\n"), new ArrayList<>());
+            sections.add(settings);
+        }
+        return settings;
+    }
+    public KeyValuePairSection findOrCreateVariablesSection() {
+        KeyValuePairSection settings = findVariablesSection();
+        if (settings == null) {
+            settings = new KeyValuePairSection(new SectionHeader(SectionKind.VARIABLES, "*** Variables ***\n"), new ArrayList<>());
+            sections.add(settings);
+        }
+        return settings;
+    }
     private KeyValuePairSection findSettingsSection() {
         for (RobotSection section : sections) {
             if (section.header.sectionKind == SectionKind.SETTINGS) {
+                return (KeyValuePairSection) section;
+            }
+        }
+        return null;
+    }
+    private KeyValuePairSection findVariablesSection() {
+        for (RobotSection section : sections) {
+            if (section.header.sectionKind == SectionKind.VARIABLES) {
                 return (KeyValuePairSection) section;
             }
         }

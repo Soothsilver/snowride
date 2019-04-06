@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
@@ -20,6 +21,7 @@ public class Scenario extends HighElement {
 
     private Cell nameCell;
     private boolean isTestCase;
+    public TestResult lastTestResult = TestResult.NOT_YET_RUN;
 
     public ObservableList<LogicalLine> getLines() {
         return lines;
@@ -136,5 +138,20 @@ public class Scenario extends HighElement {
     @Override
     public String getItalicsSubheading() {
         return isTestCase ? "Test case" : "Keyword";
+    }
+
+    public void markTestStatus(TestResult lastTestResult) {
+        this.lastTestResult = lastTestResult;
+        switch (lastTestResult) {
+            case NOT_YET_RUN:
+                this.imageView.setImage(Images.testIcon);
+                break;
+            case PASSED:
+                this.imageView.setImage(Images.yes);
+                break;
+            case FAILED:
+                this.imageView.setImage(Images.no);
+                break;
+        }
     }
 }

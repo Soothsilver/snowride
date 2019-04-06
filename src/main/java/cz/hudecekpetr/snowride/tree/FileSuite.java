@@ -3,25 +3,18 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
-import cz.hudecekpetr.snowride.parser.GateParser;
-import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.semantics.UserKeyword;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
-import sun.applet.Main;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
 
 public class FileSuite extends Suite implements ISuite {
     public File file;
-    public RobotFile fileParsed;
 
     public FileSuite(File file, String name, String contents) {
         super(name, contents, new ArrayList<>());
@@ -60,7 +53,7 @@ public class FileSuite extends Suite implements ISuite {
         }
     }
 
-    public FolderSuite getParentAsFolder() {
+    private FolderSuite getParentAsFolder() {
         return (FolderSuite) parent;
     }
 
@@ -70,7 +63,7 @@ public class FileSuite extends Suite implements ISuite {
         File currentFile = this.file;
         File newFile = selfsParent.toPath().resolve(newName + ".robot").toFile();
         if (currentFile.renameTo(newFile)) {
-            this.shortName = newName;
+            this.shortName = Extensions.toPrettyName(newName);
             this.file = newFile;
         } else {
             throw new RuntimeException("Could not rename the file suite '" + this.shortName + "'.");
@@ -79,22 +72,10 @@ public class FileSuite extends Suite implements ISuite {
     }
 
 
-    @Override
-    public void applyAndValidateText() {
-        // Apply
-        if (this.areTextChangesUnapplied) {
-            reparse();
-            this.areTextChangesUnapplied = false;
-        }
-
-        // Validate
-        if (fileParsed != null && fileParsed.errors.size() > 0) {
-            throw new RuntimeException("There are parse errors.");
-        }
-    }
 
     @Override
     public void markAsStructurallyChanged(MainForm mainForm) {
+        this.recheckSerialization();
         mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
     }
 
@@ -111,20 +92,6 @@ public class FileSuite extends Suite implements ISuite {
         this.file = Extensions.changeAncestorTo(this.file, oldFile, newFile);
     }
 
-    public void reparse() {
-        this.children.clear();
-        this.treeNode.getChildren().clear();
-        RobotFile parsed = GateParser.parse(contents);
-        this.fileParsed = parsed;
-        reparseResources(this.fileParsed);
-        this.addChildren(parsed.getHighElements());
-        this.analyzeSemantics();
-    }
-
-    public RobotFile getFileParsed() {
-        return fileParsed;
-    }
-
     public String serialize() {
         return fileParsed.serialize();
     }
@@ -139,10 +106,7 @@ public class FileSuite extends Suite implements ISuite {
         return "[file] " + toString();
     }
 
-    @Override
-    public String getFullDocumentation() {
-        return "*Qualified name:* " + this.getQualifiedName() + "\n" + "*Documentation:* " + this.semanticsDocumentation;
-    }
+
 
     @Override
     public String getItalicsSubheading() {
@@ -162,9 +126,5 @@ public class FileSuite extends Suite implements ISuite {
         this.children.add(scenario);
         this.treeNode.getChildren().add(scenario.treeNode);
         mainForm.selectProgrammaticallyAndRememberInHistory(scenario);
-    }
-
-    public void analyzeSemantics() {
-        this.fileParsed.analyzeSemantics(this);
     }
 }

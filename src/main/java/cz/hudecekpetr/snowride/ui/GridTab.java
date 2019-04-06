@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
 import cz.hudecekpetr.snowride.tree.*;
 import javafx.geometry.Insets;
@@ -21,6 +22,8 @@ public class GridTab {
     SnowTableView spreadsheetView;
     SplitPane suiteView;
     private MainForm mainForm;
+    private final SnowTableView tableSettings;
+    private final SnowTableView tableVariables;
 
     public Tab getTabGrid() {
         return tabGrid;
@@ -32,9 +35,9 @@ public class GridTab {
     public GridTab(MainForm mainForm) {
         this.mainForm = mainForm;
         lblParseError = new Label("No file loaded yet.");
-        spreadsheetView = new SnowTableView(mainForm);
-        SnowTableView tableSettings = new SnowTableView(mainForm);
-        SnowTableView tableVariables = new SnowTableView(mainForm);
+        spreadsheetView = new SnowTableView(mainForm, SnowTableKind.SCENARIO);
+        tableSettings = new SnowTableView(mainForm, SnowTableKind.SETTINGS);
+        tableVariables = new SnowTableView(mainForm, SnowTableKind.VARIABLES);
         Label settings = new Label("Settings");
         settings.setPadding(new Insets(5, 0, 0, 5));
         VBox vboxSettings = new VBox(5, settings, tableSettings);
@@ -77,8 +80,14 @@ public class GridTab {
         }
     }
 
-    private void loadSuiteTables(ISuite fsuite) {
+    private void loadSuiteTables(Suite fsuite) {
         tabGrid.setContent(suiteView);
+        if (fsuite.fileParsed != null) {
+            // TODO allow structural changes to nonexisting __init__.robot file.
+            tableSettings.loadLines(fsuite.fileParsed.findOrCreateSettingsSection().pairs);
+            tableVariables.loadLines(fsuite.fileParsed.findOrCreateVariablesSection().pairs);
+        }
+
     }
 
     private void setParseErrors(List<Exception> errors) {

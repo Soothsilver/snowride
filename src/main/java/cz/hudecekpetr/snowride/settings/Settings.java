@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.settings;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +28,11 @@ public class Settings {
     public double width = 800;
     public double height = 700;
     public boolean maximized = false;
+
+
+    @SuppressWarnings("unused") // Kept for backwards compatibility with previous versions of the Settings file.
     public String additionalXmlFiles = "";
+    public String additionalFolders = "";
 
     public static Settings getInstance() {
         if (instance == null) {
@@ -56,7 +61,7 @@ public class Settings {
             instance = settings;
         } catch (Exception exception) {
             System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
-                    "you launch Snowride, this is fine and ignore this message. Actual exception: " + exception.getMessage());
+                    "you launch Snowride, this is fine and ignore this message.");
             instance = new Settings();
         }
     }

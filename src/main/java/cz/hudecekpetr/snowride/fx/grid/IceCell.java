@@ -144,11 +144,15 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     private void updateStyle() {
         String style = "";
-        if (cellIndex <= 0) {
+        if (cellIndex <= -1) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
             setStyle(style);
         } else {
-            setStyle(getItem().getStyle());
+            if (snowTableView.snowTableKind.isScenario()) {
+                setStyle(getItem().getStyle());
+            } else {
+                setStyle(null);
+            }
         }
 
 

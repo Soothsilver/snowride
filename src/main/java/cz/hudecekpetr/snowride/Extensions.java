@@ -60,4 +60,12 @@ public class Extensions {
             throw new RuntimeException("The file '" + newFile + "' doesn't contain '" + oldFile + "' as a prefix.");
         }
     }
+
+    public static String toInvariant(String suiteOrKeywordName) {
+        return suiteOrKeywordName.replace('_', ' ').replace(" ", "").toLowerCase();
+    }
+
+    public static String toPrettyName(String newName) {
+        return newName.replace('_', ' ');
+    }
 }

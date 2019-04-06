@@ -174,10 +174,10 @@ public class TcpHost {
                     Scenario endingTest = mainForm.findTestByFullyQualifiedName(longname2);
                     if (status.equals("PASS")){
                         runTab.run.countPassedTests++;
-                        endingTest.imageView.setImage(Images.yes);
+                        endingTest.markTestStatus(TestResult.PASSED);
                     } else {
                         runTab.run.countFailedTests++;
-                        endingTest.imageView.setImage(Images.no);
+                        endingTest.markTestStatus(TestResult.FAILED);
                     }
                     runTab.updateResultsPanel();
                     break;

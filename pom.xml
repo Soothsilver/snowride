@@ -126,4 +126,10 @@
 
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>bintray-snowride-repo</id>
+            <url>https://api.bintray.com/maven/soothsilver/maven-repo/snowride/;publish=1</url>
+        </repository>
+    </distributionManagement>
 </project>

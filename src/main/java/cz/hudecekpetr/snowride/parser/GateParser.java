@@ -23,7 +23,6 @@ public class GateParser {
             String name = directoryPath.getName();
             String contents = null;
             File initFile = null;
-            RobotFile initFileParsed = null;
             List<HighElement> fileSuites = new ArrayList<>();
             File[] files = directoryPath.listFiles();
             double perFile = partOfProgress / files.length;
@@ -34,7 +33,6 @@ public class GateParser {
                 } else if (inFile.getName().toLowerCase().equals("__init__.robot")) {
                     contents = FileUtils.readFileToString(inFile, "utf-8");
                     initFile = inFile;
-                    initFileParsed = gate.parse(contents);
                     partOfOperation.success(perFile);
                 } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
                     FileSuite inThing = loadFile(inFile);
@@ -45,7 +43,7 @@ public class GateParser {
                     partOfOperation.success(perFile);
                 }
             }
-            FolderSuite folderSuite = new FolderSuite(directoryPath, initFile, initFileParsed, name, contents, fileSuites);
+            FolderSuite folderSuite = new FolderSuite(directoryPath, initFile, name, contents, fileSuites);
             folderSuite.reparse();
             for(HighElement fs : fileSuites) {
                 fs.parent = folderSuite;

@@ -1,17 +1,23 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.Setting;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class KeyValuePairSection extends RobotSection {
-    private final List<LogicalLine> pairs;
+    public final ObservableList<LogicalLine> pairs;
 
     public KeyValuePairSection(SectionHeader header, List<LogicalLine> pairs) {
         super(header);
-        this.pairs = pairs;
+        this.pairs = FXCollections.observableArrayList(pairs);
+        for (LogicalLine line : pairs) {
+            line.lineNumber = new PositionInListProperty<>(line, this.pairs);
+        }
     }
 
     @Override
