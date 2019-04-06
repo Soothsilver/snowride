@@ -3,8 +3,6 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
-import cz.hudecekpetr.snowride.parser.GateParser;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.control.Alert;
@@ -40,7 +38,7 @@ public class FolderSuite extends Suite implements ISuite {
                 initFile.createNewFile();
                 fileParsed = new RobotFile();
             }
-            this.applyAndValidateText();
+            this.applyText();
         }
         // Save folders and suites below
         for (HighElement child : children) {
@@ -105,7 +103,7 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public void markAsStructurallyChanged(MainForm mainForm) {
-        this.recheckSerialization();
+        this.analyzeSemantics();
         mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
     }
 
@@ -120,6 +118,11 @@ public class FolderSuite extends Suite implements ISuite {
         if (this.initFile != null) {
             this.initFile = Extensions.changeAncestorTo(this.initFile, oldFile, newFile);
         }
+    }
+
+    @Override
+    public Suite asSuite() {
+        return this;
     }
 
     public RobotFile getInitFileParsed() {
@@ -149,12 +152,15 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
-        this.applyAndValidateText();
+        this.applyText();
         if (asTestCase) {
             throw new RuntimeException("Folders can't contain test cases.");
         }
         if (this.initFile == null) {
             throw new NotImplementedException("This folder doesn't have an initfile yet and creating one isn't implemented yet.");
+        }
+        if (this.fileParsed.errors.size() > 0) {
+            throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
         }
         Scenario newKeyword = new Scenario(new Cell(name, "", null), false, new ArrayList<>());
         this.fileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);

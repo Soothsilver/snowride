@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.AggregatedObservableArrayList;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.ObservableMultiset;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.value.ChangeListener;
@@ -27,7 +28,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public final CheckBox checkbox;
     public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
     public ObservableList<SnowrideError> allErrorsRecursive;
-    private AggregatedObservableArrayList<SnowrideError> allErrorsRecursiveSource = new AggregatedObservableArrayList<>();
+    private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
     private HBox graphic;
     public String contents;
     public final ObservableList<HighElement> children;
@@ -55,6 +56,7 @@ public abstract class HighElement implements IAutocompleteOption {
             public void onChanged(Change<? extends HighElement> c) {
                 while (c.next()) {
                     for (HighElement added : c.getAddedSubList()) {
+                        System.out.println("Adding [" + added + "] to [" + HighElement.this + "].");
                         allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
                     }
                     for (HighElement removed : c.getRemoved()) {
@@ -63,8 +65,9 @@ public abstract class HighElement implements IAutocompleteOption {
                 }
             }
         });
+        System.out.println("Adding [" + this + ".self] to [" + this + "].");
         allErrorsRecursiveSource.appendList(this.selfErrors);
-        allErrorsRecursive = allErrorsRecursiveSource.getAggregatedList();
+        allErrorsRecursive = allErrorsRecursiveSource;//.getAggregatedList();
         addChildren(children);
     }
 
@@ -119,7 +122,7 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public abstract void renameSelfTo(String newName, MainForm mainForm);
 
-    public abstract void applyAndValidateText();
+    public abstract void applyText();
 
     public abstract void markAsStructurallyChanged(MainForm mainForm);
 
@@ -131,4 +134,6 @@ public abstract class HighElement implements IAutocompleteOption {
     }
 
     protected abstract void ancestorRenamed(File oldFile, File newFile);
+
+    public abstract Suite asSuite();
 }

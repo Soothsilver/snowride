@@ -45,6 +45,7 @@ public class ImportedResource {
                             // we're getting out of the tree
                             throw new ImportException("Snowride cannot import resource files from outside the root folder.");
                         }
+                        continue;
                     }
                     else {
                         for (HighElement child : suite.children) {

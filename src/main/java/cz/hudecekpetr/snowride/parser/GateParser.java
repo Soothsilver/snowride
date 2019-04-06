@@ -48,7 +48,6 @@ public class GateParser {
             for(HighElement fs : fileSuites) {
                 fs.parent = folderSuite;
             }
-            folderSuite.analyzeSemantics();
             return folderSuite;
         } catch (IOException exc) {
             throw new RuntimeException(exc);
@@ -59,7 +58,6 @@ public class GateParser {
         String name = FilenameUtils.removeExtension(inFile.getName());
         String contents = FileUtils.readFileToString(inFile, "utf-8");
         FileSuite fs = new FileSuite(inFile, name, contents);
-        fs.analyzeSemantics();
         return fs;
     }
 

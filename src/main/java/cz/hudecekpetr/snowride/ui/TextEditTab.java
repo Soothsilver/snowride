@@ -16,7 +16,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class TextEditTab {
@@ -68,7 +67,10 @@ public class TextEditTab {
             @Override
             public void handle(ActionEvent event) {
                 HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-                whatChanged.applyAndValidateText();
+                whatChanged.applyText();
+                if (whatChanged.asSuite().fileParsed != null && whatChanged.asSuite().fileParsed.errors.size() > 0) {
+                    throw new RuntimeException("There are parse errors. See the other tabs for details.");
+                }
             }
         });
         HBox hBox = new HBox(2, bApply, lblInfo);

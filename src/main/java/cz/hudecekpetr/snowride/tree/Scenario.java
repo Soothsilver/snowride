@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
-import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.runner.TestResult;
@@ -10,7 +10,6 @@ import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,8 +60,8 @@ public class Scenario extends HighElement {
     }
 
     @Override
-    public void applyAndValidateText() {
-        this.parent.applyAndValidateText();
+    public void applyText() {
+        this.parent.applyText();
     }
 
     @Override
@@ -92,6 +91,11 @@ public class Scenario extends HighElement {
     @Override
     protected void ancestorRenamed(File oldFile, File newFile) {
         // don't care, this is for files
+    }
+
+    @Override
+    public Suite asSuite() {
+        return (Suite) this.parent;
     }
 
     public void serializeInto(StringBuilder sb) {
@@ -132,7 +136,7 @@ public class Scenario extends HighElement {
     public String getFullDocumentation() {
         return
                 "In suite: " + this.parent.getQualifiedName() + "\n" +
-                "Documentation not yet invented";
+                        "Documentation not yet invented";
     }
 
     @Override
@@ -153,5 +157,10 @@ public class Scenario extends HighElement {
                 this.imageView.setImage(Images.no);
                 break;
         }
+    }
+
+    @Override
+    public String getQuickDocumentationCaption() {
+        return toString();
     }
 }

@@ -8,6 +8,7 @@ import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.*;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
@@ -70,14 +71,11 @@ public abstract class Suite extends HighElement {
             this.fileParsed = parsed;
             this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
             for (Exception exception : parsed.errors) {
-                this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, exception.getMessage()));
+                this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
             this.reparseResources(parsed);
             this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.IMPORT_ERROR);
-            this.validateImportedResources();
             this.addChildren(parsed.getHighElements());
-            this.analyzeSemantics();
-            this.recheckSerialization();
         }
     }
 
@@ -95,19 +93,17 @@ public abstract class Suite extends HighElement {
         if (this.fileParsed != null) {
             this.fileParsed.analyzeSemantics(this);
         }
+        this.validateImportedResources();
+        this.recheckSerialization();
     }
 
     @Override
-    public void applyAndValidateText() {
+    public void applyText() {
         // Apply
         if (this.areTextChangesUnapplied) {
             reparse();
+            analyzeSemantics();
             this.areTextChangesUnapplied = false;
-        }
-
-        // Validate
-        if (fileParsed != null && fileParsed.errors.size() > 0) {
-            throw new RuntimeException("There are parse errors.");
         }
     }
 

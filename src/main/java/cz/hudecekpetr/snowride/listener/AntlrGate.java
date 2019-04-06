@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.antlr.RobotParser;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.InputMismatchException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,7 +22,7 @@ public class AntlrGate {
         try {
             file = robotParser.file().File;
         } catch (Exception exception) {
-            listener.errors.add(exception);
+            listener.errors.add(new RuntimeException("Parsing failed. " + exception.getMessage(), exception));
         }
         file.errors = listener.errors;
         return file;

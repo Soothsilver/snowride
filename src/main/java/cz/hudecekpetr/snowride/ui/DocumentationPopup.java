@@ -21,7 +21,7 @@ public class DocumentationPopup extends Popup {
     private final DocumentationTextArea keyword_documentation;
 
     public void setData(IAutocompleteOption option) {
-        keyword_name.setText(option.getAutocompleteText());
+        keyword_name.setText(option.getQuickDocumentationCaption());
         keyword_source.setText(option.getItalicsSubheading());
         icon.setImage(option.getAutocompleteIcon());
         keyword_documentation.setDocumentation(option.getFullDocumentation());

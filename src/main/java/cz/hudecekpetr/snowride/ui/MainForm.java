@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.ui;
 
-import com.sun.deploy.ui.AboutDialog;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
@@ -74,7 +73,7 @@ public class MainForm {
 
     private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
-            getFocusedElement().applyAndValidateText();
+            getFocusedElement().applyText();
         }
         if (newValue == gridTab.getTabGrid()) {
             gridTab.loadElement(getFocusedElement());
@@ -253,7 +252,7 @@ public class MainForm {
 
     private void onfocusTreeNode(TreeItem<HighElement> oldValue) {
         if (oldValue != null) {
-            oldValue.getValue().applyAndValidateText();
+            oldValue.getValue().applyText();
         }
     }
 
@@ -584,6 +583,11 @@ public class MainForm {
             try {
                 File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 1);
+                folderSuite.selfAndDescendantHighElements().forEachOrdered(he -> {
+                    if (he instanceof Suite) {
+                        ((Suite)he).analyzeSemantics();
+                    }
+                });
                 Platform.runLater(()-> {
                     projectLoad.progress.set(1);
                     projectTree.setRoot(folderSuite.treeNode);

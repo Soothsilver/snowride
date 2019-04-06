@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -217,7 +218,11 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
         if (e != null) {
-            errors.add(e);
+            if (!StringUtils.isBlank(msg)) {
+                errors.add(new RuntimeException(msg + " at " + line + ":" + charPositionInLine));
+            } else {
+                errors.add(e);
+            }
         } else {
             errors.add(new RuntimeException("Non-exception error " + msg));
         }

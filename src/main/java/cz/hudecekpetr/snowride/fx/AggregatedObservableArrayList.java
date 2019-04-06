@@ -19,10 +19,10 @@ import java.util.function.Function;
  */
 public class AggregatedObservableArrayList<T> {
 
-    protected final List<ObservableList<T>> lists = new ArrayList<>();
+    private final List<ObservableList<T>> lists = new ArrayList<>();
     final private List<Integer> sizes = new ArrayList<>();
     final private List<InternalListModificationListener> listeners = new ArrayList<>();
-    final protected ObservableList<T> aggregatedList = FXCollections.observableArrayList();
+    private final ObservableList<T> aggregatedList = FXCollections.observableArrayList();
 
     public AggregatedObservableArrayList() {
 

@@ -22,6 +22,26 @@ public class ErrorsTab {
         tableErrors = new TableView<>();
         TableColumn<SnowrideError, HighElement> locationColumn = new TableColumn<>("Location");
         locationColumn.setCellValueFactory(param -> param.getValue().where);
+        locationColumn.setPrefWidth(100);
+
+        locationColumn.setCellFactory(new Callback<TableColumn<SnowrideError, HighElement>, TableCell<SnowrideError, HighElement>>() {
+            @Override
+            public TableCell<SnowrideError, HighElement> call(TableColumn<SnowrideError, HighElement> param) {
+                return new TableCell<SnowrideError, HighElement>() {
+                    @Override
+                    protected void updateItem(HighElement item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setText(item.shortName);
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
         tableErrors.getColumns().add(locationColumn);
         TableColumn<SnowrideError, Severity> severityColumn = new TableColumn<>("Severity");
         severityColumn.setCellValueFactory(param -> param.getValue().severity);
@@ -39,8 +59,10 @@ public class ErrorsTab {
                             setText(null);
                             if (item == Severity.ERROR) {
                                 setGraphic(new ImageView(Images.error));
+                                setText("Error");
                             } else {
                                 setGraphic(new ImageView(Images.warning));
+                                setText("Warning");
                             }
                         }
                     }
@@ -51,7 +73,7 @@ public class ErrorsTab {
         tableErrors.getColumns().add(severityColumn);
         TableColumn<SnowrideError, ErrorKind> typeColumn = new TableColumn<>("Type");
         typeColumn.setCellValueFactory(param -> param.getValue().type);
-        severityColumn.setPrefWidth(150);
+        typeColumn.setPrefWidth(100);
         tableErrors.getColumns().add(typeColumn);
         TableColumn<SnowrideError, String> descriptionColumn = new TableColumn<>("Description");
         descriptionColumn.setCellValueFactory(param -> param.getValue().description);

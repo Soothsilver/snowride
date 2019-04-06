@@ -7,7 +7,6 @@ import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class FileSuite extends Suite implements ISuite {
     @Override
     public void saveAll() throws IOException {
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            this.applyAndValidateText();
+            this.applyText();
             System.out.println("SaveAll: " + this.shortName);
         } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
             this.contents = serialize();
@@ -75,7 +74,7 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public void markAsStructurallyChanged(MainForm mainForm) {
-        this.recheckSerialization();
+        this.analyzeSemantics();
         mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
     }
 
@@ -90,6 +89,16 @@ public class FileSuite extends Suite implements ISuite {
     @Override
     protected void ancestorRenamed(File oldFile, File newFile) {
         this.file = Extensions.changeAncestorTo(this.file, oldFile, newFile);
+    }
+
+    @Override
+    public Suite asSuite() {
+        return this;
+    }
+
+    @Override
+    public String getQuickDocumentationCaption() {
+        return toString();
     }
 
     public String serialize() {
@@ -115,7 +124,10 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
-        this.applyAndValidateText();
+        this.applyText();
+        if (this.fileParsed.errors.size() > 0) {
+            throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
+        }
         Scenario scenario = new Scenario(new Cell(name, "", null), asTestCase, new ArrayList<>());
         scenario.parent = this;
         if (asTestCase) {
