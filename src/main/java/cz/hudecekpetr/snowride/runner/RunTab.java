@@ -82,6 +82,7 @@ public class RunTab {
         this.mainForm = mainForm;
         this.tcpHost = new TcpHost(this, mainForm);
         this.tcpHost.start();
+        this.multirunner = new Multirunner(this);
         this.temporaryDirectory = createTemporaryDirectory();
         openScriptFileDialog = new FileChooser();
         openScriptFileDialog.setTitle("Choose runner script");
@@ -156,6 +157,7 @@ public class RunTab {
         bRunAdvanced.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                advancedRunContextMenu.hide();
                 advancedRunContextMenu.show(bRunAdvanced, Side.RIGHT, 0, 0);
             }
         });
@@ -198,11 +200,18 @@ public class RunTab {
         return tabRun;
     }
 
+    Multirunner multirunner;
+
     private ContextMenu buildAdvancedRunContextMenu() {
-        // TODO make it do something:
         MenuItem untilFailureOrStop = new MenuItem("...until failure");
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
         untilFailureOrStop.disableProperty().bind(canRun.not());
+        untilFailureOrStop.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                multirunner.runUntilFailure();
+            }
+        });
         runOnlyFailedTests.disableProperty().bind(canRun.not());
         runOnlyFailedTests.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -211,8 +220,7 @@ public class RunTab {
                 clickRun(event);
             }
         });
-        ContextMenu menu = new ContextMenu(untilFailureOrStop, runOnlyFailedTests);
-        return menu;
+        return new ContextMenu(untilFailureOrStop, runOnlyFailedTests);
     }
 
     private void timer() {
@@ -230,6 +238,7 @@ public class RunTab {
                 ProcessUtil.destroyForcefullyAndWait(Processes.newPidProcess(run.stoppableProcessId.getValue()));
                 run.stoppableProcessId.setValue(-1);
                 run.running.set(false);
+                multirunner.manuallyStopped();
                 appendGreenText("Robot process killed.");
                 updateResultsPanel();
             } catch (Exception e) {
@@ -377,6 +386,7 @@ public class RunTab {
         Platform.runLater(()->{
             run.stoppableProcessId.set(-1);
             run.running.set(false);
+            multirunner.endedNormally();
             updateResultsPanel();
         });
     }
@@ -401,9 +411,7 @@ public class RunTab {
         result.add("--listener");
         result.add(runnerAgent.toString() + ":" + tcpHost.portNumber + ":False");
         String[] args = StringUtils.splitByWholeSeparator(this.tbArguments.getText(), " ");
-        for (String arg : args) {
-            result.add(arg);
-        }
+        result.addAll(Arrays.asList(args));
         result.add(((FolderSuite) mainForm.getProjectTree().getRoot().getValue()).directoryPath.toString());
         return result;
     }

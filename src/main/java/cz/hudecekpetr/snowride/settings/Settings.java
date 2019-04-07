@@ -57,8 +57,7 @@ public class Settings {
             XStream xStream = new XStream(new StaxDriver());
             XStream.setupDefaultSecurity(xStream);
             xStream.allowTypesByWildcard(new String[] { "cz.**" });
-            Settings settings = (Settings) xStream.fromXML(getFile());
-            instance = settings;
+            instance = (Settings) xStream.fromXML(getFile());
         } catch (Exception exception) {
             System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
                     "you launch Snowride, this is fine and ignore this message.");
@@ -82,7 +81,6 @@ public class Settings {
         Path path = Paths.get(appdata, "Snowride");
         File fileFolder = path.toFile();
         fileFolder.mkdir();
-        File fileFile = path.resolve("settings.xml").toFile();
-        return fileFile;
+        return path.resolve("settings.xml").toFile();
     }
 }

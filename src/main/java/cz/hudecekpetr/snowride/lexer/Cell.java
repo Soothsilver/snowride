@@ -1,16 +1,9 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
-import cz.hudecekpetr.snowride.semantics.CellKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
-import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.Suite;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableObjectValue;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -81,11 +74,11 @@ public class Cell {
                 break;
             }
             if (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{")) {
-
+                // Is the return value.
             } else if (!pastTheKeyword) {
                 // This is the keyword.
                 isKeyword = true;
-                permissibleKeywords = ((Suite) partOfLine.belongsToScenario.parent).getKeywordsPermissibleInSuite().collect(Collectors.toList());
+                permissibleKeywords = ((Suite) partOfLine.belongsToHighElement.parent).getKeywordsPermissibleInSuite().collect(Collectors.toList());
                 pastTheKeyword = true;
             }
             if (cell == this) {

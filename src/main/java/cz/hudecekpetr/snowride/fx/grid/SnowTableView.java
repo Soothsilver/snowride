@@ -134,7 +134,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private LogicalLine createNewLine() {
         LogicalLine newLine = new LogicalLine();
-        newLine.belongsToScenario = scenario;
+        newLine.belongsToHighElement = scenario;
         newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
         return newLine;
     }
@@ -166,7 +166,13 @@ public class SnowTableView extends TableView<LogicalLine> {
         });
     }
 
-    public void loadLines(ObservableList<LogicalLine> lines) {
+    public void loadLines(HighElement highElement, ObservableList<LogicalLine> lines) {
+        scenario = highElement;
+        for (LogicalLine line : lines) {
+            if (line.belongsToHighElement == null) {
+                line.belongsToHighElement = highElement;
+            }
+        }
         // Renew data
         this.setItems(lines);
         // Column count
@@ -184,11 +190,6 @@ public class SnowTableView extends TableView<LogicalLine> {
             }
         }
         this.considerAddingVirtualRowsAndColumns();
-    }
-
-    public void setScenario(HighElement scenario) {
-
-        this.scenario = scenario;
     }
 
     public SimpleObjectProperty<Cell> tablePositionToCell(TablePosition<LogicalLine, Cell> position) {

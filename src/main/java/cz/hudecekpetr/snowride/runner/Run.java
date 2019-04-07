@@ -25,27 +25,27 @@ public class Run {
         countFailedTests = 0;
         countPassedTests = 0;
         forciblyKilled = false;
-        keywordStack.clear();;
+        keywordStack.clear();
         lastKeywordBeganWhen = System.currentTimeMillis();
         lastRunBeganWhen = System.currentTimeMillis();
     }
 
     public String keywordStackAsString() {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for(String kw : keywordStack)
         {
-            if (!s.equals(""))
+            if (!s.toString().equals(""))
             {
-                s = " > " + s;
+                s.insert(0, " > ");
             }
-            s = kw + s;
+            s.insert(0, kw);
         }
-        if (!s.equals(""))
+        if (!s.toString().equals(""))
         {
             long period = System.currentTimeMillis() - lastKeywordBeganWhen;
-            s = "(" + Extensions.millisecondsToHumanTime(period) +  ") " + s;
+            s.insert(0, "(" + Extensions.millisecondsToHumanTime(period) + ") ");
         }
-        return s;
+        return s.toString();
     }
 
     public boolean isInProgress() {

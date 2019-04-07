@@ -69,7 +69,7 @@ public class TcpHost {
         {
             try {
                 while (true) {
-                    String readFrom = null;
+                    String readFrom;
                     synchronized (incomingDataBuffer) {
                         while (incomingDataBuffer.size() == 0) {
                             incomingDataBuffer.wait();

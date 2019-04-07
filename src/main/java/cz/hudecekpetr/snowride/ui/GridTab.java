@@ -6,12 +6,11 @@ import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
 import cz.hudecekpetr.snowride.tree.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.controlsfx.control.GridView;
-import org.controlsfx.control.spreadsheet.SpreadsheetView;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,7 +64,7 @@ public class GridTab {
                 loadSuiteTables(fsuite);
             }
         } else if (value instanceof FileSuite) {
-            FileSuite fsuite = (FileSuite)value;
+            FileSuite fsuite = (FileSuite) value;
             if (fsuite.fileParsed.errors.size() > 0) {
                 setParseErrors(fsuite.fileParsed.errors);
             } else {
@@ -73,8 +72,7 @@ public class GridTab {
             }
         } else if (value instanceof Scenario) {
             tabGrid.setContent(spreadsheetView);
-            spreadsheetView.setScenario(value);
-            spreadsheetView.loadLines(((Scenario)value).getLines());
+            spreadsheetView.loadLines(value, ((Scenario) value).getLines());
         } else {
             lblParseError.setText("Unknown high element.");
         }
@@ -84,8 +82,8 @@ public class GridTab {
         tabGrid.setContent(suiteView);
         if (fsuite.fileParsed != null) {
             // TODO allow structural changes to nonexisting __init__.robot file.
-            tableSettings.loadLines(fsuite.fileParsed.findOrCreateSettingsSection().pairs);
-            tableVariables.loadLines(fsuite.fileParsed.findOrCreateVariablesSection().pairs);
+            tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
+            tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
         }
 
     }

@@ -36,7 +36,7 @@ public class Scenario extends HighElement {
         this.lines = FXCollections.observableList(lines);
         for (int i = 0; i < lines.size(); i++) {
             this.lines.get(i).lineNumber = new PositionInListProperty<>(this.lines.get(i), this.lines);
-            this.lines.get(i).belongsToScenario = this;
+            this.lines.get(i).belongsToHighElement = this;
         }
     }
 

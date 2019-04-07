@@ -81,6 +81,7 @@ public class RobotFile {
         KeyValuePairSection settings = findSettingsSection();
         if (settings == null) {
             settings = new KeyValuePairSection(new SectionHeader(SectionKind.SETTINGS, "*** Settings ***\n"), new ArrayList<>());
+            settings.artificiallyCreated = true;
             sections.add(settings);
         }
         return settings;
@@ -89,6 +90,7 @@ public class RobotFile {
         KeyValuePairSection settings = findVariablesSection();
         if (settings == null) {
             settings = new KeyValuePairSection(new SectionHeader(SectionKind.VARIABLES, "*** Variables ***\n"), new ArrayList<>());
+            settings.artificiallyCreated = true;
             sections.add(settings);
         }
         return settings;

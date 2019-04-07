@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.fx;
 
-/**
+/*
  * Copyright (c) 2014, 2016 ControlsFX
  * All rights reserved.
  *
@@ -52,6 +52,7 @@ import javafx.beans.property.IntegerProperty;
  *
  * @param <T> Model-Type of the suggestions
  */
+@SuppressWarnings("DanglingJavadoc")
 public abstract class AutoCompletionBinding<T extends IAutocompleteOption> implements EventTarget {
 
 
@@ -65,7 +66,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     private final Object suggestionsTaskLock = new Object();
 
     private AutoCompletionBinding.FetchSuggestionsTask suggestionsTask = null;
-    private Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> suggestionProvider = null;
+    private Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> suggestionProvider;
     private boolean ignoreInputChanges = false;
     private long delay = 250;
 
@@ -115,7 +116,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Specifies whether the PopupWindow should be hidden when an unhandled
      * escape key is pressed while the popup has focus.
      *
-     * @param value
      */
     public void setHideOnEscape(boolean value) {
         autoCompletionPopup.setHideOnEscape(value);
@@ -123,7 +123,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Set the current text the user has entered
-     * @param userText
      */
     public final void setUserInput(String userText){
         if(!isIgnoreInputChanges()){
@@ -134,7 +133,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     /**
      * Sets the delay in ms between a key press and the suggestion popup being displayed.
      *
-     * @param delay
      */
     public final void setDelay(long delay) {
         this.delay = delay;
@@ -158,7 +156,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Set the maximum number of rows to be visible in the popup when it is
      * showing.
      *
-     * @param value
      */
     public final void setVisibleRowCount(int value) {
         autoCompletionPopup.setVisibleRowCount(value);
@@ -189,7 +186,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     /**
      * Sets the prefWidth of the popup.
      *
-     * @param value
      */
     public final void setPrefWidth(double value) {
         autoCompletionPopup.setPrefWidth(value);
@@ -206,7 +202,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Return the property associated with the pref width.
-     * @return
      */
     public final DoubleProperty prefWidthProperty() {
         return autoCompletionPopup.prefWidthProperty();
@@ -215,7 +210,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     /**
      * Sets the minWidth of the popup.
      *
-     * @param value
      */
     public final void setMinWidth(double value) {
         autoCompletionPopup.setMinWidth(value);
@@ -232,7 +226,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Return the property associated with the min width.
-     * @return
      */
     public final DoubleProperty minWidthProperty() {
         return autoCompletionPopup.minWidthProperty();
@@ -241,7 +234,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     /**
      * Sets the maxWidth of the popup.
      *
-     * @param value
      */
     public final void setMaxWidth(double value) {
         autoCompletionPopup.setMaxWidth(value);
@@ -258,7 +250,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Return the property associated with the max width.
-     * @return
      */
     public final DoubleProperty maxWidthProperty() {
         return autoCompletionPopup.maxWidthProperty();
@@ -273,7 +264,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
     /**
      * Complete the current user-input with the provided completion.
      * Sub-classes have to provide a concrete implementation.
-     * @param completion
      */
     protected abstract void completeUserInput(T completion);
 
@@ -323,7 +313,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Occurs when the user text has changed and the suggestions require an update
      * @param userText
      */
-    private final void onUserInputChanged(final String userText){
+    private void onUserInputChanged(final String userText){
         synchronized (suggestionsTaskLock) {
             if(suggestionsTask != null && suggestionsTask.isRunning()){
                 // cancel the current running task
@@ -339,7 +329,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Shall changes to the user input be ignored?
-     * @return
      */
     private boolean isIgnoreInputChanges(){
         return ignoreInputChanges;
@@ -349,7 +338,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * If IgnoreInputChanges is set to true, all changes to the user input are
      * ignored. This is primary used to avoid self triggering while
      * auto completing.
-     * @param state
      */
     private void setIgnoreInputChanges(boolean state){
         ignoreInputChanges = state;
@@ -366,18 +354,18 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Represents a suggestion fetch request
      *
      */
-    public static interface ISuggestionRequest {
+    public interface ISuggestionRequest {
         /**
          * Is this request canceled?
          * @return {@code true} if the request is canceled, otherwise {@code false}
          */
-        public boolean isCancelled();
+        boolean isCancelled();
 
         /**
          * Get the user text to which suggestions shall be found
          * @return {@link String} containing the user text
          */
-        public String getUserText();
+        String getUserText();
     }
 
 
@@ -461,13 +449,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
             super(AUTO_COMPLETED);
             this.completion = completion;
         }
-
-        /**
-         * Returns the chosen completion.
-         */
-        public TE getCompletion() {
-            return completion;
-        }
     }
 
 
@@ -475,7 +456,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
 
     /**
      * Set a event handler which is invoked after an auto completion.
-     * @param value
      */
     public final void setOnAutoCompleted(EventHandler<AutoCompletionBinding.AutoCompletionEvent<T>> value) {
         onAutoCompletedProperty().set( value);

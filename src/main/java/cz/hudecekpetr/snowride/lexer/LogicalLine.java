@@ -16,7 +16,7 @@ public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
     private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
-    public HighElement belongsToScenario;
+    public HighElement belongsToHighElement;
     public PositionInListProperty lineNumber;
 
     public static LogicalLine fromEmptyLine(String text) {
@@ -89,8 +89,8 @@ public class LogicalLine {
                 public void changed(ObservableValue<? extends Cell> observable, Cell oldValue, Cell newValue) {
                     String previousValue = cells.get(index).contents;
                     cells.set(index, newValue);
-                    if (belongsToScenario != null && !previousValue.equals(newValue.contents)) {
-                        belongsToScenario.markAsStructurallyChanged(mainForm);
+                    if (belongsToHighElement != null && !previousValue.equals(newValue.contents)) {
+                        belongsToHighElement.markAsStructurallyChanged(mainForm);
                     }
                 }
             });

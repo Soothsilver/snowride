@@ -57,8 +57,7 @@ public class GateParser {
     private FileSuite loadFile(File inFile) throws IOException {
         String name = FilenameUtils.removeExtension(inFile.getName());
         String contents = FileUtils.readFileToString(inFile, "utf-8");
-        FileSuite fs = new FileSuite(inFile, name, contents);
-        return fs;
+        return new FileSuite(inFile, name, contents);
     }
 
     public static RobotFile parse(String contents) {

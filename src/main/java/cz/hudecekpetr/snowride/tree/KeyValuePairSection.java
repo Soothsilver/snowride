@@ -11,6 +11,7 @@ import java.util.List;
 
 public class KeyValuePairSection extends RobotSection {
     public final ObservableList<LogicalLine> pairs;
+    public boolean artificiallyCreated = false;
 
     public KeyValuePairSection(SectionHeader header, List<LogicalLine> pairs) {
         super(header);
@@ -22,6 +23,12 @@ public class KeyValuePairSection extends RobotSection {
 
     @Override
     public void serializeInto(StringBuilder sb) {
+        if (artificiallyCreated) {
+            if (pairs.stream().allMatch(LogicalLine::isFullyVirtual)) {
+                // Do not serialize meaningless sections.
+                return;
+            }
+        }
         header.serializeInto(sb);
         for (LogicalLine line : pairs) {
             line.serializeInto(sb);
