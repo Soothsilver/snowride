@@ -3,31 +3,35 @@ package cz.hudecekpetr.snowride.runner;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.generalpurpose.ByteArrayBuilder;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
-import org.apache.commons.io.Charsets;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Queue;
 
 public class TcpHost {
+    /**
+     * This means that the thread which processes data from the client should terminate because the
+     * connection to the client is over or will soon be over.
+     */
+    private static final byte[] POISON_NULL = new byte[0];
     public int portNumber = 63222;
     private ServerSocket serverSocket = null;
     private MainForm mainForm;
     private RunTab runTab;
 
-    public TcpHost(RunTab runTab,MainForm mainForm) {
+    public TcpHost(RunTab runTab, MainForm mainForm) {
         this.runTab = runTab;
 
         this.mainForm = mainForm;
@@ -46,9 +50,7 @@ public class TcpHost {
             while (true) {
                 try {
                     Socket client = serverSocket.accept();
-                    Thread listenToClient = new Thread(() -> {
-                        listenToClient(client);
-                    });
+                    Thread listenToClient = new Thread(() -> listenToClient(client));
                     listenToClient.setDaemon(true);
                     listenToClient.start();
                 } catch (IOException e) {
@@ -61,22 +63,22 @@ public class TcpHost {
     }
 
     private void listenToClient(Socket client) {
-        Queue<String> incomingDataBuffer = new ArrayDeque<>();
-        StringBuilder incomingBuffer = new StringBuilder();
+        Queue<byte[]> incomingDataBuffer = new ArrayDeque<>();
+        ByteArrayBuilder incomingBuffer = new ByteArrayBuilder();
         int buffersize = 4096;
-        char[] buffer = new char[buffersize];
+        byte[] buffer = new byte[buffersize];
         Thread t1 = new Thread(() ->
         {
             try {
                 while (true) {
-                    String readFrom;
+                    byte[] readFrom;
                     synchronized (incomingDataBuffer) {
                         while (incomingDataBuffer.size() == 0) {
                             incomingDataBuffer.wait();
                         }
                         readFrom = incomingDataBuffer.poll();
                     }
-                    if (readFrom.equals("POISON")) {
+                    if (readFrom == POISON_NULL) {
                         // terminate
                         return;
                     } else {
@@ -92,18 +94,17 @@ public class TcpHost {
         t1.start();
         try {
             InputStream inputStream = client.getInputStream();
-            InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.US_ASCII);
             while (true) {
-                int actualSize = reader.read(buffer, 0, buffersize);
+                int actualSize = inputStream.read(buffer, 0, buffersize);
                 if (actualSize <= 0) {
                     synchronized (incomingDataBuffer) {
-                        incomingDataBuffer.add("POISON");
+                        incomingDataBuffer.add(POISON_NULL);
                         incomingDataBuffer.notifyAll();
                     }
                     logIntoMainOutput("[TCP Server] Connection to Robot listener closed normally.");
                     return;
                 }
-                String whatArrived = new String(buffer, 0, actualSize);
+                byte[] whatArrived = Arrays.copyOf(buffer, actualSize);
                 synchronized (incomingDataBuffer) {
                     incomingDataBuffer.add(whatArrived);
                     incomingDataBuffer.notifyAll();
@@ -111,24 +112,25 @@ public class TcpHost {
             }
         } catch (Exception exception) {
             synchronized (incomingDataBuffer) {
-                incomingDataBuffer.add("POISON");
+                incomingDataBuffer.add(POISON_NULL);
                 incomingDataBuffer.notifyAll();
             }
             logIntoMainOutput("[TCP Server] Connection to Robot listener closed abnormally: " + Extensions.toStringWithTrace(exception));
         }
     }
 
-    private void analyzeBuffer(StringBuilder incomingBuffer) {
-        String start = incomingBuffer.substring(0, Math.min(incomingBuffer.length(), 20));
+    private void analyzeBuffer(ByteArrayBuilder incomingBuffer) {
+        byte[] startAsBytes = incomingBuffer.getBeginning(Math.min(incomingBuffer.length(), 20));
+        String start = new String(startAsBytes, StandardCharsets.US_ASCII);
         if (start.length() > 0 && start.charAt(0) == 'J') {
             int pipeIndex = start.indexOf('|');
             if (pipeIndex != -1) {
                 String theNumber = start.substring(1, pipeIndex);
                 int number = Integer.parseInt(theNumber);
                 if (incomingBuffer.length() >= pipeIndex + 1 + number) {
-                    String data = incomingBuffer.substring(pipeIndex + 1, pipeIndex + 1 + number);
-                    performJsonCommand(data);
-                    incomingBuffer.delete(0, pipeIndex + 1 + number);
+                    byte[] data = incomingBuffer.subArray(pipeIndex + 1, pipeIndex + 1 + number);
+                    performJsonCommand(new String(data, StandardCharsets.UTF_8));
+                    incomingBuffer.deleteFromStart(pipeIndex + 1 + number);
                     analyzeBuffer(incomingBuffer);
                 }
             }
@@ -163,16 +165,16 @@ public class TcpHost {
                     runTab.lblKeyword.setText(runTab.run.keywordStackAsString());
                     break;
                 case "start_test":
-                    Map<String,Any> auxiliaries = arguments.get(1).asMap();
+                    Map<String, Any> auxiliaries = arguments.get(1).asMap();
                     String longname = auxiliaries.get("longname").as(String.class);
                     mainForm.findTestByFullyQualifiedName(longname).imageView.setImage(Images.running);
                     break;
                 case "end_test":
-                    Map<String,Any> auxiliaries2 = arguments.get(1).asMap();
+                    Map<String, Any> auxiliaries2 = arguments.get(1).asMap();
                     String status = auxiliaries2.get("status").as(String.class);
                     String longname2 = auxiliaries2.get("longname").as(String.class);
                     Scenario endingTest = mainForm.findTestByFullyQualifiedName(longname2);
-                    if (status.equals("PASS")){
+                    if (status.equals("PASS")) {
                         runTab.run.countPassedTests++;
                         endingTest.markTestStatus(TestResult.PASSED);
                     } else {
@@ -183,6 +185,7 @@ public class TcpHost {
                     break;
                 case "log_file":
                     runTab.run.logFile.set(arguments.get(0).as(String.class));
+                    break;
                 case "report_file":
                     runTab.run.reportFile.set(arguments.get(0).as(String.class));
                     break;
@@ -207,8 +210,6 @@ public class TcpHost {
     }
 
     private void logIntoMainOutput(String s) {
-        Platform.runLater(() -> {
-            runTab.appendGreenText(s);
-        });
+        Platform.runLater(() -> runTab.appendGreenText(s));
     }
 }
