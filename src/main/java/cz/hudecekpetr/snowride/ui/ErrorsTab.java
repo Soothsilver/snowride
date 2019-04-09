@@ -35,7 +35,7 @@ public class ErrorsTab {
                             setText(null);
                             setGraphic(null);
                         } else {
-                            setText(item.shortName);
+                            setText(item.getShortName());
                             setGraphic(null);
                         }
                     }

@@ -49,11 +49,11 @@ public class ImportedResource {
                     }
                     else {
                         for (HighElement child : suite.children) {
-                            if (Extensions.toInvariant(child.shortName).equals(sectionString)) {
+                            if (Extensions.toInvariant(child.getShortName()).equals(sectionString)) {
                                 suite = child;
                                 continue outerFor;
                             }
-                            if (Extensions.toInvariant(child.shortName + ".robot").equals(sectionString)) {
+                            if (Extensions.toInvariant(child.getShortName() + ".robot").equals(sectionString)) {
                                 suite = child;
                                 break outerFor;
                             }

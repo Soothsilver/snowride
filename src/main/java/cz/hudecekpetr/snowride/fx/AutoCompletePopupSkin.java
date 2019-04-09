@@ -71,6 +71,9 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
             suppressUpTo++;
             Window parent = suggestionList.getScene().getWindow();
             MainForm.documentationPopup.setData(newValue);
+            if (MainForm.documentationPopup.getOwnerWindow() != parent) {
+                MainForm.documentationPopup.hide();
+            }
             MainForm.documentationPopup.show(parent,
                     parent.getX() + suggestionList.localToScene(0.0D, 0.0D).getX() +
                             suggestionList.getScene().getX() + suggestionList.getWidth(),

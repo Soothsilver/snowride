@@ -1,13 +1,15 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
-import cz.hudecekpetr.snowride.fx.AggregatedObservableArrayList;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -19,39 +21,46 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
 public abstract class HighElement implements IAutocompleteOption {
-    public String shortName;
     public final ImageView imageView;
     public final CheckBox checkbox;
+    public final ObservableList<HighElement> children;
+    public final ObservableMultiset<HighElement> childrenRecursively = new ObservableMultiset<>();
+    public SimpleStringProperty shortNameProperty = new SimpleStringProperty();
     public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
     public ObservableList<SnowrideError> allErrorsRecursive;
-    private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
-    private HBox graphic;
     public String contents;
-    public final ObservableList<HighElement> children;
     public TreeItem<HighElement> treeNode;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
     public HighElement parent;
     public boolean dead;
     protected String semanticsDocumentation;
+    private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
+    private String invariantName;
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
-        graphic = new HBox();
+        HBox graphic = new HBox();
         imageView = new ImageView(Images.fileIcon);
         checkbox = new CheckBox();
         checkbox.setVisible(false);
         checkbox.managedProperty().bind(checkbox.visibleProperty());
         graphic.getChildren().add(imageView);
         graphic.getChildren().add(checkbox);
-        treeNode = new TreeItem<>(this, this.graphic);
-        this.shortName = shortName;
+        treeNode = new TreeItem<>(this, graphic);
+        this.shortNameProperty.addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                invariantName = Extensions.toInvariant(newValue);
+            }
+        });
+        this.shortNameProperty.set(shortName);
         this.contents = contents;
         this.children = FXCollections.observableArrayList();
+        childrenRecursively.appendList(this.children);
         this.children.addListener(new ListChangeListener<HighElement>() {
             @Override
             public void onChanged(Change<? extends HighElement> c) {
@@ -59,9 +68,11 @@ public abstract class HighElement implements IAutocompleteOption {
                     for (HighElement added : c.getAddedSubList()) {
                         System.out.println("Adding [" + added + "] to [" + HighElement.this + "].");
                         allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
+                        childrenRecursively.appendList(added.childrenRecursively);
                     }
                     for (HighElement removed : c.getRemoved()) {
                         allErrorsRecursiveSource.removeList(removed.allErrorsRecursive);
+                        childrenRecursively.removeList(removed.childrenRecursively);
                     }
                 }
             }
@@ -85,12 +96,16 @@ public abstract class HighElement implements IAutocompleteOption {
     @Override
     public String toString() {
         if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            return "[text changed] " + shortName;
+            return "[text changed] " + getShortName();
         }
         if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            return "[structure changed] " + shortName;
+            return "[structure changed] " + getShortName();
         }
-        return shortName;
+        return getShortName();
+    }
+
+    public String getShortName() {
+        return shortNameProperty.get();
     }
 
     public abstract void saveAll() throws IOException;
@@ -99,6 +114,7 @@ public abstract class HighElement implements IAutocompleteOption {
         this.treeNode.setValue(null);
         this.treeNode.setValue(this);
     }
+
     public Stream<HighElement> selfAndDescendantHighElements() {
         return Stream.concat(
                 Stream.of(this),
@@ -108,9 +124,9 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public String getQualifiedName() {
         if (parent == null) {
-            return shortName;
+            return getShortName();
         } else {
-            return parent.getQualifiedName() + "." + shortName;
+            return parent.getQualifiedName() + "." + getShortName();
         }
     }
 
@@ -139,10 +155,13 @@ public abstract class HighElement implements IAutocompleteOption {
     public abstract Suite asSuite();
 
 
-
     @Override
     public String getFullDocumentation() {
         return "*Qualified name:* " + this.getQualifiedName() +
                 (!StringUtils.isBlank(this.semanticsDocumentation) ? ("\n" + "*Documentation:* " + this.semanticsDocumentation) : "");
+    }
+
+    public String getInvariantName() {
+        return invariantName;
     }
 }

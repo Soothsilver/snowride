@@ -8,6 +8,7 @@ import javafx.scene.control.TextField;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 public class SearchSuites {
@@ -22,11 +23,17 @@ public class SearchSuites {
         String requestText = Extensions.toInvariant(request.getUserText());
         HighElement root = mainForm.getProjectTree().getRoot().getValue();
         List<HighElement> validElements = new ArrayList<>();
-        root.selfAndDescendantHighElements().forEachOrdered((highElement -> {
-            if (Extensions.toInvariant(highElement.getAutocompleteText()).contains(requestText)) {
+        root.childrenRecursively.forEach((highElement -> {
+            if (highElement.getInvariantName().contains(requestText)) {
                 validElements.add(highElement);
             }
         }));
+        validElements.sort(new Comparator<HighElement>() {
+            @Override
+            public int compare(HighElement o1, HighElement o2) {
+                return o1.getInvariantName().compareTo(o2.getInvariantName());
+            }
+        });
         return validElements;
     }
 

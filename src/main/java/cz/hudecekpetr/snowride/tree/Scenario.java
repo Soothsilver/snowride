@@ -54,7 +54,7 @@ public class Scenario extends HighElement {
     @Override
     public void renameSelfTo(String newName, MainForm mainForm) {
         this.nameCell = new Cell(newName, nameCell.postTrivia, null);
-        this.shortName = newName;
+        this.shortNameProperty.set(newName);
         this.refreshToString();
         this.markAsStructurallyChanged(mainForm);
     }

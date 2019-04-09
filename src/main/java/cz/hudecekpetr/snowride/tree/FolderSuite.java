@@ -45,7 +45,7 @@ public class FolderSuite extends Suite implements ISuite {
             child.saveAll();
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
-            System.out.println("SaveAll: [initfile] " + this.shortName);
+            System.out.println("SaveAll: [initfile] " + this.getShortName());
             FileUtils.write(initFile, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
@@ -86,7 +86,7 @@ public class FolderSuite extends Suite implements ISuite {
         File oldFile = this.directoryPath;
         File newFile = this.directoryPath.getParentFile().toPath().resolve(newName).toFile();
         if (this.directoryPath.renameTo(newFile)) {
-            this.shortName = Extensions.toPrettyName(newName);
+            this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.directoryPath = newFile;
             if (this.initFile != null) {
                 this.initFile = Extensions.changeAncestorTo(initFile, oldFile, newFile);

@@ -35,7 +35,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.snowTableView = snowTableView;
         this.setPadding(new Insets(0));
         this.setStyle("-fx-padding: 0; -fx-background-insets: 0.0;");
-        if (cellIndex < 1) {
+        if (cellIndex < 0) {
             this.setEditable(false);
         }
     }
@@ -93,12 +93,6 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     private TextField ensureTextField() {
         if (textField == null) {
             textField = new TextField();
-            textField.parentProperty().addListener(new ChangeListener<Parent>() {
-                @Override
-                public void changed(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newValue) {
-                    System.out.println("Parent now: " + newValue);
-                }
-            });
             textField.setStyle("-fx-text-box-border: transparent; -fx-background-insets: 0; -fx-focus-color: transparent; -fx-border-width: 0;");
             textField.setPadding(new Insets(0));
             textField.setOnAction(new EventHandler<ActionEvent>() {

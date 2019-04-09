@@ -7,6 +7,8 @@ import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.*;
+import cz.hudecekpetr.snowride.ui.about.AboutKeyboardShortcuts;
+import cz.hudecekpetr.snowride.ui.about.AboutSnowride;
 import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -48,12 +50,10 @@ import java.util.concurrent.TimeUnit;
 
 public class MainForm {
     public static final Font BIGGER_FONT = new Font("System Regular", 14);
-    public static MainForm INSTANCE = null;
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
-    private static final Font TREE_VIEW_FONT = new Font("System Regular", 8);
     private final SerializingTab serializingTab;
     private final ErrorsTab errorsTab;
-    GateParser gateParser = new GateParser();
+    private GateParser gateParser = new GateParser();
     private NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
     private TreeView<HighElement> projectTree;
@@ -84,6 +84,11 @@ public class MainForm {
         return getProjectTree().getFocusModel().getFocusedItem().getValue();
     }
 
+    /**
+     * Gets the folder suite that's the root of the project.
+     */
+    public HighElement getRootElement() { return getProjectTree().getRoot().getValue(); }
+
     public TreeView<HighElement> getProjectTree() {
         return projectTree;
     }
@@ -97,7 +102,6 @@ public class MainForm {
     private GridTab gridTab;
 
     public MainForm(Stage stage) {
-        MainForm.INSTANCE = this;
 
         this.stage = stage;
         filesystem = new Filesystem(this);
@@ -366,7 +370,7 @@ public class MainForm {
         rename.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.shortName);
+                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
                 if (newName != null) {
                     element.renameSelfTo(newName, MainForm.this);
                 }

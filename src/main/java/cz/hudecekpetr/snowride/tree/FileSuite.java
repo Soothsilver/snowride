@@ -25,11 +25,11 @@ public class FileSuite extends Suite implements ISuite {
     public void saveAll() throws IOException {
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED) {
             this.applyText();
-            System.out.println("SaveAll: " + this.shortName);
+            System.out.println("SaveAll: " + this.getShortName());
         } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
             this.contents = serialize();
             this.optimizeStructure();
-            System.out.println("SaveAll structurally: " + this.shortName);
+            System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             FileUtils.write(file, contents, "utf-8");
@@ -62,10 +62,10 @@ public class FileSuite extends Suite implements ISuite {
         File currentFile = this.file;
         File newFile = selfsParent.toPath().resolve(newName + ".robot").toFile();
         if (currentFile.renameTo(newFile)) {
-            this.shortName = Extensions.toPrettyName(newName);
+            this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.file = newFile;
         } else {
-            throw new RuntimeException("Could not rename the file suite '" + this.shortName + "'.");
+            throw new RuntimeException("Could not rename the file suite '" + this.getShortName() + "'.");
         }
         refreshToString();
     }

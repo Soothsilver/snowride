@@ -1,7 +1,5 @@
 package cz.hudecekpetr.snowride.semantics;
 
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
-import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -21,7 +19,7 @@ public class UserKeyword implements IKnownKeyword {
     }
 
     public static UserKeyword fromScenario(Scenario s) {
-        return new UserKeyword(s.shortName, s.getDocumentation(), (Suite) s.parent, s);
+        return new UserKeyword(s.getShortName(), s.getDocumentation(), (Suite) s.parent, s);
     }
 
     @Override
@@ -41,7 +39,7 @@ public class UserKeyword implements IKnownKeyword {
 
     @Override
     public String getItalicsSubheading() {
-        return "User keyword (from " + owningSuite.shortName + ")";
+        return "User keyword (from " + owningSuite.getShortName() + ")";
     }
 
     @Override

@@ -21,16 +21,15 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.Window;
 import javafx.util.Callback;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
 
-    private HighElement scenario;
-    private MainForm mainForm;
     public SnowTableKind snowTableKind;
     public boolean triggerAutocompletionNext;
+    private HighElement scenario;
+    private MainForm mainForm;
 
     public SnowTableView(MainForm mainForm, SnowTableKind snowTableKind) {
         super();
@@ -65,16 +64,21 @@ public class SnowTableView extends TableView<LogicalLine> {
                 if (highElement != null) {
                     mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
                 } else {
-                    mainForm.toast("Keyword '"  + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
+                    mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
                 }
             }
         }
     }
 
     private Cell getFocusedCell() {
-        TablePosition<LogicalLine, Cell> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
+        TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
         SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
         return cellSimpleObjectProperty.getValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    private TablePosition<LogicalLine, Cell> getFocusedTablePosition() {
+        return this.focusModelProperty().get().focusedCellProperty().get();
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {
@@ -84,60 +88,50 @@ public class SnowTableView extends TableView<LogicalLine> {
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused, createNewLine());
             this.getFocusModel().focusAboveCell();
-        }
-        else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             // Append
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused + 1, createNewLine());
             this.getFocusModel().focusBelowCell();
             keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
-            TablePosition<LogicalLine, ?> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
+        } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
+            TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.triggerAutocompletionNext = true;
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             this.triggerAutocompletionNext = false;
             keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
+        } else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
             this.getSelectionModel().getSelectedCells().forEach(tablePosition -> {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
                 cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
             });
             keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             TableClipboard.store(cell.getValue().contents);
             keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             TableClipboard.store(cell.getValue().contents);
             cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
             keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             cell.set(new Cell(Clipboard.getSystemClipboard().getString(), cell.getValue().postTrivia, cell.getValue().partOfLine));
             keyEvent.consume();
-        }
-        else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
+        } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             Cell copy = cell.getValue().copy();
             copy.triggerDocumentationNext = true;
             cell.set(copy);
             keyEvent.consume();
-        }
-
-        else if (keyEvent.getCode() == KeyCode.TAB) {
+        } else if (keyEvent.getCode() == KeyCode.TAB) {
             this.getSelectionModel().clearSelection();
             this.getSelectionModel().selectNext();
             keyEvent.consume();
-        }
-        else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
+        } else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
                 && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()) {
-            TablePosition<LogicalLine, ?> focusedCell = this.focusModelProperty().get().focusedCellProperty().get();
+            TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             keyEvent.consume();
         }
@@ -161,7 +155,6 @@ public class SnowTableView extends TableView<LogicalLine> {
             }
         });
         column.setPrefWidth(200);
-        this.getColumns().add(column);
         column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
             @Override
             public ObservableValue<Cell> call(TableColumn.CellDataFeatures<LogicalLine, Cell> param) {
@@ -175,10 +168,12 @@ public class SnowTableView extends TableView<LogicalLine> {
                 }
             }
         });
+        this.getColumns().add(column);
     }
 
     public void loadLines(HighElement highElement, ObservableList<LogicalLine> lines) {
         scenario = highElement;
+        // For key-value tables:
         for (LogicalLine line : lines) {
             if (line.belongsToHighElement == null) {
                 line.belongsToHighElement = highElement;
@@ -203,9 +198,10 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.considerAddingVirtualRowsAndColumns();
     }
 
-    private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition<LogicalLine, Cell> position) {
-        return (SimpleObjectProperty<Cell>)this.getItems().get(position.getRow()).getCellAsStringProperty(position.getColumn(), mainForm);
+    private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition position) {
+        return this.getItems().get(position.getRow()).getCellAsStringProperty(position.getColumn(), mainForm);
     }
+
 
     public void considerAddingVirtualRowsAndColumns() {
         int virtualRows = 0;
@@ -214,13 +210,14 @@ public class SnowTableView extends TableView<LogicalLine> {
             if (line.isFullyVirtual()) {
                 virtualRows++;
             }
-            if (virtualRows >= 1) {
+            if (virtualRows >= 4) {
                 // That's enough. That's fine. We don't need more.
                 return;
             }
         }
-        if (virtualRows < 1) {
+        while (virtualRows < 4) {
             getItems().add(createNewLine());
+            virtualRows++;
         }
     }
 }

@@ -54,7 +54,6 @@ public class TextEditTab {
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 if (!mainForm.switchingTextEditContents) {
                     HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-                    System.out.println(whatChanged.shortName + " selectedTabChanged.");
                     whatChanged.areTextChangesUnapplied = true;
                     whatChanged.contents = newValue;
                     mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
