@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.fx.grid;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -14,6 +15,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Window;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
     private TableColumn<LogicalLine, Cell> column;
@@ -35,6 +37,19 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.setStyle("-fx-padding: 0; -fx-background-insets: 0.0;");
         if (cellIndex < 1) {
             this.setEditable(false);
+        }
+    }
+
+    private void triggerDocumentation() {
+        Cell focusedCell = getItem();
+        if (focusedCell.hasDocumentation()) {
+            MainForm.documentationPopup.setData(focusedCell);
+            Window parent = IceCell.this.getScene().getWindow();
+            MainForm.documentationPopup.show(parent,
+                    parent.getX() + IceCell.this.localToScene(0.0D, 0.0D).getX() +
+                            IceCell.this.getScene().getX() + IceCell.this.getWidth(),
+                    parent.getY() + IceCell.this.localToScene(0.0D, 0.0D).getY() +
+                            IceCell.this.getScene().getY() + 0);
         }
     }
 
@@ -139,7 +154,12 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             updateStyle();
             setText(item.contents);
             setGraphic(null);
+            if (item.triggerDocumentationNext) {
+                triggerDocumentation();
+                item.triggerDocumentationNext = false;
+            }
         }
+
     }
 
     private void updateStyle() {

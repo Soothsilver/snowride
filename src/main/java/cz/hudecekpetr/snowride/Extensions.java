@@ -68,4 +68,12 @@ public class Extensions {
     public static String toPrettyName(String newName) {
         return newName.replace('_', ' ');
     }
+
+    public static String englishCount(int number, String singular, String plural) {
+        if (number == 1) {
+            return "1 " + singular;
+        } else {
+            return number + " " + plural;
+        }
+    }
 }

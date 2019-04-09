@@ -158,7 +158,7 @@ public class MainForm {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.F5) {
+                if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                     runTab.clickRun(null);
                     event.consume();
                 } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
@@ -166,6 +166,10 @@ public class MainForm {
                     event.consume();
                 } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
                     goForwards(null);
+                    event.consume();
+                } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
+                    tbSearchTests.requestFocus();
+                    searchSuitesAutoCompletion.trigger();
                     event.consume();
                 }
             }
@@ -530,7 +534,15 @@ public class MainForm {
                 aboutSnowride.show();
             }
         });
-        Menu helpMenu = new Menu("Help", null, about);
+        MenuItem shortcuts = new MenuItem("Keyboard shortcuts");
+        shortcuts.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                AboutKeyboardShortcuts aboutSnowride = new AboutKeyboardShortcuts();
+                aboutSnowride.show();
+            }
+        });
+        Menu helpMenu = new Menu("Help", null, about, shortcuts);
         mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, helpMenu);
         return mainMenu;
     }

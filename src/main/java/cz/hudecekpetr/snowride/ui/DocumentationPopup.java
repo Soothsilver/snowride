@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -20,7 +21,7 @@ public class DocumentationPopup extends Popup {
     private final ImageView icon;
     private final DocumentationTextArea keyword_documentation;
 
-    public void setData(IAutocompleteOption option) {
+    public void setData(IHasQuickDocumentation option) {
         keyword_name.setText(option.getQuickDocumentationCaption());
         keyword_source.setText(option.getItalicsSubheading());
         icon.setImage(option.getAutocompleteIcon());

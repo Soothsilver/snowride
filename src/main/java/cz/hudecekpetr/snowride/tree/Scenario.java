@@ -133,13 +133,6 @@ public class Scenario extends HighElement {
     }
 
     @Override
-    public String getFullDocumentation() {
-        return
-                "In suite: " + this.parent.getQualifiedName() + "\n" +
-                        "Documentation not yet invented";
-    }
-
-    @Override
     public String getItalicsSubheading() {
         return isTestCase ? "Test case" : "Keyword";
     }

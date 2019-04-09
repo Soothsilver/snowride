@@ -1,21 +1,24 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.tree.Suite;
+import javafx.scene.image.Image;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Cell {
+public class Cell implements IHasQuickDocumentation {
 
     public final String contents;
     public String postTrivia;
     public LogicalLine partOfLine;
     public boolean virtual;
+    public boolean triggerDocumentationNext;
     private boolean isComment;
     private boolean isKeyword;
     private int cellIndex;
@@ -25,6 +28,12 @@ public class Cell {
         this.contents = contents;
         this.postTrivia = postTrivia;
         this.partOfLine = partOfLine;
+    }
+
+    public Cell copy() {
+        Cell theCopy = new Cell(contents, postTrivia, partOfLine);
+        theCopy.virtual = this.virtual;
+        return theCopy;
     }
 
     @Override
@@ -108,6 +117,54 @@ public class Cell {
                     .findFirst();
             if (first.isPresent()) {
                 return first.get();
+            }
+        }
+        return null;
+    }
+
+    public boolean hasDocumentation() {
+        return this.isKeyword;
+    }
+
+    @Override
+    public Image getAutocompleteIcon() {
+        if (isKeyword) {
+            IKnownKeyword kw = getKeywordInThisCell();
+            if (kw != null) {
+                return kw.getAutocompleteIcon();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getQuickDocumentationCaption() {
+        if (isKeyword) {
+            IKnownKeyword kw = getKeywordInThisCell();
+            if (kw != null) {
+                return kw.getQuickDocumentationCaption();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getFullDocumentation() {
+        if (isKeyword) {
+            IKnownKeyword kw = getKeywordInThisCell();
+            if (kw != null) {
+                return kw.getFullDocumentation();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getItalicsSubheading() {
+        if (isKeyword) {
+            IKnownKeyword kw = getKeywordInThisCell();
+            if (kw != null) {
+                return kw.getItalicsSubheading();
             }
         }
         return null;

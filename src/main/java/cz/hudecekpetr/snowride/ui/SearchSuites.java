@@ -12,6 +12,7 @@ import java.util.List;
 
 public class SearchSuites {
     private MainForm mainForm;
+    private AutoCompletionTextFieldBinding<HighElement> binding;
 
     public SearchSuites(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -30,10 +31,10 @@ public class SearchSuites {
     }
 
     public void bind(TextField tbSearchTests) {
-        AutoCompletionTextFieldBinding<HighElement> binding = new AutoCompletionTextFieldBinding<HighElement>(tbSearchTests, this::callback) {
+        binding = new AutoCompletionTextFieldBinding<HighElement>(tbSearchTests, this::callback) {
             @Override
             protected void completeUserInput(HighElement completion) {
-                super.completeUserInput(completion);
+                getCompletionTarget().setText(""); // clear the search box so the user can search again
                 if (completion != null) {
                     mainForm.selectProgrammaticallyAndRememberInHistory(completion);
                     mainForm.getProjectTree().requestFocus();
@@ -43,5 +44,9 @@ public class SearchSuites {
         binding.setMinWidth(500);
         binding.setDelay(0);
         binding.setVisibleRowCount(25);
+    }
+
+    public void trigger() {
+        binding.setUserInput("");
     }
 }

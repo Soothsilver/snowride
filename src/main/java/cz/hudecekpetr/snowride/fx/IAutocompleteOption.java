@@ -1,17 +1,11 @@
 package cz.hudecekpetr.snowride.fx;
 
-import javafx.scene.image.Image;
-
-public interface IAutocompleteOption {
-    Image getAutocompleteIcon();
+public interface IAutocompleteOption extends IHasQuickDocumentation {
 
     String getAutocompleteText();
 
+    @Override
     default String getQuickDocumentationCaption() {
         return getAutocompleteText();
     }
-
-    String getFullDocumentation();
-
-    String getItalicsSubheading();
 }

@@ -76,6 +76,7 @@ public class RunTab {
     private TextField tbWithoutTags;
     private TextField tbWithTags;
     private CheckBox cbWithTags;
+    public Label lblMultirun;
 
 
     public RunTab(MainForm mainForm) {
@@ -161,7 +162,11 @@ public class RunTab {
                 advancedRunContextMenu.show(bRunAdvanced, Side.RIGHT, 0, 0);
             }
         });
-        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport, bRunAdvanced);
+        lblMultirun = new Label("Running until failure (0 successes so far)");
+        lblMultirun.managedProperty().bind(lblMultirun.visibleProperty());
+        lblMultirun.setVisible(false);
+        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport, bRunAdvanced, lblMultirun);
+        hboxButtons.setAlignment(Pos.CENTER_LEFT);
         hboxButtons.setPadding(new Insets(2));
         Label labelArguments = new Label("Arguments:");
         tbArguments = new TextField(Settings.getInstance().runArguments);
@@ -235,10 +240,10 @@ public class RunTab {
         if (run.stoppableProcessId.getValue() > 0) {
             run.forciblyKilled = true;
             try {
+                multirunner.manuallyStopped();
                 ProcessUtil.destroyForcefullyAndWait(Processes.newPidProcess(run.stoppableProcessId.getValue()));
                 run.stoppableProcessId.setValue(-1);
                 run.running.set(false);
-                multirunner.manuallyStopped();
                 appendGreenText("Robot process killed.");
                 updateResultsPanel();
             } catch (Exception e) {
@@ -312,6 +317,7 @@ public class RunTab {
             Process start = processBuilder.start();
             run.stoppableProcessId.setValue(-1);
             run.running.set(true);
+            multirunner.actuallyStarted();
             executor.execute(() -> readFromOutput(start.getInputStream()));
             executor.execute(() -> this.waitForProcessExit(start));
 

@@ -15,6 +15,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -136,4 +137,12 @@ public abstract class HighElement implements IAutocompleteOption {
     protected abstract void ancestorRenamed(File oldFile, File newFile);
 
     public abstract Suite asSuite();
+
+
+
+    @Override
+    public String getFullDocumentation() {
+        return "*Qualified name:* " + this.getQualifiedName() +
+                (!StringUtils.isBlank(this.semanticsDocumentation) ? ("\n" + "*Documentation:* " + this.semanticsDocumentation) : "");
+    }
 }

@@ -21,6 +21,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Window;
 import javafx.util.Callback;
 
 
@@ -55,6 +56,7 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     private void onMouseClicked(MouseEvent mouseEvent) {
+        MainForm.documentationPopup.hide();
         if (mouseEvent.isControlDown() && snowTableKind.isScenario()) {
             Cell cell = getFocusedCell();
             IKnownKeyword keyword = cell.getKeywordInThisCell();
@@ -76,15 +78,18 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {
+        MainForm.documentationPopup.hide();
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
             // Insert
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused, createNewLine());
+            this.getFocusModel().focusAboveCell();
         }
         else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             // Append
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused + 1, createNewLine());
+            this.getFocusModel().focusBelowCell();
             keyEvent.consume();
         }
         else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
@@ -117,7 +122,13 @@ public class SnowTableView extends TableView<LogicalLine> {
             cell.set(new Cell(Clipboard.getSystemClipboard().getString(), cell.getValue().postTrivia, cell.getValue().partOfLine));
             keyEvent.consume();
         }
-
+        else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
+            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+            Cell copy = cell.getValue().copy();
+            copy.triggerDocumentationNext = true;
+            cell.set(copy);
+            keyEvent.consume();
+        }
 
         else if (keyEvent.getCode() == KeyCode.TAB) {
             this.getSelectionModel().clearSelection();
@@ -192,7 +203,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.considerAddingVirtualRowsAndColumns();
     }
 
-    public SimpleObjectProperty<Cell> tablePositionToCell(TablePosition<LogicalLine, Cell> position) {
+    private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition<LogicalLine, Cell> position) {
         return (SimpleObjectProperty<Cell>)this.getItems().get(position.getRow()).getCellAsStringProperty(position.getColumn(), mainForm);
     }
 

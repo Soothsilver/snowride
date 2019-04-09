@@ -69,7 +69,11 @@ public class RobotFile {
                 for (LogicalLine line : scc.getLines()) {
                     if (line.cells.size() >= 3) {
                         if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
-                            scc.semanticsDocumentation = line.cells.get(2).contents; // TODO make it all values concatenated
+                            List<String> docCells = new ArrayList<>();
+                            for (int i = 2; i < line.cells.size(); i++) {
+                                docCells.add(line.cells.get(i).contents);
+                            }
+                            scc.semanticsDocumentation = String.join("\n", docCells);
                         }
                     }
                 }

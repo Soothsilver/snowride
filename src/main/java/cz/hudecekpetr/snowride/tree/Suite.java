@@ -117,10 +117,4 @@ public abstract class Suite extends HighElement {
             }
         }
     }
-
-    @Override
-    public String getFullDocumentation() {
-        return "*Qualified name:* " + this.getQualifiedName() +
-                (!StringUtils.isBlank(this.semanticsDocumentation) ? ("\n" + "*Documentation:* " + this.semanticsDocumentation) : "");
-    }
 }
