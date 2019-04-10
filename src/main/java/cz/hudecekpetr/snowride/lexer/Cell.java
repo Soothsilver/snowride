@@ -87,7 +87,7 @@ public class Cell implements IHasQuickDocumentation {
             } else if (!pastTheKeyword) {
                 // This is the keyword.
                 isKeyword = true;
-                permissibleKeywords = ((Suite) partOfLine.belongsToHighElement.parent).getKeywordsPermissibleInSuite().collect(Collectors.toList());
+                permissibleKeywords = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
                 pastTheKeyword = true;
             }
             if (cell == this) {

@@ -29,6 +29,7 @@ public abstract class Suite extends HighElement {
 
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
+    private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
     public long importedResourcesLastRecursedDuringIteration = 0;
 
     public List<ImportedResource> getImportedResources() {
@@ -55,8 +56,12 @@ public abstract class Suite extends HighElement {
 
     private void recalculateResources() {
         importedResourcesRecursively.clear();
+        importedKeywordsRecursively.clear();
         importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
         importedResources.forEach(ir -> ir.gatherSelfInto(importedResourcesRecursively, this, ImportedResource.incrementAndGetIterationCount()));
+        importedResourcesRecursively.stream().flatMap(ks -> ks.getAllKeywords()).forEachOrdered(kk -> {
+            importedKeywordsRecursively.add(kk);
+        });
     }
 
     public Stream<IKnownKeyword> getSelfKeywords() {
@@ -67,8 +72,8 @@ public abstract class Suite extends HighElement {
                 });
     }
 
-    public Stream<IKnownKeyword> getKeywordsPermissibleInSuite() {
-        return Stream.concat(getSelfKeywords(), getImportedKeywords());
+    public List<IKnownKeyword> getKeywordsPermissibleInSuite() {
+        return importedKeywordsRecursively;
     }
 
     private Stream<IKnownKeyword> getImportedKeywords() {
@@ -91,22 +96,10 @@ public abstract class Suite extends HighElement {
         }
     }
 
-    private void validateImportedResources() {
-        this.selfErrors.removeIf(err -> err.type.getValue() == ErrorKind.IMPORT_ERROR);
-        for (ImportedResource importedResource : importedResources) {
-            try {
-                importedResource.getImportedKeywords(this);
-            } catch (ImportException importError) {
-                this.selfErrors.add(new SnowrideError(this, ErrorKind.IMPORT_ERROR, Severity.ERROR, importError.getMessage()));
-            }
-        }
-    }
-
     public void analyzeSemantics() {
         if (this.fileParsed != null) {
             this.fileParsed.analyzeSemantics(this);
         }
-        this.validateImportedResources();
         this.recheckSerialization();
     }
 

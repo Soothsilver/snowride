@@ -170,8 +170,12 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         } else {
             if (snowTableView.snowTableKind.isScenario()) {
                 setStyle(null);
-                //setStyle(getItem().getStyle());
+                setStyle(getItem().getStyle());
             } else {
+                if (cellIndex == 0) {
+                    style += "-fx-font-weight: bold; -fx-text-fill: darkmagenta; ";
+                    setStyle(style);
+                }
                 setStyle(null);
             }
         }

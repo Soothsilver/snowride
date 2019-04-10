@@ -8,4 +8,6 @@ public interface IAutocompleteOption extends IHasQuickDocumentation {
     default String getQuickDocumentationCaption() {
         return getAutocompleteText();
     }
+
+    default boolean hasQuickDocumentation() { return true; }
 }

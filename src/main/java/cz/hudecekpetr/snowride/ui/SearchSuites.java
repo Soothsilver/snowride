@@ -28,6 +28,9 @@ public class SearchSuites {
                 validElements.add(highElement);
             }
         }));
+        if (root.getInvariantName().contains(requestText)) {
+            validElements.add(root);
+        }
         validElements.sort(new Comparator<HighElement>() {
             @Override
             public int compare(HighElement o1, HighElement o2) {

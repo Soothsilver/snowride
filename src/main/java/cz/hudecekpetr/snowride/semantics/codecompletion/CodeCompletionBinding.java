@@ -8,11 +8,11 @@ import cz.hudecekpetr.snowride.lexer.Cell;
 import javafx.scene.control.TextField;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CodeCompletionBinding {
-    private final TextField textField;
     private final IceCell iceCell;
     private final AutoCompletionTextFieldBinding<? extends IAutocompleteOption> binding;
 
@@ -24,7 +24,6 @@ public class CodeCompletionBinding {
                 iceCell.commit();
             }
         };
-        this.textField = textField;
         this.iceCell = iceCell;
         binding.setMinWidth(500);
         binding.setDelay(0);
@@ -37,7 +36,11 @@ public class CodeCompletionBinding {
         Stream<IAutocompleteOption> allOptions = cell.getCompletionOptions().filter(option -> {
             return option.getAutocompleteText().toLowerCase().contains(text);
         });
-        return allOptions.collect(Collectors.toList());
+        List<IAutocompleteOption> collectedOptions = allOptions.collect(Collectors.toList());
+        if ("".equals(text) && collectedOptions.size() > 0) {
+            collectedOptions.add(0, new DummyAutocompleteOption());
+        }
+        return collectedOptions;
     }
 
     public void trigger() {
