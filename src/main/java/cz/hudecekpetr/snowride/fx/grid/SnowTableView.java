@@ -220,4 +220,8 @@ public class SnowTableView extends TableView<LogicalLine> {
             virtualRows++;
         }
     }
+
+    public void goRight() {
+        this.getFocusModel().focusRightCell();
+    }
 }

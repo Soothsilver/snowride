@@ -25,7 +25,7 @@ public abstract class Suite extends HighElement {
     public List<ImportedResource> importedResources = new ArrayList<>();
 
 
-    protected void reparseResources(RobotFile robotFile) {
+    private void reparseResources(RobotFile robotFile) {
         this.importedResources.clear();
         for (RobotSection section : robotFile.sections) {
             if (section.header.sectionKind == SectionKind.SETTINGS) {
@@ -80,6 +80,7 @@ public abstract class Suite extends HighElement {
     }
 
     private void validateImportedResources() {
+        this.selfErrors.removeIf(err -> err.type.getValue() == ErrorKind.IMPORT_ERROR);
         for (ImportedResource importedResource : importedResources) {
             try {
                 importedResource.getImportedKeywords(this);

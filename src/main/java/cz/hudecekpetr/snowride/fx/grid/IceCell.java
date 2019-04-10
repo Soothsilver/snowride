@@ -112,6 +112,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                     }
                     else if (event.getCode() == KeyCode.RIGHT) {
                         commit();
+                        snowTableView.goRight();
                         // No consume. May work?
                     }
                 }
