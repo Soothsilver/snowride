@@ -1,6 +1,8 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
 import cz.hudecekpetr.snowride.XmlFacade;
+import cz.hudecekpetr.snowride.semantics.Parameter;
+import cz.hudecekpetr.snowride.semantics.ParameterKind;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 import org.w3c.dom.Document;
@@ -58,7 +60,15 @@ public class ExternalLibrary {
             }
             doc = doc.replace(" +", " ").replace("\n \n", "\n\n").replace("\n\n","[[DOUBLENEWLINE]]")
                     .replace("\n", " ").replace(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n");
-            externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), doc, externalLibrary));
+            List<Parameter> parameters = new ArrayList<>();
+            NodeList args = kw.getElementsByTagName("arguments");
+            if (args.getLength() == 1) {
+                NodeList actualArgs = ((Element) args.item(0)).getElementsByTagName("arg");
+                for (int j = 0; j < actualArgs.getLength(); j++) {
+                    parameters.add(new Parameter(actualArgs.item(j).getTextContent(), ParameterKind.UNKNOWN));
+                }
+            }
+            externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), doc, parameters, externalLibrary));
         }
         return externalLibrary;
     }

@@ -27,8 +27,8 @@ public class FileSuite extends Suite implements ISuite {
             this.applyText();
             System.out.println("SaveAll: " + this.getShortName());
         } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            this.contents = serialize();
             this.optimizeStructure();
+            this.contents = serialize();
             System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
@@ -101,9 +101,7 @@ public class FileSuite extends Suite implements ISuite {
         return toString();
     }
 
-    public String serialize() {
-        return fileParsed.serialize();
-    }
+
 
     @Override
     public Image getAutocompleteIcon() {

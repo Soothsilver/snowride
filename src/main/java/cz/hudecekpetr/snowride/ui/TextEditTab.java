@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -84,6 +85,9 @@ public class TextEditTab {
     }
 
     public void loadElement(HighElement value) {
+        if (value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED && value instanceof Suite) {
+            ((Suite) value).contents = ((Suite) value).serialize();
+        }
         this.lastLoaded = value;
         if (value instanceof Scenario) {
             tabTextEdit.setContent(warningPane);

@@ -32,13 +32,13 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public void saveAll() throws IOException {
+        if (unsavedChanges != LastChangeKind.PRISTINE) {
+            ensureAnInitFileExists();
+        }
         if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            if (initFile == null) {
-                initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
-                initFile.createNewFile();
-                fileParsed = new RobotFile();
-            }
             this.applyText();
+        } else if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
+            this.contents = serialize();
         }
         // Save folders and suites below
         for (HighElement child : children) {
@@ -55,6 +55,20 @@ public class FolderSuite extends Suite implements ISuite {
                 }
             }
             refreshToString();
+        }
+    }
+
+    private void ensureAnInitFileExists() {
+        try {
+            if (initFile == null) {
+                initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
+                if (!initFile.createNewFile()) {
+                    throw new RuntimeException("Could not create __init__.robot");
+                }
+                fileParsed = new RobotFile();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -156,9 +170,7 @@ public class FolderSuite extends Suite implements ISuite {
         if (asTestCase) {
             throw new RuntimeException("Folders can't contain test cases.");
         }
-        if (this.initFile == null) {
-            throw new NotImplementedException("This folder doesn't have an initfile yet and creating one isn't implemented yet.");
-        }
+        ensureAnInitFileExists();
         if (this.fileParsed.errors.size() > 0) {
             throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
         }

@@ -130,7 +130,8 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.getSelectionModel().selectNext();
             keyEvent.consume();
         } else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
-                && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()) {
+                && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()
+                && keyEvent.getCode() != KeyCode.ESCAPE) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             keyEvent.consume();

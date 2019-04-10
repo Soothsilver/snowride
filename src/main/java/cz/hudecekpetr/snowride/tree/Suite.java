@@ -35,7 +35,9 @@ public abstract class Suite extends HighElement {
     public List<ImportedResource> getImportedResources() {
         return importedResources;
     }
-
+    public String serialize() {
+        return fileParsed.serialize();
+    }
     public void reparseResources() {
         this.importedResources.clear();
         if (fileParsed != null) {
