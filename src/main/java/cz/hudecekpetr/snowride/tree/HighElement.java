@@ -66,7 +66,6 @@ public abstract class HighElement implements IAutocompleteOption {
             public void onChanged(Change<? extends HighElement> c) {
                 while (c.next()) {
                     for (HighElement added : c.getAddedSubList()) {
-                        System.out.println("Adding [" + added + "] to [" + HighElement.this + "].");
                         allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
                         childrenRecursively.appendList(added.childrenRecursively);
                     }
@@ -77,7 +76,6 @@ public abstract class HighElement implements IAutocompleteOption {
                 }
             }
         });
-        System.out.println("Adding [" + this + ".self] to [" + this + "].");
         allErrorsRecursiveSource.appendList(this.selfErrors);
         allErrorsRecursive = allErrorsRecursiveSource;//.getAggregatedList();
         addChildren(children);

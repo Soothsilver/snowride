@@ -224,4 +224,8 @@ public class SnowTableView extends TableView<LogicalLine> {
     public void goRight() {
         this.getFocusModel().focusRightCell();
     }
+
+    public HighElement getScenario() {
+        return scenario;
+    }
 }

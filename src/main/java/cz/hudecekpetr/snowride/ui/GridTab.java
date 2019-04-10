@@ -55,6 +55,7 @@ public class GridTab {
     }
 
     public void loadElement(HighElement value) {
+        value.asSuite().reparseAndRecalculateResources();
         tabGrid.setContent(lblParseError);
         if (value instanceof FolderSuite) {
             FolderSuite fsuite = (FolderSuite) value;

@@ -9,6 +9,12 @@ Many other features are unstable. Use at own risk. I recommend [RIDE](https://gi
 **Screenshot.** 
 ![Screenshot](screenshots/Alpha1.PNG)
 
+**Download.**
+Download Snowride from Bintray:
+1. Go to https://bintray.com/soothsilver/snowride/snowride
+2. In section "Downloads", download the "jar-with-dependencies".
+3. Double-click it.
+
 **Design principles of *Snowride*:**
 * **Responsive.** Every operation should happen immediately. Snowride should load within a second. 
 A test suite that contains thousands of tests should load within a second. Clicking any button or pressing any

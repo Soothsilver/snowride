@@ -6,7 +6,7 @@
 
     <groupId>cz.hudecekpetr.snowride</groupId>
     <artifactId>snowride</artifactId>
-    <version>0.2</version>
+    <version>0.5</version>
     <build>
         <plugins>
             <plugin>
@@ -129,7 +129,7 @@
     <distributionManagement>
         <repository>
             <id>bintray-snowride-repo</id>
-            <url>https://api.bintray.com/maven/soothsilver/maven-repo/snowride/;publish=1</url>
+            <url>https://api.bintray.com/maven/soothsilver/snowride/snowride/;publish=1</url>
         </repository>
     </distributionManagement>
 </project>

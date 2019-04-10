@@ -7,12 +7,17 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.*;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
-import org.apache.commons.lang3.StringUtils;
+import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
+import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
+import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
+import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement {
@@ -22,23 +27,36 @@ public abstract class Suite extends HighElement {
         super(Extensions.toPrettyName(shortName), contents, children);
     }
 
-    public List<ImportedResource> importedResources = new ArrayList<>();
+    private List<ImportedResource> importedResources = new ArrayList<>();
+    private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
+    public long importedResourcesLastRecursedDuringIteration = 0;
 
+    public List<ImportedResource> getImportedResources() {
+        return importedResources;
+    }
 
-    private void reparseResources(RobotFile robotFile) {
+    public void reparseResources() {
         this.importedResources.clear();
-        for (RobotSection section : robotFile.sections) {
-            if (section.header.sectionKind == SectionKind.SETTINGS) {
-                KeyValuePairSection settingsSection = (KeyValuePairSection) section;
-                settingsSection.createSettings().forEach(setting -> {
-                    if (setting.key.equalsIgnoreCase("Library")) {
-                        importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.LIBRARY));
-                    } else if (setting.key.equalsIgnoreCase("Resource")) {
-                        importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.RESOURCE));
-                    }
-                });
+        if (fileParsed != null) {
+            for (RobotSection section : fileParsed.sections) {
+                if (section.header.sectionKind == SectionKind.SETTINGS) {
+                    KeyValuePairSection settingsSection = (KeyValuePairSection) section;
+                    settingsSection.createSettings().forEach(setting -> {
+                        if (setting.key.equalsIgnoreCase("Library")) {
+                            importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.LIBRARY));
+                        } else if (setting.key.equalsIgnoreCase("Resource")) {
+                            importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.RESOURCE));
+                        }
+                    });
+                }
             }
         }
+    }
+
+    private void recalculateResources() {
+        importedResourcesRecursively.clear();
+        importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
+        importedResources.forEach(ir -> ir.gatherSelfInto(importedResourcesRecursively, this, ImportedResource.incrementAndGetIterationCount()));
     }
 
     public Stream<IKnownKeyword> getSelfKeywords() {
@@ -50,17 +68,11 @@ public abstract class Suite extends HighElement {
     }
 
     public Stream<IKnownKeyword> getKeywordsPermissibleInSuite() {
-        return Stream.concat(Stream.concat(getSelfKeywords(), getImportedKeywords()), ExternalLibrary.builtIn.keywords.stream());
+        return Stream.concat(getSelfKeywords(), getImportedKeywords());
     }
 
     private Stream<IKnownKeyword> getImportedKeywords() {
-        return importedResources.stream().flatMap(ir -> {
-            try {
-                return ir.getImportedKeywords(this);
-            } catch (ImportException importException) {
-                return Stream.empty();
-            }
-        });
+        return importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords);
     }
 
     public void reparse() {
@@ -73,7 +85,7 @@ public abstract class Suite extends HighElement {
             for (Exception exception : parsed.errors) {
                 this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
-            this.reparseResources(parsed);
+            this.reparseResources();
             this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.IMPORT_ERROR);
             this.addChildren(parsed.getHighElements());
         }
@@ -108,7 +120,7 @@ public abstract class Suite extends HighElement {
         }
     }
 
-    protected void recheckSerialization() {
+    private void recheckSerialization() {
         this.selfErrors.removeIf(error -> error.type.getValue() == ErrorKind.SERIALIZATION_ERROR);
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED && this.fileParsed != null && this.fileParsed.errors.size() == 0) {
             String afterSerialization = this.fileParsed.serialize().replace("\r", "");
@@ -117,5 +129,10 @@ public abstract class Suite extends HighElement {
                 selfErrors.add(new SnowrideError(this, ErrorKind.SERIALIZATION_ERROR, Severity.WARNING, "File might not serialize in the same way you've written it down."));
             }
         }
+    }
+
+    public void reparseAndRecalculateResources() {
+        this.reparseResources();
+        this.recalculateResources();
     }
 }

@@ -3,6 +3,8 @@ package cz.hudecekpetr.snowride.fx.grid;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
+import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -75,6 +77,9 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     @Override
     public void commitEdit(Cell newValue) {
         super.commitEdit(newValue);
+        if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
+            ((Suite) snowTableView.getScenario()).reparseResources();
+        }
         if (getScene().getFocusOwner() == textField) {
              column.getTableView().requestFocus();
         }
@@ -164,7 +169,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             setStyle(style);
         } else {
             if (snowTableView.snowTableKind.isScenario()) {
-                setStyle(getItem().getStyle());
+                setStyle(null);
+                //setStyle(getItem().getStyle());
             } else {
                 setStyle(null);
             }

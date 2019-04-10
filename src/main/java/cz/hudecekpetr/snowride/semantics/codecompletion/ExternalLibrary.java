@@ -3,13 +3,11 @@ package cz.hudecekpetr.snowride.semantics.codecompletion;
 import cz.hudecekpetr.snowride.XmlFacade;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
-import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
-import java.net.URI;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,17 +39,12 @@ public class ExternalLibrary {
     }
 
     private static ExternalLibrary loadFromBuiltInXmlFile(String filename) {
-        try {
-            URI uri = ExternalLibrary.class.getResource("/xmls/" + filename).toURI();
-            File file = new File(uri);
-            return loadFromFile(file);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        InputStream inputStream = ExternalLibrary.class.getResourceAsStream("/xmls/" + filename);
+        return loadFromInputStream(inputStream);
     }
 
-    private static ExternalLibrary loadFromFile(File file) {
-        Document document = XmlFacade.loadXmlFromFile(file);
+    private static ExternalLibrary loadFromInputStream(InputStream inputStream) {
+        Document document = XmlFacade.loadXmlFromInputStream(inputStream);
         NodeList keywords = document.getElementsByTagName("kw");
         ExternalLibrary externalLibrary = new ExternalLibrary();
         externalLibrary.name = document.getDocumentElement().getAttribute("name");

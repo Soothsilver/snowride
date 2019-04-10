@@ -8,6 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class XmlFacade {
     static {
@@ -22,9 +23,9 @@ public class XmlFacade {
 
     private static DocumentBuilder dBuilder;
 
-    public static Document loadXmlFromFile(File file) {
+    public static Document loadXmlFromInputStream(InputStream inputStream) {
         try {
-            return dBuilder.parse(file);
+            return dBuilder.parse(inputStream);
         } catch (SAXException | IOException e) {
             throw new RuntimeException(e);
         }
