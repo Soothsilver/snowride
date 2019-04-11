@@ -66,17 +66,7 @@ public class RobotFile {
         for (HighElement sc : getHighElements()) {
             if (sc instanceof Scenario) {
                 Scenario scc = (Scenario) sc;
-                for (LogicalLine line : scc.getLines()) {
-                    if (line.cells.size() >= 3) {
-                        if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
-                            List<String> docCells = new ArrayList<>();
-                            for (int i = 2; i < line.cells.size(); i++) {
-                                docCells.add(line.cells.get(i).contents);
-                            }
-                            scc.semanticsDocumentation = String.join("\n", docCells);
-                        }
-                    }
-                }
+                scc.analyzeSemantics();
             }
         }
     }

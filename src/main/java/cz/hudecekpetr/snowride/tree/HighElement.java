@@ -36,7 +36,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public TreeItem<HighElement> treeNode;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
-    public HighElement parent;
+    public Suite parent;
     public boolean dead;
     protected String semanticsDocumentation;
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
@@ -48,6 +48,12 @@ public abstract class HighElement implements IAutocompleteOption {
         checkbox = new CheckBox();
         checkbox.setVisible(false);
         checkbox.managedProperty().bind(checkbox.visibleProperty());
+        checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                MainForm.INSTANCE.runTab.maybeRunNumberChanged();
+            }
+        });
         graphic.getChildren().add(imageView);
         graphic.getChildren().add(checkbox);
         treeNode = new TreeItem<>(this, graphic);
@@ -86,7 +92,7 @@ public abstract class HighElement implements IAutocompleteOption {
         for (HighElement child : children) {
             treeNode.getChildren().add(child.treeNode);
             if (child instanceof Scenario) {
-                child.parent = this;
+                child.parent = (Suite) this;
             }
         }
     }
@@ -107,6 +113,8 @@ public abstract class HighElement implements IAutocompleteOption {
     }
 
     public abstract void saveAll() throws IOException;
+
+    public abstract void updateTagsForSelfAndChildren();
 
     protected void refreshToString() {
         this.treeNode.setValue(null);

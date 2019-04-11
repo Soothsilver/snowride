@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.lexer;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.KeyValuePairSection;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;

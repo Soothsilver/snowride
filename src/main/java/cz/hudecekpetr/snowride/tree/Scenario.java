@@ -14,6 +14,7 @@ import javafx.scene.image.Image;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class Scenario extends HighElement {
@@ -21,6 +22,7 @@ public class Scenario extends HighElement {
     private Cell nameCell;
     private boolean isTestCase;
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
+    public HashSet<Tag> actualTags = new HashSet<>();
 
     public ObservableList<LogicalLine> getLines() {
         return lines;
@@ -44,6 +46,7 @@ public class Scenario extends HighElement {
     public void saveAll() throws IOException {
         // Saved as part of the file suite.
     }
+
 
     @Override
     public void deleteSelf(MainForm mainForm) {
@@ -156,4 +159,38 @@ public class Scenario extends HighElement {
     public String getQuickDocumentationCaption() {
         return toString();
     }
+
+    public void analyzeSemantics() {
+        for (LogicalLine line : getLines()) {
+            if (line.cells.size() >= 3) {
+                if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
+                    List<String> docCells = new ArrayList<>();
+                    for (int i = 2; i < line.cells.size(); i++) {
+                        docCells.add(line.cells.get(i).contents);
+                    }
+                    semanticsDocumentation = String.join("\n", docCells);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void updateTagsForSelfAndChildren() {
+        actualTags = new HashSet<>(parent.forceTagsCumulative);
+        boolean foundTags = false;
+        for (LogicalLine line : getLines()) {
+            if (line.cells.size() >= 2) {
+                if (line.cells.get(1).contents.equalsIgnoreCase("[tags]")) {
+                    for (int i = 2; i < line.cells.size(); i++) {
+                        actualTags.add(new Tag(line.cells.get(i).contents));
+                    }
+                    foundTags = true;
+                }
+            }
+        }
+        if (!foundTags) {
+            actualTags.addAll(parent.defaultTags);
+        }
+    }
+
 }

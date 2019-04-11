@@ -41,7 +41,9 @@ public class GridTab {
         settings.setPadding(new Insets(5, 0, 0, 5));
         VBox vboxSettings = new VBox(5, settings, tableSettings);
         VBox.setVgrow(tableSettings, Priority.ALWAYS);
-        VBox vboxVariables = new VBox(5, new Label("Variables"), tableVariables);
+        Label labelVariables = new Label("Variables");
+        labelVariables.setPadding(new Insets(5, 0, 0, 5));
+        VBox vboxVariables = new VBox(5, labelVariables, tableVariables);
         VBox.setVgrow(tableVariables, Priority.ALWAYS);
         suiteView = new SplitPane(vboxSettings, vboxVariables);
         suiteView.setOrientation(Orientation.VERTICAL);
@@ -82,7 +84,6 @@ public class GridTab {
     private void loadSuiteTables(Suite fsuite) {
         tabGrid.setContent(suiteView);
         if (fsuite.fileParsed != null) {
-            // TODO allow structural changes to nonexisting __init__.robot file.
             tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
             tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
         }

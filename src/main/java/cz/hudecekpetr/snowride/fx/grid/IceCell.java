@@ -107,7 +107,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                     event.consume();
                 }
             });
-            codeCompletionBinding = new CodeCompletionBinding(textField, this);
+            codeCompletionBinding = new CodeCompletionBinding(textField, this, snowTableView.snowTableKind);
             textField.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
@@ -168,10 +168,16 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 setStyle(getItem().getStyle());
             } else {
                 if (cellIndex == 0) {
-                    style += "-fx-font-weight: bold; -fx-text-fill: darkmagenta; ";
+                    style += "-fx-font-weight: bold; ";
+                    if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
+                        style += "-fx-text-fill: darkmagenta; ";
+                    } else {
+                        style += "-fx-text-fill: green; ";
+                    }
                     setStyle(style);
+                } else {
+                    setStyle(null);
                 }
-                setStyle(null);
             }
         }
 

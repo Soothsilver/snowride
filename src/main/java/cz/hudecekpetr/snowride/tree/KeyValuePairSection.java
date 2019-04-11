@@ -8,6 +8,7 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class KeyValuePairSection extends RobotSection {
     public final ObservableList<LogicalLine> pairs;
@@ -44,8 +45,8 @@ public class KeyValuePairSection extends RobotSection {
     public List<Setting> createSettings() {
         List<Setting> settings = new ArrayList<>();
         for (LogicalLine line : pairs) {
-            if (line.cells.size() >= 2) {
-                settings.add(new Setting(line.cells.get(0).contents, line.cells.get(1).contents));
+            if (line.cells.size() >= 1) {
+                settings.add(new Setting(line.cells.get(0).contents, line.cells.stream().skip(1).map(cell -> cell.contents).collect(Collectors.toList())));
             }
         }
         return settings;

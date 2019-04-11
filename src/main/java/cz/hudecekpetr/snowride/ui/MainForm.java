@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 public class MainForm {
     public static final Font BIGGER_FONT = new Font("System Regular", 14);
     public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
+    public static MainForm INSTANCE;
     private final SerializingTab serializingTab;
     private final ErrorsTab errorsTab;
     private GateParser gateParser = new GateParser();
@@ -98,11 +99,11 @@ public class MainForm {
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     private ContextMenu treeContextMenu;
-    private RunTab runTab;
+    public RunTab runTab;
     private GridTab gridTab;
 
     public MainForm(Stage stage) {
-
+        INSTANCE = this;
         this.stage = stage;
         filesystem = new Filesystem(this);
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
@@ -184,6 +185,7 @@ public class MainForm {
         whatChanged.unsavedChanges = how;
         whatChanged.treeNode.setValue(null);
         whatChanged.treeNode.setValue(whatChanged);
+        runTab.maybeRunNumberChanged();
         canSave.set(true);
     }
 
@@ -425,6 +427,7 @@ public class MainForm {
         bNavigateForwards.setTooltip(new Tooltip("Navigate forwards"));
         Button bSaveAll = new Button("Save all", loadIcon(Images.save));
         Button bRun = new Button("Run", loadIcon(Images.play));
+        bRun.textProperty().bind(runTab.runCaption);
         Button bStop = new Button("Stop", loadIcon(Images.stop));
         bNavigateBack.disableProperty().bind(canNavigateBack.not());
         bNavigateBack.setOnAction(this::goBack);
@@ -524,6 +527,7 @@ public class MainForm {
         MenuItem run = new MenuItem("Run", loadIcon(Images.play));
         run.setAccelerator(new KeyCodeCombination(KeyCode.F5));
         run.disableProperty().bind(runTab.canRun.not());
+        run.textProperty().bind(runTab.runCaption);
         run.setOnAction(runTab::clickRun);
         MenuItem stop = new MenuItem("Stop", loadIcon(Images.stop));
         stop.disableProperty().bind(runTab.canStop.not());
@@ -610,6 +614,7 @@ public class MainForm {
                     tbSearchTests.requestFocus();
                     projectTree.getSelectionModel().select(0);
                     projectTree.getFocusModel().focus(0);
+                    runTab.maybeRunNumberChanged();
 
                     Settings.getInstance().lastOpenedProject = canonicalPath.toString();
                     Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());

@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
@@ -14,19 +15,20 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -43,26 +45,35 @@ import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class RunTab {
-    public static final String INITIAL_STYLE = "-fx-font-family: Consolas; -fx-font-size: 10pt;";
-    private MainForm mainForm;
-    private FileChooser openScriptFileDialog;
-    private TextField tbScript;
+    public static final String INITIAL_STYLE = "-fx-font-family: Consolas, 'Courier New', monospace; -fx-font-size: 10pt;";
     public Run run = new Run();
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
-    private StyledTextArea<String, String> tbOutput;
     public StyledTextArea<String, String> tbLog;
-    private Tab tabRun;
     public Label lblKeyword;
+    public Label lblMultirun;
+    public SimpleStringProperty runCaption = new SimpleStringProperty("Run");
+    Multirunner multirunner;
+    AnsiOutputStream ansiOutputStream = new AnsiOutputStream();
+    private MainForm mainForm;
+    private FileChooser openScriptFileDialog;
+    private TextField tbScript;
+    private StyledTextArea<String, String> tbOutput;
+    private Tab tabRun;
     private Label lblPassed;
     private Label lblFailed;
     private Label lblTotalTime;
@@ -76,8 +87,6 @@ public class RunTab {
     private TextField tbWithoutTags;
     private TextField tbWithTags;
     private CheckBox cbWithTags;
-    public Label lblMultirun;
-
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -107,14 +116,14 @@ public class RunTab {
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), event -> timer()));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
-        tbOutput = new StyledTextArea<String, String>( "", TextFlow::setStyle,
+        tbOutput = new StyledTextArea<String, String>("", TextFlow::setStyle,
                 INITIAL_STYLE, TextExt::setStyle,
                 new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
                 true);
         tbOutput.setUseInitialStyleForInsertion(true);
         tbOutput.setEditable(false);
         tbOutput.setPadding(new Insets(4));
-        tbLog = new StyledTextArea<String, String>( "", TextFlow::setStyle,
+        tbLog = new StyledTextArea<String, String>("", TextFlow::setStyle,
                 INITIAL_STYLE, TextExt::setStyle,
                 new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
                 true);
@@ -132,6 +141,7 @@ public class RunTab {
         HBox.setHgrow(tbScript, Priority.ALWAYS);
         Button bRun = new Button("Run", new ImageView(Images.play));
         bRun.setOnAction(this::clickRun);
+        bRun.textProperty().bind(runCaption);
         bRun.disableProperty().bind(canRun.not());
         Button bStop = new Button("Stop", new ImageView(Images.stop));
         bStop.setOnAction(this::clickStop);
@@ -176,7 +186,7 @@ public class RunTab {
         hboxArguments.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tbArguments, Priority.ALWAYS);
         lblTotalTime = new Label("0:00:00");
-        lblTotalTime.setPadding(new Insets(0,0,0,10));
+        lblTotalTime.setPadding(new Insets(0, 0, 0, 10));
         lblFailed = new Label("Failed: 0");
         lblPassed = new Label("Passed: 0");
         lblKeyword = new Label("No keyword running.");
@@ -187,13 +197,17 @@ public class RunTab {
         hboxExecutionLine.setAlignment(Pos.CENTER_LEFT);
         cbWithTags = new CheckBox("Run only tests with tags:");
         cbWithTags.setSelected(Settings.getInstance().cbWithTags);
+        cbWithTags.selectedProperty().addListener(this::tagsCheckboxChanged);
         tbWithTags = new TextField(Settings.getInstance().tbWithTags);
         tbWithTags.setFont(MainForm.TEXT_EDIT_FONT);
+        tbWithTags.textProperty().addListener(this::tagsTextChanged);
         vboxWithTags = new VBox(2, cbWithTags, tbWithTags);
         cbWithoutTags = new CheckBox("Don't run tests with tags:");
         cbWithoutTags.setSelected(Settings.getInstance().cbWithoutTags);
+        cbWithoutTags.selectedProperty().addListener(this::tagsCheckboxChanged);
         tbWithoutTags = new TextField(Settings.getInstance().tbWithoutTags);
         tbWithoutTags.setFont(MainForm.TEXT_EDIT_FONT);
+        tbWithoutTags.textProperty().addListener(this::tagsTextChanged);
         VBox vboxWithoutTags = new VBox(2, cbWithoutTags, tbWithoutTags);
         HBox hboxTags = new HBox(5, vboxWithTags, vboxWithoutTags);
         HBox.setHgrow(vboxWithTags, Priority.ALWAYS);
@@ -204,9 +218,13 @@ public class RunTab {
         tabRun.setClosable(false);
         return tabRun;
     }
-
-    Multirunner multirunner;
-
+    private void tagsTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+        maybeRunNumberChanged();
+    }
+    private void tagsCheckboxChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+    {
+        maybeRunNumberChanged();
+    }
     private ContextMenu buildAdvancedRunContextMenu() {
         MenuItem untilFailureOrStop = new MenuItem("...until failure");
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
@@ -255,6 +273,7 @@ public class RunTab {
     public void appendGreenText(String text) {
         flushIntoTbOutput(text + "\n", "-fx-font-style: italic");
     }
+
     public void appendGreenTextNoNewline(String text) {
         flushIntoTbOutput(text, "-fx-font-style: italic");
     }
@@ -288,9 +307,9 @@ public class RunTab {
                 }
             }
             // Back to std. image
-            mainForm.getProjectTree().getRoot().getValue().selfAndDescendantHighElements().forEach((he)->{
+            mainForm.getProjectTree().getRoot().getValue().selfAndDescendantHighElements().forEach((he) -> {
                 if (he instanceof Scenario && ((Scenario) he).isTestCase()) {
-                    ((Scenario)he).markTestStatus(TestResult.NOT_YET_RUN);
+                    ((Scenario) he).markTestStatus(TestResult.NOT_YET_RUN);
                 }
             });
 
@@ -337,11 +356,11 @@ public class RunTab {
 
     private void collectCheckedTestCases(HighElement element, List<Scenario> checkedStuff) {
         if (element instanceof Scenario) {
-            if (element.checkbox.isSelected() && ((Scenario)element).isTestCase()) {
+            if (element.checkbox.isSelected() && ((Scenario) element).isTestCase()) {
                 checkedStuff.add((Scenario) element);
             }
         }
-        for(HighElement child : element.children) {
+        for (HighElement child : element.children) {
             collectCheckedTestCases(child, checkedStuff);
         }
     }
@@ -353,7 +372,7 @@ public class RunTab {
             int howManyRead = twilight.read(buffer);
             while (howManyRead != -1) {
                 String s = new String(buffer, 0, howManyRead);
-                Platform.runLater(()->{
+                Platform.runLater(() -> {
                     this.appendAnsiText(s);
                 });
                 howManyRead = twilight.read(buffer);
@@ -363,8 +382,6 @@ public class RunTab {
             // end of business
         }
     }
-
-    AnsiOutputStream ansiOutputStream = new AnsiOutputStream();
 
     public void appendAnsiText(String text) {
         ansiOutputStream.add(text);
@@ -389,7 +406,7 @@ public class RunTab {
         } catch (InterruptedException e) {
             // doesn't matter
         }
-        Platform.runLater(()->{
+        Platform.runLater(() -> {
             run.stoppableProcessId.set(-1);
             run.running.set(false);
             multirunner.endedNormally();
@@ -440,7 +457,7 @@ public class RunTab {
                 lines.add(tag.trim());
             }
         }
-        for(Scenario testCase : testCases) {
+        for (Scenario testCase : testCases) {
             lines.add("--suite");
             lines.add(testCase.parent.getQualifiedName());
             lines.add("--test");
@@ -504,6 +521,52 @@ public class RunTab {
         File file = openScriptFileDialog.showOpenDialog(mainForm.getStage());
         if (file != null) {
             tbScript.setText(file.getAbsoluteFile().toString());
+        }
+    }
+
+    public void maybeRunNumberChanged() {
+        int[] totalSelected = new int[]{0};
+        int[] totalTests = new int[]{0};
+        boolean tagsRequired = cbWithTags.isSelected();
+        boolean tagsIgnored = cbWithoutTags.isSelected();
+        boolean[] anythingIsChecked = new boolean[]{false};
+        List<Tag> whatTagsMustBe = new ArrayList<>();
+        List<Tag> whatTagsCannotBe = new ArrayList<>();
+        if (tagsRequired) {
+            for (String tag : StringUtils.split(tbWithTags.getText(), ',')) {
+                whatTagsMustBe.add(new Tag(tag.trim().toLowerCase()));
+            }
+        }
+        if (tagsIgnored) {
+            for (String tag : StringUtils.split(tbWithoutTags.getText(), ',')) {
+                whatTagsCannotBe.add(new Tag(tag.trim().toLowerCase()));
+            }
+        }
+        mainForm.getRootElement().selfAndDescendantHighElements().forEach(he -> {
+            if (he.checkbox.isSelected() && he instanceof Scenario && ((Scenario) he).isTestCase()) {
+                anythingIsChecked[0] = true;
+            }
+        });
+        boolean ignoreCheckboxes = !anythingIsChecked[0];
+        mainForm.getRootElement().selfAndDescendantHighElements().forEach(he -> {
+            if (he instanceof Scenario) {
+                Scenario s = (Scenario) he;
+                if (s.isTestCase()) {
+                    totalTests[0]++;
+                    if (ignoreCheckboxes || he.checkbox.isSelected()) {
+                        if (!tagsRequired || Extensions.containsAny(s.actualTags, whatTagsMustBe)) {
+                            if (!tagsIgnored || !Extensions.containsAny(s.actualTags, whatTagsCannotBe)) {
+                                totalSelected[0]++;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (totalSelected[0] == totalTests[0]) {
+            runCaption.set("Run");
+        } else {
+            runCaption.set("Run " + Extensions.englishCount(totalSelected[0], "test", "tests"));
         }
     }
 }

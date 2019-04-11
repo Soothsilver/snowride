@@ -2,14 +2,13 @@ package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
+import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
-import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.scene.image.Image;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Cell implements IHasQuickDocumentation {
@@ -97,16 +96,24 @@ public class Cell implements IHasQuickDocumentation {
         }
     }
 
-    public Stream<IAutocompleteOption> getCompletionOptions() {
-        updateSemanticsStatus();
-        Stream<IAutocompleteOption> options = Stream.empty();
-        if (cellIndex == 1) {
-            options = Stream.concat(options, TestCaseSettingOption.allOptions.stream());
+    public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind) {
+        if (snowTableKind.isScenario()) {
+            updateSemanticsStatus();
+            Stream<IAutocompleteOption> options = Stream.empty();
+            if (cellIndex == 1) {
+                options = Stream.concat(options, TestCaseSettingOption.testCaseTableOptions.stream());
+            }
+            if (isKeyword) {
+                options = Stream.concat(options, permissibleKeywords.stream());
+            }
+            return options;
+        } else {
+            cellIndex = partOfLine.cells.indexOf(this);
+            if (cellIndex == 0 && snowTableKind == SnowTableKind.SETTINGS) {
+                return TestCaseSettingOption.settingsTableOptions.stream();
+            }
+            return Stream.empty();
         }
-        if (isKeyword) {
-            options = Stream.concat(options, permissibleKeywords.stream());
-        }
-        return options;
     }
 
     public IKnownKeyword getKeywordInThisCell() {

@@ -1,10 +1,13 @@
 package cz.hudecekpetr.snowride;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.Tag;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -75,5 +78,14 @@ public class Extensions {
         } else {
             return number + " " + plural;
         }
+    }
+
+    public static <T> boolean containsAny(Set<T> haystack, List<T> needles) {
+        for (T needle : needles) {
+            if (haystack.contains(needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -31,6 +31,8 @@ public abstract class Suite extends HighElement {
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
     public long importedResourcesLastRecursedDuringIteration = 0;
+    public Set<Tag> forceTagsCumulative = new HashSet<>();
+    public Set<Tag> defaultTags = new HashSet<>();
 
     public List<ImportedResource> getImportedResources() {
         return importedResources;
@@ -45,10 +47,12 @@ public abstract class Suite extends HighElement {
                 if (section.header.sectionKind == SectionKind.SETTINGS) {
                     KeyValuePairSection settingsSection = (KeyValuePairSection) section;
                     settingsSection.createSettings().forEach(setting -> {
-                        if (setting.key.equalsIgnoreCase("Library")) {
-                            importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.LIBRARY));
-                        } else if (setting.key.equalsIgnoreCase("Resource")) {
-                            importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.RESOURCE));
+                        if (setting.firstValue != null) {
+                            if (setting.key.equalsIgnoreCase("Library")) {
+                                importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.LIBRARY));
+                            } else if (setting.key.equalsIgnoreCase("Resource")) {
+                                importedResources.add(new ImportedResource(setting.firstValue, ImportedResourceKind.RESOURCE));
+                            }
                         }
                     });
                 }
@@ -102,6 +106,7 @@ public abstract class Suite extends HighElement {
         if (this.fileParsed != null) {
             this.fileParsed.analyzeSemantics(this);
         }
+        this.updateTagsForSelfAndChildren();
         this.recheckSerialization();
     }
 
@@ -129,5 +134,33 @@ public abstract class Suite extends HighElement {
     public void reparseAndRecalculateResources() {
         this.reparseResources();
         this.recalculateResources();
+    }
+
+    @Override
+    public void updateTagsForSelfAndChildren() {
+        if (this.parent != null) {
+            this.forceTagsCumulative = new HashSet<>(parent.forceTagsCumulative);
+        } else {
+            this.forceTagsCumulative.clear();
+        }
+        this.defaultTags.clear();
+        if (this.fileParsed != null) {
+            List<Setting> settings = this.fileParsed.findOrCreateSettingsSection().createSettings();
+            for (Setting setting : settings) {
+                if (setting.key.toLowerCase().equals("force tags")) {
+                    for (String val : setting.values) {
+                        forceTagsCumulative.add(new Tag(val));
+                    }
+                }
+                if (setting.key.toLowerCase().equals("default tags")) {
+                    for (String val : setting.values) {
+                        defaultTags.add(new Tag(val));
+                    }
+                }
+            }
+        }
+        for (HighElement child : this.children) {
+            child.updateTagsForSelfAndChildren();
+        }
     }
 }
