@@ -14,6 +14,8 @@ public class IntToCellBinding extends ObjectBinding<Cell> {
 
     @Override
     protected Cell computeValue() {
-        return new Cell(integer.getValue().toString(), "irrelevant", null);
+        Cell lineNumberCell = new Cell(integer.getValue().toString(), "irrelevant", null);
+        lineNumberCell.isLineNumberCell = true;
+        return lineNumberCell;
     }
 }

@@ -7,10 +7,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.*;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
-import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
-import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
-import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
-import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
+import cz.hudecekpetr.snowride.semantics.resources.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
@@ -64,8 +61,9 @@ public abstract class Suite extends HighElement {
         importedResourcesRecursively.clear();
         importedKeywordsRecursively.clear();
         importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
+        importedResourcesRecursively.add(new ResourceFileKeywordSource(this));
         importedResources.forEach(ir -> ir.gatherSelfInto(importedResourcesRecursively, this, ImportedResource.incrementAndGetIterationCount()));
-        importedResourcesRecursively.stream().flatMap(ks -> ks.getAllKeywords()).forEachOrdered(kk -> {
+        importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
         });
     }
@@ -80,10 +78,6 @@ public abstract class Suite extends HighElement {
 
     public List<IKnownKeyword> getKeywordsPermissibleInSuite() {
         return importedKeywordsRecursively;
-    }
-
-    private Stream<IKnownKeyword> getImportedKeywords() {
-        return importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords);
     }
 
     public void reparse() {

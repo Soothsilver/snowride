@@ -36,7 +36,6 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.cellIndex = cellIndex;
         this.snowTableView = snowTableView;
         this.setPadding(new Insets(0));
-        this.setStyle("-fx-padding: 0; -fx-background-insets: 0.0;");
         if (cellIndex < 0) {
             this.setEditable(false);
         }
@@ -134,53 +133,32 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     public void cancelEdit() {
         super.cancelEdit();
         setGraphic(null);
-        updateStyle();
         setText(this.getItem().contents);
     }
 
     @Override
     protected void updateItem(Cell item, boolean empty) {
+
         super.updateItem(item, empty);
+        styleProperty().unbind();
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
             setStyle(null);
         } else {
-            updateStyle();
             setText(item.contents);
             setGraphic(null);
+            if (item.isLineNumberCell) {
+                String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
+                style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-alignment: center; ";
+                setStyle(style);
+            } else {
+                styleProperty().bind(item.getStyleProperty());
+            }
             if (item.triggerDocumentationNext) {
                 triggerDocumentation();
                 item.triggerDocumentationNext = false;
             }
         }
-
-    }
-
-    private void updateStyle() {
-        String style = "";
-        if (cellIndex <= -1) {
-            style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
-            setStyle(style);
-        } else {
-            if (snowTableView.snowTableKind.isScenario()) {
-                setStyle(null);
-                setStyle(getItem().getStyle());
-            } else {
-                if (cellIndex == 0) {
-                    style += "-fx-font-weight: bold; ";
-                    if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
-                        style += "-fx-text-fill: darkmagenta; ";
-                    } else {
-                        style += "-fx-text-fill: green; ";
-                    }
-                    setStyle(style);
-                } else {
-                    setStyle(null);
-                }
-            }
-        }
-
-
     }
 }

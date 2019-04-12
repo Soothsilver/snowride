@@ -36,6 +36,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
@@ -43,6 +44,7 @@ import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
+import sun.nio.ch.IOStatus;
 
 import java.awt.*;
 import java.io.File;
@@ -421,9 +423,11 @@ public class RunTab {
             runnerAgent = temporaryDirectory.resolve("TestRunnerAgent.py").toFile();
             argfile = File.createTempFile("argfile", ".txt", temporaryDirectory.toFile());
             createArgFile(argfile, testCases);
-            File testRunnerAgentFile = new File(this.getClass().getResource("/TestRunnerAgent.py").getFile());
-            byte[] testRunnerAgentData = Files.readAllBytes(testRunnerAgentFile.toPath());
-            Files.write(runnerAgent.toPath(), testRunnerAgentData);
+            if (!runnerAgent.exists()) {
+                InputStream runnerAgentDataStream = this.getClass().getResourceAsStream("/TestRunnerAgent.py");
+                byte[] testRunnerAgentData = IOUtils.toByteArray(runnerAgentDataStream);
+                Files.write(runnerAgent.toPath(), testRunnerAgentData);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

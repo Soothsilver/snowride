@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.KeyValuePairSection;
 import cz.hudecekpetr.snowride.ui.MainForm;
@@ -19,6 +20,7 @@ public class LogicalLine {
     private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
     public HighElement belongsToHighElement;
     public PositionInListProperty lineNumber;
+    public SnowTableKind belongsWhere;
 
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
@@ -90,6 +92,7 @@ public class LogicalLine {
                 public void changed(ObservableValue<? extends Cell> observable, Cell oldValue, Cell newValue) {
                     String previousValue = cells.get(index).contents;
                     cells.set(index, newValue);
+                    recalcStyles();
                     if (belongsToHighElement != null && !previousValue.equals(newValue.contents)) {
                         belongsToHighElement.markAsStructurallyChanged(mainForm);
                     }
@@ -111,5 +114,11 @@ public class LogicalLine {
             return false;
         }
 
+    }
+
+    public void recalcStyles() {
+        for (Cell cell : cells) {
+            cell.updateStyle();
+        }
     }
 }

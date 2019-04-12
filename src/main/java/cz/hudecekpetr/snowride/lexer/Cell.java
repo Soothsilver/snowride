@@ -5,6 +5,8 @@ import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.image.Image;
 
 import java.util.List;
@@ -12,16 +14,19 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class Cell implements IHasQuickDocumentation {
-
+    // Permanent fields:
     public final String contents;
     public String postTrivia;
     public LogicalLine partOfLine;
+    // Fields via analysis:
     public boolean virtual;
     public boolean triggerDocumentationNext;
+    public boolean isLineNumberCell;
     private boolean isComment;
     private boolean isKeyword;
     private int cellIndex;
     private List<IKnownKeyword> permissibleKeywords;
+    private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
         this.contents = contents;
@@ -40,8 +45,27 @@ public class Cell implements IHasQuickDocumentation {
         return contents;
     }
 
-
-    public String getStyle() {
+    public void updateStyle() {
+        String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
+        if (isLineNumberCell) {
+            style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
+        } else {
+            if (partOfLine.belongsWhere.isScenario()) {
+                style += getStyle();
+            } else {
+                if (cellIndex == 0) {
+                    style += "-fx-font-weight: bold; ";
+                    if (partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
+                        style += "-fx-text-fill: darkmagenta; ";
+                    } else {
+                        style += "-fx-text-fill: green; ";
+                    }
+                }
+            }
+        }
+        styleProperty.set(style);
+    }
+    private String getStyle() {
         updateSemanticsStatus();
         String style = "";
         if (cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
@@ -175,5 +199,9 @@ public class Cell implements IHasQuickDocumentation {
             }
         }
         return null;
+    }
+
+    public SimpleStringProperty getStyleProperty() {
+        return styleProperty;
     }
 }

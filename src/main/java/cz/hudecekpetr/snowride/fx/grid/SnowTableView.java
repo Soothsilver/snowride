@@ -142,6 +142,8 @@ public class SnowTableView extends TableView<LogicalLine> {
         LogicalLine newLine = new LogicalLine();
         newLine.belongsToHighElement = scenario;
         newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
+        newLine.belongsWhere = snowTableKind;
+        newLine.recalcStyles();
         return newLine;
     }
 
@@ -176,9 +178,9 @@ public class SnowTableView extends TableView<LogicalLine> {
         scenario = highElement;
         // For key-value tables:
         for (LogicalLine line : lines) {
-            if (line.belongsToHighElement == null) {
-                line.belongsToHighElement = highElement;
-            }
+            line.belongsToHighElement = highElement;
+            line.belongsWhere = snowTableKind;
+            line.recalcStyles();
         }
         // Renew data
         this.setItems(lines);
