@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.Setting;
@@ -40,6 +41,11 @@ public class KeyValuePairSection extends RobotSection {
     @Override
     public List<? extends HighElement> getHighElements() {
         return new ArrayList<>();
+    }
+
+    @Override
+    public void optimizeStructure() {
+        Extensions.optimizeLines(pairs);
     }
 
     public List<Setting> createSettings() {

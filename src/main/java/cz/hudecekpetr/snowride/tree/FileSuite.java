@@ -79,28 +79,14 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
-    protected void optimizeStructure() {
-        // not yet
-        for (HighElement child : children) {
-            child.optimizeStructure();
-        }
-    }
-
-    @Override
     protected void ancestorRenamed(File oldFile, File newFile) {
         this.file = Extensions.changeAncestorTo(this.file, oldFile, newFile);
-    }
-
-    @Override
-    public Suite asSuite() {
-        return this;
     }
 
     @Override
     public String getQuickDocumentationCaption() {
         return toString();
     }
-
 
 
     @Override

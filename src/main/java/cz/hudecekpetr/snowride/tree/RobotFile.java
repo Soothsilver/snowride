@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.semantics.Setting;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public class RobotFile {
         return he;
     }
 
-    public String serialize() {
+    public String serialize(NewlineStyle newlineStyle) {
         StringBuilder sb = new StringBuilder();
         for(RobotSection robotSection : sections) {
             robotSection.serializeInto(sb);
@@ -28,8 +28,7 @@ public class RobotFile {
             throw new RuntimeException("There were parse errors. Editing or saving is not possible.");
         }
         String str = Extensions.removeFinalNewlineIfAny(sb.toString());
-        str = Extensions.normalizeLineEndings(str);
-        return str;
+        return newlineStyle.convertToStyle(str);
     }
 
     public TestCasesSection findOrCreateTestCasesSection() {

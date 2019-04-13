@@ -13,4 +13,6 @@ public abstract class RobotSection {
     public abstract void serializeInto(StringBuilder sb);
 
     public abstract List<? extends HighElement> getHighElements();
+
+    public abstract void optimizeStructure();
 }

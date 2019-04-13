@@ -21,4 +21,9 @@ public class TextOnlyRobotSection extends RobotSection {
     public List<HighElement> getHighElements() {
         return new ArrayList<>();
     }
+
+    @Override
+    public void optimizeStructure() {
+        // do nothing
+    }
 }

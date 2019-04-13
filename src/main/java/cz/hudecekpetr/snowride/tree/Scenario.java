@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.tree;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.Cell;
@@ -75,20 +76,7 @@ public class Scenario extends HighElement {
 
     @Override
     protected void optimizeStructure() {
-        int lineIndex = lines.size() - 1;
-        boolean permitOne = true;
-        while (lineIndex >= 0) {
-            LogicalLine line = lines.get(lineIndex);
-            if (line.isFullyVirtual()) {
-                if (!permitOne) {
-                    lines.remove(lineIndex);
-                }
-                permitOne = false;
-            } else {
-                permitOne = false;
-            }
-            lineIndex--;
-        }
+        Extensions.optimizeLines(lines);
     }
 
     @Override

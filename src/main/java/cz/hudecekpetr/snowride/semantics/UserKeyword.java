@@ -46,4 +46,14 @@ public class UserKeyword implements IKnownKeyword {
     public Scenario getScenarioIfPossible() {
         return scenario;
     }
+
+    @Override
+    public int getNumberOfMandatoryArguments() {
+        return 0;
+    }
+
+    @Override
+    public int getNumberOfOptionalArguments() {
+        return 1000; // not yet implemented
+    }
 }

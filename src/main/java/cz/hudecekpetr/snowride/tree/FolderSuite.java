@@ -122,11 +122,6 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    protected void optimizeStructure() {
-        // not yet
-    }
-
-    @Override
     protected void ancestorRenamed(File oldFile, File newFile) {
         this.directoryPath = Extensions.changeAncestorTo(this.directoryPath, oldFile, newFile);
         if (this.initFile != null) {
@@ -134,10 +129,6 @@ public class FolderSuite extends Suite implements ISuite {
         }
     }
 
-    @Override
-    public Suite asSuite() {
-        return this;
-    }
 
     public RobotFile getInitFileParsed() {
         return fileParsed;

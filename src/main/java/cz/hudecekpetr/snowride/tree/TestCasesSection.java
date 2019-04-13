@@ -23,6 +23,13 @@ public class TestCasesSection extends RobotSection {
         return testCases;
     }
 
+    @Override
+    public void optimizeStructure() {
+        for (Scenario s : testCases) {
+            s.optimizeStructure();
+        }
+    }
+
     public void addScenario(Scenario scenario) {
         testCases.add(scenario);
     }

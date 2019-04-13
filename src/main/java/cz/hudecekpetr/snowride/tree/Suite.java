@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.ErrorKind;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
@@ -22,11 +23,19 @@ public abstract class Suite extends HighElement {
 
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
+        if (contents.indexOf('\r') != -1) {
+            // If you load it with \r, it's Windows-style line endings.
+            newlineStyle = NewlineStyle.CRLF;
+        }
     }
 
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
+    /**
+     * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
+     */
+    private NewlineStyle newlineStyle = NewlineStyle.LF;
     public long importedResourcesLastRecursedDuringIteration = 0;
     public Set<Tag> forceTagsCumulative = new HashSet<>();
     public Set<Tag> defaultTags = new HashSet<>();
@@ -35,7 +44,7 @@ public abstract class Suite extends HighElement {
         return importedResources;
     }
     public String serialize() {
-        return fileParsed.serialize();
+        return fileParsed.serialize(newlineStyle);
     }
     public void reparseResources() {
         this.importedResources.clear();
@@ -117,7 +126,7 @@ public abstract class Suite extends HighElement {
     private void recheckSerialization() {
         this.selfErrors.removeIf(error -> error.type.getValue() == ErrorKind.SERIALIZATION_ERROR);
         if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED && this.fileParsed != null && this.fileParsed.errors.size() == 0) {
-            String afterSerialization = this.fileParsed.serialize().replace("\r", "");
+            String afterSerialization = this.fileParsed.serialize(newlineStyle).replace("\r", "");
             String beforeSerialization = Extensions.removeFinalNewlineIfAny(this.contents.replace("\r", ""));
             if (!afterSerialization.equals(beforeSerialization)) {
                 selfErrors.add(new SnowrideError(this, ErrorKind.SERIALIZATION_ERROR, Severity.WARNING, "File might not serialize in the same way you've written it down."));
@@ -156,5 +165,20 @@ public abstract class Suite extends HighElement {
         for (HighElement child : this.children) {
             child.updateTagsForSelfAndChildren();
         }
+    }
+
+
+    @Override
+    protected final void optimizeStructure() {
+        if (fileParsed != null) {
+            for (RobotSection section : fileParsed.sections) {
+                section.optimizeStructure();
+            }
+        }
+    }
+
+    @Override
+    public final Suite asSuite() {
+        return this;
     }
 }

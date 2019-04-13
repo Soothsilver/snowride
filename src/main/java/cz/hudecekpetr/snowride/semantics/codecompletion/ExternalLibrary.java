@@ -10,7 +10,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.Map;
 public class ExternalLibrary {
     public static ExternalLibrary builtIn = ExternalLibrary.loadFromBuiltInXmlFile("BuiltIn.xml");
     public static Map<String, ExternalLibrary> otherPackedInLibraries = new HashMap<>();
-    public List<ExternalKeyword> keywords = new ArrayList<>();
 
     static {
         declarePackedLibrary("BuiltIn");
@@ -34,6 +32,7 @@ public class ExternalLibrary {
         declarePackedLibrary("XML");
     }
 
+    public List<ExternalKeyword> keywords = new ArrayList<>();
     private String name;
 
     private static void declarePackedLibrary(String libraryName) {
@@ -58,14 +57,22 @@ public class ExternalLibrary {
                 Element doce = (Element) docs.item(0);
                 doc = doce.getTextContent();
             }
-            doc = doc.replace(" +", " ").replace("\n \n", "\n\n").replace("\n\n","[[DOUBLENEWLINE]]")
+            doc = doc.replace(" +", " ").replace("\n \n", "\n\n").replace("\n\n", "[[DOUBLENEWLINE]]")
                     .replace("\n", " ").replace(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n");
             List<Parameter> parameters = new ArrayList<>();
             NodeList args = kw.getElementsByTagName("arguments");
             if (args.getLength() == 1) {
                 NodeList actualArgs = ((Element) args.item(0)).getElementsByTagName("arg");
                 for (int j = 0; j < actualArgs.getLength(); j++) {
-                    parameters.add(new Parameter(actualArgs.item(j).getTextContent(), ParameterKind.UNKNOWN));
+                    String arg = actualArgs.item(j).getTextContent();
+                    ParameterKind parameterKind = ParameterKind.STANDARD;
+                    if (arg.indexOf('=') != -1) {
+                        parameterKind = ParameterKind.NAMED;
+                    }
+                    if (arg.startsWith("*")) {
+                        parameterKind = ParameterKind.VARARGS;
+                    }
+                    parameters.add(new Parameter(arg, parameterKind));
                 }
             }
             externalLibrary.keywords.add(new ExternalKeyword(kw.getAttribute("name"), doc, parameters, externalLibrary));

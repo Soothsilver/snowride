@@ -212,7 +212,7 @@ public class MainForm {
                     TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
                     if (focusedItem != null) {
                         HighElement element = focusedItem.getValue();
-                        element.checkbox.setSelected(!element.checkbox.isSelected());
+                        invertCheckboxes(element);
                     }
                 }
             }
@@ -405,6 +405,13 @@ public class MainForm {
 
     private void delete(HighElement element) {
         element.deleteSelf(this);
+    }
+
+    private void invertCheckboxes(HighElement element) {
+        element.checkbox.setSelected(!element.checkbox.isSelected());
+        for (HighElement child : element.children) {
+            invertCheckboxes(child);
+        }
     }
 
     private void setCheckboxes(HighElement element, boolean shouldBeChecked) {

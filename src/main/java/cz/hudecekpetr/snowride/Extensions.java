@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.tree.Tag;
+import javafx.collections.ObservableList;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -46,13 +47,6 @@ public class Extensions {
         return text;
     }
 
-    public static String normalizeLineEndings(String str) {
-        // Commit Unix-style:
-        str = str.replace("\r\n", "\n");
-        //str = str.replace("\n", "\r\n");
-        return str;
-    }
-
     public static File changeAncestorTo(File changeAncestorOfThisFile, File oldFile, File newFile) {
         String pathInQuestion = changeAncestorOfThisFile.getPath();
         String oldName = oldFile.getPath();
@@ -87,5 +81,22 @@ public class Extensions {
             }
         }
         return false;
+    }
+
+    public static void optimizeLines(ObservableList<LogicalLine> lines) {
+        int lineIndex = lines.size() - 1;
+        boolean permitOne = true;
+        while (lineIndex >= 0) {
+            LogicalLine line = lines.get(lineIndex);
+            if (line.isFullyVirtual()) {
+                if (!permitOne) {
+                    lines.remove(lineIndex);
+                }
+                permitOne = false;
+            } else {
+                permitOne = false;
+            }
+            lineIndex--;
+        }
     }
 }

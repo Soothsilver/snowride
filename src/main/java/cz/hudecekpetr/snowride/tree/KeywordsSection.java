@@ -24,6 +24,13 @@ public class KeywordsSection extends RobotSection {
         return keywords;
     }
 
+    @Override
+    public void optimizeStructure() {
+        for (Scenario kw : keywords) {
+            kw.optimizeStructure();
+        }
+    }
+
     public void addScenario(Scenario scenario) {
         keywords.add(scenario);
     }
