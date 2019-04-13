@@ -1,17 +1,15 @@
 *** Keywords ***
 Root Ahoy
-	Log	Ahoy	WARN
+    Log    Ahoy    WARN
+    Log    Another Ahoy
+
 *** Settings ***
-fsdf    fsdgdf
-sdfgsdfg    sdfgsdfg
-dsfgsfdg
-
-
-
+Library    Collections
+Library    String
+Test Timeout    5 minutes
+Test Setup    Log    Ahoy
+Test Teardown    Log    End
 
 *** Variables ***
-sdfgsdf
-sdfgsdfg    sdfgsfdg
-
-
-
+${yourname}    Soothsilver
+${realm}    Seven Mounting Heavens of Celestia

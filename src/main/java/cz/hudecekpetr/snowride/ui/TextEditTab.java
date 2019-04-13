@@ -11,10 +11,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -86,7 +83,9 @@ public class TextEditTab {
 
     public void loadElement(HighElement value) {
         if (value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED && value instanceof Suite) {
-            ((Suite) value).contents = ((Suite) value).serialize();
+            Suite asSuite = (Suite) value;
+            asSuite.optimizeStructure();
+            asSuite.contents = asSuite.serialize();
         }
         this.lastLoaded = value;
         if (value instanceof Scenario) {
@@ -100,6 +99,12 @@ public class TextEditTab {
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
             mainForm.selectProgrammatically(lastLoaded.parent);
+        }
+        if (newValue == this.tabTextEdit) {
+            TreeItem<HighElement> focusedItem = mainForm.getProjectTree().getFocusModel().getFocusedItem();
+            if (focusedItem != null) {
+                loadElement(focusedItem.getValue());
+            }
         }
     }
 }

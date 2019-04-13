@@ -169,7 +169,7 @@ public abstract class Suite extends HighElement {
 
 
     @Override
-    protected final void optimizeStructure() {
+    public final void optimizeStructure() {
         if (fileParsed != null) {
             for (RobotSection section : fileParsed.sections) {
                 section.optimizeStructure();

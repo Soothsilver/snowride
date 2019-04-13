@@ -38,6 +38,7 @@ public class FolderSuite extends Suite implements ISuite {
         if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
             this.applyText();
         } else if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
+            optimizeStructure();
             this.contents = serialize();
         }
         // Save folders and suites below

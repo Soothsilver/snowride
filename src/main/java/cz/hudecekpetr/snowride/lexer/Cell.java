@@ -45,7 +45,7 @@ public class Cell implements IHasQuickDocumentation {
         return contents;
     }
 
-    public void updateStyle() {
+    public void updateStyle(int cellIndex) {
         String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
         if (isLineNumberCell) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";

@@ -117,8 +117,9 @@ public class LogicalLine {
     }
 
     public void recalcStyles() {
-        for (Cell cell : cells) {
-            cell.updateStyle();
+        for (int i = 0, cellsSize = cells.size(); i < cellsSize; i++) {
+            Cell cell = cells.get(i);
+            cell.updateStyle(i);
         }
     }
 }
