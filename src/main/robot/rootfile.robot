@@ -15,7 +15,7 @@ Summation Test
     Should Be Equal As Integers    6    ${result}
     Log List    ahoj    beta
     ${a}    Create List    delta    gamma
-
+    Log     This is CRLF.
     ${a}    Get Length    ${the list}
 
 *** Keywords ***
