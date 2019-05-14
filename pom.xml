@@ -77,6 +77,9 @@
         </plugins>
     </build>
 
+    <name>Snowride</name>
+    <description>A faster IDE for Robot Framework</description>
+
     <dependencies>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>

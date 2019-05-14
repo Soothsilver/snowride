@@ -70,7 +70,9 @@ public class ImportedResource {
                             }
                         }
                     }
-                    throw new ImportException("Path '" + path + "' doesn't lead to a resource file because '" + section.toString() + "' is not a suite.");
+                    // TODO add it to import errors
+                    return;
+                    // throw new ImportException("Path '" + path + "' doesn't lead to a resource file because '" + section.toString() + "' is not a suite.");
                 }
                 if (suite instanceof Suite) {
                     Suite asSuite = (Suite)suite;
