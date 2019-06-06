@@ -25,6 +25,12 @@ public class Scenario extends HighElement {
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
     public HashSet<Tag> actualTags = new HashSet<>();
 
+    public List<String> getSemanticsArguments() {
+        return semanticsArguments;
+    }
+
+    private List<String> semanticsArguments = new ArrayList<>();
+
     public ObservableList<LogicalLine> getLines() {
         return lines;
     }
@@ -149,6 +155,7 @@ public class Scenario extends HighElement {
     }
 
     public void analyzeSemantics() {
+        ArrayList<String> argCells = new ArrayList<>();
         for (LogicalLine line : getLines()) {
             if (line.cells.size() >= 3) {
                 if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
@@ -158,7 +165,17 @@ public class Scenario extends HighElement {
                     }
                     semanticsDocumentation = String.join("\n", docCells);
                 }
+                else if (line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")) {
+                    for (int i = 2; i < line.cells.size(); i++) {
+                        argCells.add(line.cells.get(i).contents);
+                    }
+
+                }
             }
+        }
+        this.semanticsArguments = argCells;
+        if (argCells.size() > 0) {
+            this.semanticsDocumentation =  "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");
         }
     }
 
