@@ -7,4 +7,5 @@ public interface IKnownKeyword extends IAutocompleteOption {
     Scenario getScenarioIfPossible();
     int getNumberOfMandatoryArguments();
     int getNumberOfOptionalArguments();
+    String getInvariantName();
 }

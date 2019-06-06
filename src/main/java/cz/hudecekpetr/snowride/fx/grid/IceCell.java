@@ -153,6 +153,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-alignment: center; ";
                 setStyle(style);
             } else {
+                // TODO This is a potential performance bottleneck.
                 styleProperty().bind(item.getStyleProperty());
             }
             if (item.triggerDocumentationNext) {

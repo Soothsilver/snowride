@@ -34,6 +34,8 @@ public class ImportedResource {
             case LIBRARY:
                 if (ExternalLibrary.otherPackedInLibraries.containsKey(name)) {
                     gatherIntoThis.add(new LibraryKeywordSource(ExternalLibrary.otherPackedInLibraries.get(name)));
+                } else if (ExternalLibrary.knownExternalLibraries.containsKey(name)) {
+                    gatherIntoThis.add(new LibraryKeywordSource(ExternalLibrary.knownExternalLibraries.get(name)));
                 } else {
                     // Unknown library
                     // Ignore it here. We'll put in the error list and such later.
@@ -65,6 +67,10 @@ public class ImportedResource {
                                 continue outerFor;
                             }
                             if (Extensions.toInvariant(child.getShortName() + ".robot").equals(sectionString)) {
+                                suite = child;
+                                break outerFor;
+                            }
+                            if (Extensions.toInvariant(child.getShortName() + ".txt").equals(sectionString)) {
                                 suite = child;
                                 break outerFor;
                             }

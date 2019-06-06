@@ -5,8 +5,15 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.*;
+import cz.hudecekpetr.snowride.tree.FileSuite;
+import cz.hudecekpetr.snowride.tree.FolderSuite;
+import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.ISuite;
+import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.ui.about.AboutChangelog;
 import cz.hudecekpetr.snowride.ui.about.AboutKeyboardShortcuts;
 import cz.hudecekpetr.snowride.ui.about.AboutSnowride;
 import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
@@ -20,26 +27,44 @@ import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
+import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.stage.*;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import org.controlsfx.control.NotificationPane;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -50,57 +75,38 @@ import java.util.concurrent.TimeUnit;
 
 public class MainForm {
     public static final Font BIGGER_FONT = new Font("System Regular", 14);
-    public static final Font TEXT_EDIT_FONT = new Font("Consolas", 12);
+    public static final Font TEXT_EDIT_FONT = new Font("Courier New", 12);
     public static MainForm INSTANCE;
+    public static DocumentationPopup documentationPopup = new DocumentationPopup();
     private final SerializingTab serializingTab;
     private final ErrorsTab errorsTab;
+    private final TabPane tabs;
+    private final Tab tabTextEdit;
+    private final TextEditTab textEditTab;
+    private final NotificationPane notificationPane;
+    public BooleanProperty canSave = new SimpleBooleanProperty(false);
+    public RunTab runTab;
+    boolean switchingTextEditContents = false;
+    boolean humanInControl = true;
+    BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
+    BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     private GateParser gateParser = new GateParser();
     private NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
     private TreeView<HighElement> projectTree;
     private SearchSuites searchSuitesAutoCompletion;
-    boolean switchingTextEditContents = false;
-    private final TabPane tabs;
-    private final Tab tabTextEdit;
     private Filesystem filesystem;
     private SeparatorMenuItem separatorBeforeRecentProjects;
     private SeparatorMenuItem separatorAfterRecentProjects;
     private DirectoryChooser openFolderDialog;
     private Menu projectMenu;
-    private final TextEditTab textEditTab;
-    public static DocumentationPopup documentationPopup = new DocumentationPopup();
     private TextField tbSearchTests;
-    private final NotificationPane notificationPane;
-
-    private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
-        if (oldValue == tabTextEdit) {
-            getFocusedElement().applyText();
-        }
-        if (newValue == gridTab.getTabGrid()) {
-            gridTab.loadElement(getFocusedElement());
-        }
-    }
-
-    public HighElement getFocusedElement() {
-        return getProjectTree().getFocusModel().getFocusedItem().getValue();
-    }
-
-    /**
-     * Gets the folder suite that's the root of the project.
-     */
-    public HighElement getRootElement() { return getProjectTree().getRoot().getValue(); }
-
-    public TreeView<HighElement> getProjectTree() {
-        return projectTree;
-    }
-
-    boolean humanInControl = true;
-    public BooleanProperty canSave = new SimpleBooleanProperty(false);
-    BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
-    BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     private ContextMenu treeContextMenu;
-    public RunTab runTab;
     private GridTab gridTab;
+    private LongRunningOperation projectLoad = new LongRunningOperation();
+    private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
+    private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
+    private String notificationShowingWhat = null;
 
     public MainForm(Stage stage) {
         INSTANCE = this;
@@ -136,7 +142,7 @@ public class MainForm {
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
         SplitPane.setResizableWithParent(searchableTree, false);
-        treeAndGrid.setDividerPosition(0,0.3);
+        treeAndGrid.setDividerPosition(0, 0.3);
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
         notificationPane = new NotificationPane(vBox);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
@@ -157,6 +163,32 @@ public class MainForm {
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake3.png")));
+    }
+
+    private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+        if (getFocusedElement() != null) {
+            if (oldValue == tabTextEdit) {
+                getFocusedElement().applyText();
+            }
+            if (newValue == gridTab.getTabGrid()) {
+                gridTab.loadElement(getFocusedElement());
+            }
+        }
+    }
+
+    public HighElement getFocusedElement() {
+        return getProjectTree().getFocusModel().getFocusedItem().getValue();
+    }
+
+    /**
+     * Gets the folder suite that's the root of the project.
+     */
+    public HighElement getRootElement() {
+        return getProjectTree().getRoot().getValue();
+    }
+
+    public TreeView<HighElement> getProjectTree() {
+        return projectTree;
     }
 
     private void addGlobalShortcuts(Scene scene) {
@@ -185,7 +217,8 @@ public class MainForm {
         whatChanged.unsavedChanges = how;
         whatChanged.treeNode.setValue(null);
         whatChanged.treeNode.setValue(whatChanged);
-        runTab.maybeRunNumberChanged();
+        // TODO It's possible the user change the tag which should cause the number of tests to update
+        // but for performance reasons we choose not to update the number here.
         canSave.set(true);
     }
 
@@ -200,7 +233,7 @@ public class MainForm {
 
     private VBox createLeftPane() {
         tbSearchTests = new TextField();
-        tbSearchTests.setPromptText("Search for tests or suites...");
+        tbSearchTests.setPromptText("Search for tests, keywords or suites (Ctrl+N)...");
         searchSuitesAutoCompletion = new SearchSuites(this);
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
@@ -212,7 +245,9 @@ public class MainForm {
                     TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
                     if (focusedItem != null) {
                         HighElement element = focusedItem.getValue();
-                        invertCheckboxes(element);
+                        withUpdateSuppression(() -> {
+                            invertCheckboxes(element);
+                        });
                     }
                 }
             }
@@ -220,7 +255,7 @@ public class MainForm {
         projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
             @Override
             public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
-                onfocusTreeNode(oldValue);
+                onFocusTreeNode(oldValue);
                 focusTreeNode(newValue);
             }
         });
@@ -235,7 +270,7 @@ public class MainForm {
                 treeContextMenu.getItems().clear();
                 TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
                 if (focused != null) {
-                   treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
                 }
             }
         });
@@ -260,7 +295,7 @@ public class MainForm {
         return vBox;
     }
 
-    private void onfocusTreeNode(TreeItem<HighElement> oldValue) {
+    private void onFocusTreeNode(TreeItem<HighElement> oldValue) {
         if (oldValue != null) {
             oldValue.getValue().applyText();
         }
@@ -288,7 +323,7 @@ public class MainForm {
                     String name = TextFieldForm.askForText("Create new file", "Enter file name (without .robot extension):", "Create new file", "");
                     if (name != null) {
                         try {
-                            filesystem.createNewRobotFile((FolderSuite)element, name);
+                            filesystem.createNewRobotFile((FolderSuite) element, name);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -305,7 +340,7 @@ public class MainForm {
                 public void handle(ActionEvent event) {
                     String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
                     if (name != null) {
-                        ((FileSuite)element).createNewChild(name, true, MainForm.this);
+                        ((FileSuite) element).createNewChild(name, true, MainForm.this);
                         changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
@@ -316,7 +351,7 @@ public class MainForm {
                 @Override
                 public void handle(ActionEvent event) {
                     try {
-                        Desktop.getDesktop().edit(((FileSuite)element).file);
+                        Desktop.getDesktop().edit(((FileSuite) element).file);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -331,7 +366,7 @@ public class MainForm {
                 public void handle(ActionEvent event) {
                     String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
                     if (name != null) {
-                        ((ISuite)element).createNewChild(name, false, MainForm.this);
+                        ((ISuite) element).createNewChild(name, false, MainForm.this);
                         changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 }
@@ -348,12 +383,14 @@ public class MainForm {
                 }
             });
             menu.add(select_all_tests);
-            if (element.selfAndDescendantHighElements().anyMatch(he -> he instanceof Scenario && ((Scenario)he).lastTestResult == TestResult.FAILED)) {
+            if (element.selfAndDescendantHighElements().anyMatch(he -> he instanceof Scenario && ((Scenario) he).lastTestResult == TestResult.FAILED)) {
                 MenuItem select_failed_tests = new MenuItem("Select failed tests only");
                 select_failed_tests.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        selectFailedTests(element);
+                        withUpdateSuppression(() -> {
+                            selectFailedTests(element);
+                        });
                     }
                 });
                 menu.add(select_failed_tests);
@@ -397,14 +434,21 @@ public class MainForm {
     }
 
     public void selectFailedTests(HighElement element) {
-        element.checkbox.setSelected(element instanceof Scenario && ((Scenario)element).lastTestResult == TestResult.FAILED);
+        element.checkbox.setSelected(element instanceof Scenario && ((Scenario) element).lastTestResult == TestResult.FAILED);
         for (HighElement child : element.children) {
             selectFailedTests(child);
         }
     }
 
-    private void delete(HighElement element) {
-        element.deleteSelf(this);
+    /**
+     * Runs a block of code while suppressing some changes to UI elements during that time, then updates the UI afterwards.
+     * This improves performance.
+     */
+    private void withUpdateSuppression(Runnable block) {
+        runTab.suppressRunNumberChangeNotifications = true;
+        block.run();
+        runTab.suppressRunNumberChangeNotifications = false;
+        runTab.maybeRunNumberChanged();
     }
 
     private void invertCheckboxes(HighElement element) {
@@ -415,10 +459,20 @@ public class MainForm {
     }
 
     private void setCheckboxes(HighElement element, boolean shouldBeChecked) {
+        withUpdateSuppression(() -> {
+            setCheckboxesRecursive(element, shouldBeChecked);
+        });
+    }
+
+    private void setCheckboxesRecursive(HighElement element, boolean shouldBeChecked) {
         element.checkbox.setSelected(shouldBeChecked);
         for (HighElement child : element.children) {
-            setCheckboxes(child, shouldBeChecked);
+            setCheckboxesRecursive(child, shouldBeChecked);
         }
+    }
+
+    private void delete(HighElement element) {
+        element.deleteSelf(this);
     }
 
     private void maybeAddSeparator(List<MenuItem> menu) {
@@ -428,7 +482,7 @@ public class MainForm {
     }
 
     private ToolBar buildToolBar() {
-        Button bNavigateBack = new Button(null,loadIcon(Images.goLeft));
+        Button bNavigateBack = new Button(null, loadIcon(Images.goLeft));
         bNavigateBack.setTooltip(new Tooltip("Navigate back"));
         Button bNavigateForwards = new Button(null, loadIcon(Images.goRight));
         bNavigateForwards.setTooltip(new Tooltip("Navigate forwards"));
@@ -459,7 +513,6 @@ public class MainForm {
             if (humanInControl) {
                 navigationStack.standardEnter(focusedNode.getValue());
             }
-
             switchingTextEditContents = true;
             textEditTab.loadElement(focusedNode.getValue());
             gridTab.loadElement(focusedNode.getValue());
@@ -557,9 +610,39 @@ public class MainForm {
                 aboutSnowride.show();
             }
         });
-        Menu helpMenu = new Menu("Help", null, about, shortcuts);
+        MenuItem robotFrameworkUserGuide = new MenuItem("Navigate to Robot Framework User Guide");
+        robotFrameworkUserGuide.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                navigateToWebsite("http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html");
+            }
+        });
+        MenuItem robotFrameworkLibrariesDocumentation = new MenuItem("Navigate to Robot Framework libraries documentation");
+        robotFrameworkLibrariesDocumentation.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                navigateToWebsite("http://robotframework.org/robotframework/#user-guide");
+            }
+        });
+        MenuItem releaseNotes = new MenuItem("View Snowride changelog/release notes");
+        releaseNotes.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                AboutChangelog aboutChangelog = new AboutChangelog();
+                aboutChangelog.show();
+            }
+        });
+        Menu helpMenu = new Menu("Help", null, about, shortcuts, robotFrameworkUserGuide, robotFrameworkLibrariesDocumentation, releaseNotes);
         mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, helpMenu);
         return mainMenu;
+    }
+
+    private void navigateToWebsite(String uri) {
+        try {
+            Desktop.getDesktop().browse(URI.create(uri));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void openDirectory(ActionEvent actionEvent) {
@@ -574,6 +657,7 @@ public class MainForm {
             selectProgrammatically(navigationStack.navigateBackwards());
         }
     }
+
     private void goForwards(ActionEvent event) {
         if (navigationStack.canNavigateForwards.getValue()) {
             selectProgrammatically(navigationStack.navigateForwards());
@@ -585,13 +669,15 @@ public class MainForm {
             return;
         }
         TreeItem<HighElement> selectWhat = navigateTo.treeNode;
-        expandUpTo(selectWhat);
-        int index = projectTree.getRow(selectWhat);
         humanInControl = false;
-        projectTree.getFocusModel().focus(index);
-        projectTree.getSelectionModel().select(index);
-        projectTree.scrollTo(index);
-        humanInControl = true;
+        expandUpTo(selectWhat);
+        Platform.runLater(() -> {
+            int index = projectTree.getRow(selectWhat);
+            projectTree.getFocusModel().focus(index);
+            projectTree.getSelectionModel().select(index);
+            projectTree.scrollTo(index);
+            humanInControl = true;
+        });
     }
 
     private void expandUpTo(TreeItem<HighElement> expandUpTo) {
@@ -601,32 +687,33 @@ public class MainForm {
         expandUpTo.setExpanded(true);
     }
 
-    private LongRunningOperation projectLoad = new LongRunningOperation();
-    private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
-
     public void loadProjectFromFolder(File path) {
         projectLoad.progress.set(0);
-        projectLoader.submit(()->{
+        projectLoader.submit(() -> {
             try {
                 File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 1);
                 folderSuite.selfAndDescendantHighElements().forEachOrdered(he -> {
                     if (he instanceof Suite) {
-                        ((Suite)he).analyzeSemantics();
+                        ((Suite) he).analyzeSemantics();
                     }
                 });
-                Platform.runLater(()-> {
+                Platform.runLater(() -> {
                     projectLoad.progress.set(1);
+                    navigationStack.clear();
+                    humanInControl = false;
                     projectTree.setRoot(folderSuite.treeNode);
                     tbSearchTests.requestFocus();
                     projectTree.getSelectionModel().select(0);
                     projectTree.getFocusModel().focus(0);
                     runTab.maybeRunNumberChanged();
+                    humanInControl = true;
 
                     Settings.getInstance().lastOpenedProject = canonicalPath.toString();
                     Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());
                     refreshRecentlyOpenMenu();
                     Settings.getInstance().save();
+                    reloadExternalLibraries();
                 });
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -649,7 +736,6 @@ public class MainForm {
         }
         projectMenu.getItems().addAll(startAt, newItems);
     }
-
 
     public void show() {
         stage.show();
@@ -674,8 +760,6 @@ public class MainForm {
         }).findFirst().get();
     }
 
-    private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
-    private String notificationShowingWhat = null;
     public void toast(String toastMessage) {
         notificationShowingWhat = toastMessage;
         notificationPane.show(toastMessage);
@@ -683,7 +767,7 @@ public class MainForm {
     }
 
     private void endTheToast(String toastMessage) {
-        Platform.runLater(() ->{
+        Platform.runLater(() -> {
             //noinspection StringEquality -- reference comparison on purpose
             if (this.notificationShowingWhat == toastMessage) {
                 notificationPane.hide();
@@ -691,7 +775,15 @@ public class MainForm {
         });
     }
 
-    public void reloadExternalLibraries() {
 
+    public void reloadExternalLibraries() {
+        ReloadExternalLibraries.reload(() -> {
+            humanInControl = false;
+            if (getFocusedElement() != null) {
+                // Reload current thing
+                focusTreeNode(getFocusedElement().treeNode);
+            }
+            humanInControl = true;
+        });
     }
 }

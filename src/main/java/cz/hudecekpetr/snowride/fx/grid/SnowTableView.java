@@ -190,6 +190,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (this.getColumns().size() > columnCount) {
             this.getColumns().remove(columnCount, this.getColumns().size());
         } else {
+            // TODO performance bottleneck in adding columns
             while (this.getColumns().size() < columnCount) {
                 if (snowTableKind.isScenario()) {
                     addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)

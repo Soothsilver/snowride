@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -58,8 +59,10 @@ public class Extensions {
         }
     }
 
+    private static ConcurrentHashMap<String, String> invariantNames = new ConcurrentHashMap<>();
+
     public static String toInvariant(String suiteOrKeywordName) {
-        return suiteOrKeywordName.replace('_', ' ').replace(" ", "").toLowerCase();
+        return invariantNames.computeIfAbsent(suiteOrKeywordName, key -> key.replace('_', ' ').replace(" ", "").toLowerCase());
     }
 
     public static String toPrettyName(String newName) {

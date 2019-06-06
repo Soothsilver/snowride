@@ -7,6 +7,7 @@ import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.InputStream;
@@ -14,10 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExternalLibrary {
     public static ExternalLibrary builtIn = ExternalLibrary.loadFromBuiltInXmlFile("BuiltIn.xml");
     public static Map<String, ExternalLibrary> otherPackedInLibraries = new HashMap<>();
+    public static ConcurrentHashMap<String, ExternalLibrary> knownExternalLibraries = new ConcurrentHashMap<>();
 
     static {
         declarePackedLibrary("BuiltIn");
@@ -33,6 +36,12 @@ public class ExternalLibrary {
     }
 
     public List<ExternalKeyword> keywords = new ArrayList<>();
+    private LibraryKind kind;
+
+    public String getName() {
+        return name;
+    }
+
     private String name;
 
     private static void declarePackedLibrary(String libraryName) {
@@ -41,14 +50,15 @@ public class ExternalLibrary {
 
     private static ExternalLibrary loadFromBuiltInXmlFile(String filename) {
         InputStream inputStream = ExternalLibrary.class.getResourceAsStream("/xmls/" + filename);
-        return loadFromInputStream(inputStream);
+        return loadFromInputStream(inputStream, LibraryKind.PACKED_IN);
     }
 
-    private static ExternalLibrary loadFromInputStream(InputStream inputStream) {
+    public static ExternalLibrary loadFromInputStream(InputStream inputStream, LibraryKind libraryKind) {
         Document document = XmlFacade.loadXmlFromInputStream(inputStream);
         NodeList keywords = document.getElementsByTagName("kw");
         ExternalLibrary externalLibrary = new ExternalLibrary();
         externalLibrary.name = document.getDocumentElement().getAttribute("name");
+        externalLibrary.setKind(libraryKind);
         for (int i = 0; i < keywords.getLength(); i++) {
             Element kw = (Element) keywords.item(i);
             NodeList docs = kw.getElementsByTagName("doc");
@@ -80,12 +90,35 @@ public class ExternalLibrary {
         return externalLibrary;
     }
 
+    private void setKind(LibraryKind libraryKind) {
+        this.kind = libraryKind;
+        switch (this.kind) {
+            case PACKED_IN:
+                this.icon = Images.b;
+                break;
+            case XML:
+                this.icon = Images.xml;
+                break;
+            case PYTHON:
+                this.icon = Images.python;
+                break;
+            default:
+                this.icon = Images.no;
+                break;
+        }
+    }
+
+    private Image icon;
     public Image getIcon() {
-        return Images.b;
+        return icon;
     }
 
     @Override
     public String toString() {
         return name;
+    }
+
+    public LibraryKind getKind() {
+        return kind;
     }
 }

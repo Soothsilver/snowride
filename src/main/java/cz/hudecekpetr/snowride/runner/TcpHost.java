@@ -160,7 +160,15 @@ public class TcpHost {
                     runTab.lblKeyword.setText(runTab.run.keywordStackAsString());
                     break;
                 case "end_keyword":
-                    runTab.run.keywordStack.pop();
+                    try {
+                        if (runTab.run.keywordStack.size() > 0) {
+                            runTab.run.keywordStack.pop();
+                        } else {
+                            System.out.println("The robot exited keyword '" + arguments.get(0).as(String.class) + "' but there is no keyword in the keyword stack.");
+                        }
+                    } catch (Exception e) {
+                        System.err.println(e.toString());
+                    }
                     runTab.run.lastKeywordBeganWhen = System.currentTimeMillis();
                     runTab.lblKeyword.setText(runTab.run.keywordStackAsString());
                     break;

@@ -58,7 +58,6 @@ public class GridTab {
 
     public void loadElement(HighElement value) {
         value.asSuite().reparseAndRecalculateResources();
-        tabGrid.setContent(lblParseError);
         if (value instanceof FolderSuite) {
             FolderSuite fsuite = (FolderSuite) value;
             if (fsuite.getInitFileParsed() != null && fsuite.getInitFileParsed().errors.size() > 0) {
@@ -74,20 +73,21 @@ public class GridTab {
                 loadSuiteTables(fsuite);
             }
         } else if (value instanceof Scenario) {
-            tabGrid.setContent(spreadsheetView);
             spreadsheetView.loadLines(value, ((Scenario) value).getLines());
+            tabGrid.setContent(spreadsheetView);
         } else {
+            tabGrid.setContent(lblParseError);
             lblParseError.setText("Unknown high element.");
+            tabGrid.setContent(lblParseError);
         }
     }
 
     private void loadSuiteTables(Suite fsuite) {
-        tabGrid.setContent(suiteView);
         if (fsuite.fileParsed != null) {
             tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
             tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
         }
-
+        tabGrid.setContent(suiteView);
     }
 
     private void setParseErrors(List<Exception> errors) {

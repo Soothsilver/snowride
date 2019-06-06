@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.lexer;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
@@ -9,8 +10,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.image.Image;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class Cell implements IHasQuickDocumentation {
@@ -25,7 +29,8 @@ public class Cell implements IHasQuickDocumentation {
     private boolean isComment;
     private boolean isKeyword;
     private int cellIndex;
-    private List<IKnownKeyword> permissibleKeywords;
+    private Set<IKnownKeyword> permissibleKeywords;
+    private Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
@@ -71,13 +76,18 @@ public class Cell implements IHasQuickDocumentation {
         if (cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
+        } else if (cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR")) {
+            style += "-fx-text-fill: darkmagenta; ";
+            style += "-fx-font-weight: bold; ";
+        } else if (cellIndex == 1 && contents.equals("\\")) {
+            style += "-fx-font-style: italic;  -fx-background-color: darkgray; ";
         } else if (isComment) {
             style += "-fx-text-fill: brown; ";
         } else if (isKeyword) {
             style += "-fx-font-weight: bold; ";
-            Optional<IKnownKeyword> first = permissibleKeywords.stream().filter(kk -> kk.getAutocompleteText().toLowerCase().equals(this.contents.toLowerCase())).findFirst();
-            if (first.isPresent()) {
-                if (first.get().getScenarioIfPossible() != null) {
+            IKnownKeyword knownKeyword = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
+            if (knownKeyword != null) {
+                if (knownKeyword.getScenarioIfPossible() != null) {
                     style += "-fx-text-fill: blue; ";
                 } else {
                     style += "-fx-text-fill: dodgerblue; ";
@@ -111,6 +121,7 @@ public class Cell implements IHasQuickDocumentation {
                 // This is the keyword.
                 isKeyword = true;
                 permissibleKeywords = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
+                permissibleKeywordsByInvariantName = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuiteByInvariantName();
                 pastTheKeyword = true;
             }
             if (cell == this) {
@@ -143,12 +154,8 @@ public class Cell implements IHasQuickDocumentation {
     public IKnownKeyword getKeywordInThisCell() {
         updateSemanticsStatus();
         if (isKeyword) {
-            Optional<IKnownKeyword> first = permissibleKeywords.stream()
-                    .filter(kk -> kk.getAutocompleteText().toLowerCase().equals(this.contents.toLowerCase()))
-                    .findFirst();
-            if (first.isPresent()) {
-                return first.get();
-            }
+            IKnownKeyword first = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
+            return first;
         }
         return null;
     }

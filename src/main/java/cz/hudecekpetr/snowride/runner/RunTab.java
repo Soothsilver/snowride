@@ -61,7 +61,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class RunTab {
-    public static final String INITIAL_STYLE = "-fx-font-family: Consolas, 'Courier New', monospace; -fx-font-size: 10pt;";
+    public static final String INITIAL_STYLE = "-fx-font-family: monospace; -fx-font-size: 10pt;";
     public Run run = new Run();
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
     public BooleanProperty canStop = new SimpleBooleanProperty(false);
@@ -284,7 +284,12 @@ public class RunTab {
         try {
             List<Scenario> testCases = getCheckedTestCases();
             if (testCases.size() == 0) {
-                Optional<ButtonType> buttonType = new Alert(Alert.AlertType.CONFIRMATION, "You didn't choose any test case. Do you want to run the entire suite?", ButtonType.YES, ButtonType.NO).showAndWait();
+                String warningText = "You didn't choose any test case. Do you want to run the entire suite?";
+                if (!allTestsAreChosen) {
+                    warningText = "Do you want to run all test cases with the chosen tags (" + numberOfTestsToBeRun + " test cases in total)?";
+                }
+                Optional<ButtonType> buttonType = new Alert(Alert.AlertType.CONFIRMATION,
+                        warningText, ButtonType.YES, ButtonType.NO).showAndWait();
                 if (buttonType.orElse(ButtonType.NO) == ButtonType.NO) {
                     // cancel
                     return;
@@ -335,7 +340,12 @@ public class RunTab {
             processBuilder.command(command);
             processBuilder.directory(runnerDirectory);
             processBuilder.redirectErrorStream(true);
-            Process start = processBuilder.start();
+            Process start;
+            try {
+                start = processBuilder.start();
+            } catch (IOException exception) {
+                throw new RuntimeException("Snowride couldn't start process '" + runner + "'. Are you sure you put an executable file name in the 'Script' field?", exception);
+            }
             run.stoppableProcessId.setValue(-1);
             run.running.set(true);
             multirunner.actuallyStarted();
@@ -345,7 +355,7 @@ public class RunTab {
 
         } catch (Exception ex) {
             tbOutput.replaceText(Extensions.toStringWithTrace(ex));
-            new Alert(Alert.AlertType.WARNING, Extensions.toStringWithTrace(ex), ButtonType.CLOSE).showAndWait();
+            new Alert(Alert.AlertType.WARNING,ex.getMessage(), ButtonType.CLOSE).showAndWait();
         }
     }
 
@@ -517,7 +527,7 @@ public class RunTab {
         try {
             Desktop.getDesktop().open(new File(filename));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage() + "\n\nIt's possible you don't have Windows set up to automatically open HTML files in a browser. You can do that in 'Default Apps' or with 'Choose default program...'.", e);
         }
     }
 
@@ -528,7 +538,14 @@ public class RunTab {
         }
     }
 
+    public boolean suppressRunNumberChangeNotifications = false;
+    private boolean allTestsAreChosen = false;
+    private int numberOfTestsToBeRun = 0;
+
     public void maybeRunNumberChanged() {
+        if (suppressRunNumberChangeNotifications) {
+            return;
+        }
         int[] totalSelected = new int[]{0};
         int[] totalTests = new int[]{0};
         boolean tagsRequired = cbWithTags.isSelected();
@@ -567,9 +584,12 @@ public class RunTab {
                 }
             }
         });
+        numberOfTestsToBeRun = totalSelected[0];
         if (totalSelected[0] == totalTests[0]) {
+            allTestsAreChosen = true;
             runCaption.set("Run");
         } else {
+            allTestsAreChosen = false;
             runCaption.set("Run " + Extensions.englishCount(totalSelected[0], "test", "tests"));
         }
     }

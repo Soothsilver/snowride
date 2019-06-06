@@ -58,10 +58,20 @@ public class Settings {
             XStream.setupDefaultSecurity(xStream);
             xStream.allowTypesByWildcard(new String[] { "cz.**" });
             instance = (Settings) xStream.fromXML(getFile());
+            instance.correctWindowExcesses();
         } catch (Exception exception) {
             System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
                     "you launch Snowride, this is fine and ignore this message.");
             instance = new Settings();
+        }
+    }
+
+    private void correctWindowExcesses() {
+        if (this.x < 0) {
+            this.x = 0;
+        }
+        if (this.y < 0) {
+            this.y = 0;
         }
     }
 

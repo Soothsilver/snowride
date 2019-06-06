@@ -6,6 +6,9 @@ public class Parameter {
 
     public Parameter(String text, ParameterKind kind) {
         this.text = text;
+        if (kind == ParameterKind.VARARGS) {
+            this.text = "[varargs] " + this.text.replace("*", "");
+        }
         this.kind = kind;
     }
 }

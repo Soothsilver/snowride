@@ -26,7 +26,7 @@ public class SettingsWindow extends Stage {
         this.mainForm = mainForm;
         Tab tabImporting = createTabImporting();
         TabPane tabs = new TabPane(tabImporting);
-        Button buttonOK = new Button("OK");
+        Button buttonOK = new Button("Apply and close");
         buttonOK.setOnAction(this::applyAndClose);
         Button buttonCancel = new Button("Cancel");
         buttonCancel.setOnAction(new EventHandler<ActionEvent>() {
@@ -47,7 +47,7 @@ public class SettingsWindow extends Stage {
 
     private Tab createTabImporting() {
         additionalXmlFilesBox = new TitledTextArea("Folders for XML, Python and Java files", Settings.getInstance().additionalFolders);
-        Label folderDescription = new Label("Each line is an absolute path to a folder. Snowride will add these folders to the runner script's pythonpath, and it will browse these folders for XML files, Python classes and Java classes in order to get documentation.");
+        Label folderDescription = new Label("Each line is an absolute path to a folder. Snowride will add these folders to the runner script's pythonpath, and it will browse these folders for XML files, Python files, and Robot Framework files in order to get documentation.");
         folderDescription.setWrapText(true);
         VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription);
         vboxImportingOptions.setPadding(new Insets(5,0,0,0));

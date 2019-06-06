@@ -5,4 +5,6 @@ Ctrl+Left: Navigate back
 Ctrl+Right: Navigate forwards
 Ctrl+I: Insert row above selected cell
 Ctrl+A: Append row below selected cell
+Ctrl+/: Comment line out
+Ctrl+Shift+/: Uncomment line
 Ctrl+Q, F1: Show quick documentation for selected cell

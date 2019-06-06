@@ -13,8 +13,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -31,7 +34,8 @@ public abstract class Suite extends HighElement {
 
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
-    private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
+    private LinkedHashSet<IKnownKeyword> importedKeywordsRecursively = new LinkedHashSet<>();
+    private Map<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName = new HashMap<>();
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
@@ -75,6 +79,8 @@ public abstract class Suite extends HighElement {
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
         });
+        importedKeywordsRecursivelyByInvariantName.clear();
+        importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
     }
 
     public Stream<IKnownKeyword> getSelfKeywords() {
@@ -85,8 +91,11 @@ public abstract class Suite extends HighElement {
                 });
     }
 
-    public List<IKnownKeyword> getKeywordsPermissibleInSuite() {
+    public LinkedHashSet<IKnownKeyword> getKeywordsPermissibleInSuite() {
         return importedKeywordsRecursively;
+    }
+    public Map<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {
+        return importedKeywordsRecursivelyByInvariantName;
     }
 
     public void reparse() {

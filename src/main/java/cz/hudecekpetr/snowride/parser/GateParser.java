@@ -30,11 +30,12 @@ public class GateParser {
                 if (inFile.isDirectory()) {
                     FolderSuite inThing = loadDirectory(inFile, partOfOperation, perFile);
                     fileSuites.add(inThing);
-                } else if (inFile.getName().toLowerCase().equals("__init__.robot")) {
+                } else if (inFile.getName().equalsIgnoreCase("__init__.robot") ||
+                           inFile.getName().equalsIgnoreCase("__init__.txt")) {
                     contents = FileUtils.readFileToString(inFile, "utf-8");
                     initFile = inFile;
                     partOfOperation.success(perFile);
-                } else if (inFile.getName().toLowerCase().endsWith(".robot")) {
+                } else if (inFile.getName().toLowerCase().endsWith(".robot") || inFile.getName().toLowerCase().endsWith(".txt")) {
                     FileSuite inThing = loadFile(inFile);
                     fileSuites.add(inThing);
                     partOfOperation.success(perFile);

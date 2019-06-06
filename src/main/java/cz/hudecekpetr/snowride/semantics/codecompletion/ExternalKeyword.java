@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.Parameter;
@@ -48,7 +49,19 @@ public class ExternalKeyword implements IKnownKeyword {
 
     @Override
     public String getItalicsSubheading() {
-        return "External keyword (library " + library + ")";
+        String keywordKind = "External keyword";
+        switch (library.getKind()) {
+            case PACKED_IN:
+                keywordKind = "Robot built-in library";
+                break;
+            case XML:
+                keywordKind = "Keyword imported from XML";
+                break;
+            case PYTHON:
+                keywordKind = "Python keyword";
+                break;
+        }
+        return keywordKind + " (library " + library + ")";
     }
 
     @Override
@@ -64,5 +77,10 @@ public class ExternalKeyword implements IKnownKeyword {
     @Override
     public int getNumberOfOptionalArguments() {
         return numberOfOptionalArguments;
+    }
+
+    @Override
+    public String getInvariantName() {
+        return Extensions.toInvariant(canonicalName);
     }
 }

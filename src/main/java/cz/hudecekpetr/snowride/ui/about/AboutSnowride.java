@@ -30,6 +30,8 @@ public class AboutSnowride extends AboutDialogBase {
         lblSnowride.setFont(MainForm.BIGGER_FONT);
         Label lblDescription = new Label("Snowride is a fast and many-featured IDE for Robot Framework test projects.");
         Label lblAuthor = new Label("© 2019 Petr Hudeček");
+        Label lblAuthor2 = new Label("© 2019 ION");
+        Label lblLicense = new Label("Distributed under GNU GPL v3");
         Hyperlink hyperlinkToGithub = new Hyperlink(GITHUB_MAIN_URL);
         hyperlinkToGithub.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -41,7 +43,7 @@ public class AboutSnowride extends AboutDialogBase {
                 }
             }
         });
-        VBox vbMain = new VBox(5, lblSnowride, lblDescription, lblAuthor, hyperlinkToGithub);
+        VBox vbMain = new VBox(5, lblSnowride, lblDescription, lblAuthor, lblAuthor2, lblLicense, hyperlinkToGithub);
         Button bClose = new Button("Close");
         bClose.setOnAction(new EventHandler<ActionEvent>() {
             @Override
