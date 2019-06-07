@@ -501,7 +501,14 @@ public class MainForm {
         bRun.setOnAction(runTab::clickRun);
         bStop.disableProperty().bind(runTab.canStop.not());
         bStop.setOnAction(runTab::clickStop);
-        return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
+        Button bReloadAll = new Button("Reload all", loadIcon(Images.refresh));
+        bReloadAll.setTooltip(new Tooltip("Reloads the current Robot project as though you restarted Snowride."));
+        bReloadAll.setOnAction(this::reloadAll);
+        return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop, bReloadAll);
+    }
+
+    private void reloadAll(ActionEvent actionEvent) {
+        loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
     }
 
     // Hello
@@ -555,20 +562,16 @@ public class MainForm {
                 settingsWindow.show();
             }
         });
-
+        MenuItem bReloadAll = new MenuItem("Reload everything", loadIcon(Images.refresh));
+        bReloadAll.setOnAction(this::reloadAll);
         MenuItem bReload = new MenuItem("Reload external libraries");
-        bReload.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                reloadExternalLibraries();
-            }
-        });
+        bReload.setOnAction(event -> reloadExternalLibraries());
 
         MenuItem bExit = new MenuItem("Exit Snowride", loadIcon(Images.exit));
         bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
-        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReload, bExit);
+        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReloadAll, bReload, bExit);
         refreshRecentlyOpenMenu();
 
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
