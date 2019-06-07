@@ -34,7 +34,7 @@ public abstract class Suite extends HighElement {
 
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
-    private LinkedHashSet<IKnownKeyword> importedKeywordsRecursively = new LinkedHashSet<>();
+    private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
     private Map<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName = new HashMap<>();
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
@@ -79,6 +79,9 @@ public abstract class Suite extends HighElement {
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
         });
+        importedKeywordsRecursively.sort((kw1,kw2)->{
+            return Integer.compare(kw1.getCompletionPriority(), kw2.getCompletionPriority());
+        });
         importedKeywordsRecursivelyByInvariantName.clear();
         importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
     }
@@ -91,7 +94,7 @@ public abstract class Suite extends HighElement {
                 });
     }
 
-    public LinkedHashSet<IKnownKeyword> getKeywordsPermissibleInSuite() {
+    public List<IKnownKeyword> getKeywordsPermissibleInSuite() {
         return importedKeywordsRecursively;
     }
     public Map<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {

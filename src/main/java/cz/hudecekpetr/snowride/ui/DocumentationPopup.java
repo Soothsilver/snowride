@@ -31,23 +31,22 @@ public class DocumentationPopup extends Popup {
 
     public DocumentationPopup() {
         this.setAnchorLocation(AnchorLocation.CONTENT_TOP_LEFT);
-        Label documentation = new Label("Documentation");
         keyword_name = new Label("No Operation");
         keyword_name.setStyle("-fx-font-size: 12pt; -fx-font-weight: bold;");
         keyword_source = new Label("Built-in keyword (library BuiltIn)");
-        keyword_source.setStyle("-fx-font-style: italic; -fx-font-size: 8pt;");
+        keyword_source.setStyle("-fx-font-style: italic; -fx-font-size: 10pt;");
         keyword_documentation = new DocumentationTextArea();
         keyword_documentation.setWrapText(true);
         icon = new ImageView(Images.stop);
         VirtualizedScrollPane<DocumentationTextArea> vPane = new VirtualizedScrollPane<>(keyword_documentation);
-        VBox documentationPane = new VBox(documentation, keyword_name,
+        VBox documentationPane = new VBox(keyword_name,
                 new HBox(5, icon, keyword_source), vPane);
         VBox.setVgrow(vPane, Priority.ALWAYS);
         documentationPane.setStyle("-fx-background-color: whitesmoke;");
-        documentationPane.setMinWidth(400);
-        documentationPane.setMinHeight(350);
-        documentationPane.setMaxWidth(400);
-        documentationPane.setMaxHeight(350);
+        documentationPane.setMinWidth(450);
+        documentationPane.setMinHeight(500);
+        documentationPane.setMaxWidth(450);
+        documentationPane.setMaxHeight(500);
         documentationPane.setPadding(new Insets(6));
         this.setConsumeAutoHidingEvents(false);
         this.getContent().add(documentationPane);

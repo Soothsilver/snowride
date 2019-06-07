@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -447,6 +448,13 @@ public class RunTab {
         result.add(argfile.toString());
         result.add("--listener");
         result.add(runnerAgent.toString() + ":" + tcpHost.portNumber + ":False");
+        for(String path : StringUtils.split( Settings.getInstance().additionalFolders,  '\n')) {
+            String trimPath = path.trim();
+            if (!trimPath.isEmpty()) {
+                result.add("--pythonpath");
+                result.add(trimPath);
+            }
+        }
         String[] args = StringUtils.splitByWholeSeparator(this.tbArguments.getText(), " ");
         result.addAll(Arrays.asList(args));
         result.add(((FolderSuite) mainForm.getProjectTree().getRoot().getValue()).directoryPath.toString());

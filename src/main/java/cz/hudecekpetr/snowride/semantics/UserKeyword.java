@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.semantics;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalKeyword;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -61,5 +62,10 @@ public class UserKeyword implements IKnownKeyword {
     @Override
     public String getInvariantName() {
         return Extensions.toInvariant(name);
+    }
+
+    @Override
+    public int getCompletionPriority() {
+        return ExternalKeyword.PRIORITY_USER_KEYWORD;
     }
 }

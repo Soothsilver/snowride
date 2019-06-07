@@ -32,7 +32,7 @@ testCaseSteps returns [Lines Lines]: stepOrEmptyLine*;
 step returns [LogicalLine LogicalLine]: CELLSPACE ANY_CELL restOfRow;
 stepOrEmptyLine returns [LogicalLine LogicalLine]: step | emptyLine;
 // General
-endOfLine: LINE_SEPARATOR | EOF;
+endOfLine: LINE_SEPARATOR | EOF | ' 'LINE_SEPARATOR;
 restOfRow returns [LogicalLine Line]: (CELLSPACE (ANY_CELL CELLSPACE?)* (COMMENT | endOfLine)) | endOfLine;
 emptyLines returns [String Trivia]: emptyLine+;
 emptyLine: ((CELLSPACE | SINGLE_SPACE)+ (COMMENT | endOfLine)) | LINE_SEPARATOR | COMMENT;

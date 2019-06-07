@@ -119,6 +119,21 @@ public class SnowTableView extends TableView<LogicalLine> {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             cell.set(new Cell(Clipboard.getSystemClipboard().getString(), cell.getValue().postTrivia, cell.getValue().partOfLine));
             keyEvent.consume();
+        } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isControlDown()) {
+            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+            LogicalLine theLine = cell.getValue().partOfLine;
+            Cell firstCell = theLine.getCellAsStringProperty(1, mainForm).getValue();
+            if (keyEvent.isShiftDown()) {
+                // uncomment
+                if (Extensions.toInvariant(firstCell.contents).equalsIgnoreCase("Comment")) {
+                    theLine.shiftTrueCellsLeft(mainForm);
+                }
+                theLine.getCellAsStringProperty(0, mainForm).set(new Cell("", "    ", theLine));
+            } else {
+                // comment out
+                theLine.shiftTrueCellsRight(mainForm);
+                theLine.getCellAsStringProperty(1, mainForm).set(new Cell("Comment", "    ", theLine));
+            }
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
             Cell copy = cell.getValue().copy();

@@ -4,7 +4,6 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.KeyValuePairSection;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -17,10 +16,10 @@ import java.util.List;
 public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
-    private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
     public HighElement belongsToHighElement;
     public PositionInListProperty lineNumber;
     public SnowTableKind belongsWhere;
+    private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
 
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
@@ -31,8 +30,7 @@ public class LogicalLine {
                 line.cells.add(new Cell("", text.substring(0, text.indexOf('#')), line));
             }
             line.cells.add(new Cell(text.trim(), "", line));
-        }
-        else {
+        } else {
             line.cells.add(new Cell("", text, line));
         }
         return line;
@@ -44,6 +42,7 @@ public class LogicalLine {
         this.preTrivia = "";
         return this;
     }
+
     public LogicalLine prepend(String cell) {
         cells.add(0, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
@@ -120,6 +119,24 @@ public class LogicalLine {
         for (int i = 0, cellsSize = cells.size(); i < cellsSize; i++) {
             Cell cell = cells.get(i);
             cell.updateStyle(i);
+        }
+    }
+
+    public void shiftTrueCellsRight(MainForm mainForm) {
+        int cellcount = cells.size();
+        for (int i = cellcount - 1; i >= 1; i--) {
+            getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
+        }
+    }
+
+    public void shiftTrueCellsLeft(MainForm mainForm) {
+        int cellcount = cells.size();
+        for (int i = 2; i <= cellcount; i++) {
+            if (i == cellcount) {
+                getCellAsStringProperty(i - 1, mainForm).set(new Cell("", "    ", this));
+            } else {
+                getCellAsStringProperty(i - 1, mainForm).set(cells.get(i).copy());
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ import org.fxmisc.richtext.model.TextOps;
 import java.util.function.BiConsumer;
 
 public class DocumentationTextArea extends StyledTextArea<String, String> {
-    public static final String DOC_STYLE = "-fx-font-size: 8pt; ";
+    public static final String DOC_STYLE = "-fx-font-size: 10pt; ";
     public static final String BOLD_STYLE = DOC_STYLE + "-fx-font-weight: bold; ";
     public static final String CODE_STYLE = DOC_STYLE + "-fx-font-family: monospace; ";
 

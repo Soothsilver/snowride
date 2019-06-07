@@ -1,22 +1,23 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.Parameter;
 import cz.hudecekpetr.snowride.semantics.ParameterKind;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.scene.image.Image;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ExternalKeyword implements IKnownKeyword {
 
+    public static final int PRIORITY_USER_KEYWORD = 0; // highest priority
+    private static final int PRIORITY_EXTERNAL_LIBRARY = 1;
+    private static final int PRIORITY_PACKED_IN = 2;
     private final String canonicalName;
-    private String documentation;
     private final ExternalLibrary library;
+    private String documentation;
     private int numberOfMandatoryArguments = 0;
     private int numberOfOptionalArguments = 0;
 
@@ -24,8 +25,8 @@ public class ExternalKeyword implements IKnownKeyword {
 
         this.canonicalName = canonicalName;
         this.documentation = documentation;
-        this.numberOfMandatoryArguments = (int)(parameters.stream().filter(p -> p.kind == ParameterKind.STANDARD)).count();
-        this.numberOfOptionalArguments = (int)((parameters.stream().filter(p -> p.kind == ParameterKind.NAMED)).count() + (parameters.stream().filter(p -> p.kind == ParameterKind.VARARGS)).count() * 100);
+        this.numberOfMandatoryArguments = (int) (parameters.stream().filter(p -> p.kind == ParameterKind.STANDARD)).count();
+        this.numberOfOptionalArguments = (int) ((parameters.stream().filter(p -> p.kind == ParameterKind.NAMED)).count() + (parameters.stream().filter(p -> p.kind == ParameterKind.VARARGS)).count() * 100);
         if (parameters.size() > 0) {
             this.documentation = "*Args:* " + parameters.stream().map(p -> p.text).collect(Collectors.joining(", ")) + "\n" + documentation;
         }
@@ -82,5 +83,18 @@ public class ExternalKeyword implements IKnownKeyword {
     @Override
     public String getInvariantName() {
         return Extensions.toInvariant(canonicalName);
+    }
+
+    @Override
+    public int getCompletionPriority() {
+        switch (library.getKind()) {
+            case XML:
+            case PYTHON:
+                return PRIORITY_EXTERNAL_LIBRARY;
+            case PACKED_IN:
+                return PRIORITY_PACKED_IN;
+            default:
+                return 100; // unknown
+        }
     }
 }

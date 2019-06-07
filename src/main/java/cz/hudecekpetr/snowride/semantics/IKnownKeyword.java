@@ -8,4 +8,5 @@ public interface IKnownKeyword extends IAutocompleteOption {
     int getNumberOfMandatoryArguments();
     int getNumberOfOptionalArguments();
     String getInvariantName();
+    int getCompletionPriority();
 }

@@ -29,7 +29,7 @@ public class Cell implements IHasQuickDocumentation {
     private boolean isComment;
     private boolean isKeyword;
     private int cellIndex;
-    private Set<IKnownKeyword> permissibleKeywords;
+    private List<IKnownKeyword> permissibleKeywords;
     private Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
 
