@@ -13,6 +13,10 @@ import java.nio.charset.StandardCharsets;
 
 public class AntlrGate {
     public RobotFile parse(String fileContents) {
+        // Remove byte order mark:
+        if (fileContents.length() > 0 && fileContents.charAt(0) == '\uFEFF') {
+            fileContents = fileContents.substring(1);
+        }
         RobotLexer robotLexer = new RobotLexer(CharStreams.fromString(fileContents));
         RobotParser robotParser = new RobotParser(new CommonTokenStream(robotLexer));
         AntlrListener listener = new AntlrListener();

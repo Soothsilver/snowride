@@ -178,7 +178,12 @@ public class MainForm {
     }
 
     public HighElement getFocusedElement() {
-        return getProjectTree().getFocusModel().getFocusedItem().getValue();
+        TreeItem<HighElement> focusedItem = getProjectTree().getFocusModel().getFocusedItem();
+        if (focusedItem != null) {
+            return focusedItem.getValue();
+        } else {
+            return null;
+        }
     }
 
     /**
