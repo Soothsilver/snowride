@@ -67,8 +67,9 @@ public class ExternalLibrary {
                 Element doce = (Element) docs.item(0);
                 doc = doce.getTextContent();
             }
-            doc = doc.replace(" +", " ").replace("\n \n", "\n\n").replace("\n\n", "[[DOUBLENEWLINE]]")
-                    .replace("\n", " ").replace(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n");
+            // TODO performance and bullet point replacement
+            doc = doc.replace(" +", " ").replaceAll("\n +\n", "\n\n").replace("\n\n", "[[DOUBLENEWLINE]]")
+                    .replaceAll("\n +-", "[[BULLET]]") .replace("\n", " ").replaceAll(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n").replace("[[BULLET]]", "\n- ");
             List<Parameter> parameters = new ArrayList<>();
             NodeList args = kw.getElementsByTagName("arguments");
             if (args.getLength() == 1) {

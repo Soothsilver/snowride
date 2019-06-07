@@ -6,15 +6,15 @@ import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
+import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
+import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.image.Image;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public class Cell implements IHasQuickDocumentation {
@@ -22,13 +22,19 @@ public class Cell implements IHasQuickDocumentation {
     public final String contents;
     public String postTrivia;
     public LogicalLine partOfLine;
+
+    // Fields via Settings table analysis:
+    public Suite leadsToSuite;
+
     // Fields via analysis:
     public boolean virtual;
     public boolean triggerDocumentationNext;
     public boolean isLineNumberCell;
     private boolean isComment;
     private boolean isKeyword;
+    private ArgumentStatus argumentStatus;
     private int cellIndex;
+    private IKnownKeyword keywordOfThisLine; // TODO to be reimplemented at the line level
     private List<IKnownKeyword> permissibleKeywords;
     private Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
@@ -51,6 +57,7 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     public void updateStyle(int cellIndex) {
+        leadsToSuite = null;
         String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
         if (isLineNumberCell) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
@@ -66,12 +73,31 @@ public class Cell implements IHasQuickDocumentation {
                         style += "-fx-text-fill: green; ";
                     }
                 }
+                if (cellIndex == 1 && partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
+                    if (partOfLine.belongsToHighElement instanceof Suite) {
+                        Suite asSuite = (Suite) partOfLine.belongsToHighElement;
+                        Optional<ImportedResource> resource = asSuite.getImportedResources().stream().filter(ir -> ir.getName().equals(contents)).findFirst();
+                        if (resource.isPresent()) {
+                            if (resource.get().isSuccessfullyImported()) {
+                                if (resource.get().getImportsSuite() != null) {
+                                    style += "-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold; ";
+                                    leadsToSuite = resource.get().getImportsSuite();
+                                } else {
+                                    style += "-fx-text-fill: dodgerblue; ";
+                                }
+                            } else {
+                                style += "-fx-text-fill: red; ";
+                            }
+                        }
+                    }
+                }
             }
         }
         styleProperty.set(style);
     }
     private String getStyle() {
         updateSemanticsStatus();
+
         String style = "";
         if (cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
@@ -80,7 +106,7 @@ public class Cell implements IHasQuickDocumentation {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
         } else if (cellIndex == 1 && contents.equals("\\")) {
-            style += "-fx-font-style: italic;  -fx-background-color: darkgray; ";
+            style += "-fx-font-style: italic; -fx-background-color: darkgray; ";
         } else if (isComment) {
             style += "-fx-text-fill: brown; ";
         } else if (isKeyword) {
@@ -96,16 +122,38 @@ public class Cell implements IHasQuickDocumentation {
         } else if (contents.contains("${") || contents.contains("@{") || contents.contains("&{")) {
             style += "-fx-text-fill: green; ";
         }
+        style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
+        switch (argumentStatus) {
+            case FORBIDDEN:
+                if (!isComment && !StringUtils.isBlank(contents)) {
+                    style += "-fx-background-color: #ff7291; ";
+                }
+                break;
+            case VARARG:
+                style += "-fx-background-color: #F5F5F5; ";
+                break;
+            case MANDATORY:
+                style += "-fx-background-color: white; ";
+                if (StringUtils.isBlank(contents)) {
+                    style += "-fx-background-color: #ffcf32; ";
+                }
+                break;
+        }
         return style;
     }
 
     private void updateSemanticsStatus() {
+        keywordOfThisLine = null;
         isComment = false;
         cellIndex = partOfLine.cells.indexOf(this);
         boolean pastTheKeyword = false;
         isKeyword = false;
         boolean skipFirst = true;
+        int indexOfThisAsArgument = -2;
         for (Cell cell : partOfLine.cells) {
+            if (indexOfThisAsArgument >= -1) {
+                indexOfThisAsArgument++;
+            }
             if (skipFirst) {
                 skipFirst = false;
                 continue;
@@ -122,11 +170,27 @@ public class Cell implements IHasQuickDocumentation {
                 isKeyword = true;
                 permissibleKeywords = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
                 permissibleKeywordsByInvariantName = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuiteByInvariantName();
+                keywordOfThisLine = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
                 pastTheKeyword = true;
+                indexOfThisAsArgument = -1;
             }
             if (cell == this) {
                 // The rest doesn't matter.
                 break;
+            }
+        }
+        argumentStatus = ArgumentStatus.UNKNOWN;
+        if (keywordOfThisLine != null) {
+            int maxMandatory = keywordOfThisLine.getNumberOfMandatoryArguments();
+            int maxOptional = keywordOfThisLine.getNumberOfOptionalArguments() + maxMandatory;
+            if (indexOfThisAsArgument >= 0) {
+                if (indexOfThisAsArgument < maxMandatory) {
+                    argumentStatus = ArgumentStatus.MANDATORY;
+                } else if (indexOfThisAsArgument < maxOptional) {
+                    argumentStatus = ArgumentStatus.VARARG;
+                } else {
+                    argumentStatus = ArgumentStatus.FORBIDDEN;
+                }
             }
         }
     }
@@ -210,5 +274,12 @@ public class Cell implements IHasQuickDocumentation {
 
     public SimpleStringProperty getStyleProperty() {
         return styleProperty;
+    }
+
+    private enum ArgumentStatus {
+        MANDATORY,
+        VARARG,
+        FORBIDDEN,
+        UNKNOWN
     }
 }

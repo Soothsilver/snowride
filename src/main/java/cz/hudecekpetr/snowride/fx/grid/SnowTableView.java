@@ -56,15 +56,22 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private void onMouseClicked(MouseEvent mouseEvent) {
         MainForm.documentationPopup.hide();
-        if (mouseEvent.isControlDown() && snowTableKind.isScenario()) {
-            Cell cell = getFocusedCell();
-            IKnownKeyword keyword = cell.getKeywordInThisCell();
-            if (keyword != null) {
-                Scenario highElement = keyword.getScenarioIfPossible();
-                if (highElement != null) {
-                    mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
-                } else {
-                    mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
+        if (mouseEvent.isControlDown()) {
+            if (snowTableKind.isScenario()) {
+                Cell cell = getFocusedCell();
+                IKnownKeyword keyword = cell.getKeywordInThisCell();
+                if (keyword != null) {
+                    Scenario highElement = keyword.getScenarioIfPossible();
+                    if (highElement != null) {
+                        mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
+                    } else {
+                        mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
+                    }
+                }
+            } else {
+                Cell cell = getFocusedCellInSettingsTable();
+                if (cell != null && cell.leadsToSuite != null) {
+                    mainForm.selectProgrammaticallyAndRememberInHistory(cell.leadsToSuite);
                 }
             }
         }
@@ -74,6 +81,16 @@ public class SnowTableView extends TableView<LogicalLine> {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
         SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
         return cellSimpleObjectProperty.getValue();
+    }
+    private Cell getFocusedCellInSettingsTable() {
+        TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
+        int colIndex = focusedCell.getColumn() - 1;
+        if (colIndex >= 0) {
+            SimpleObjectProperty<Cell> cellSimpleObjectProperty = this.getItems().get(focusedCell.getRow()).getCellAsStringProperty(colIndex, mainForm);
+            return cellSimpleObjectProperty.getValue();
+        } else {
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -135,11 +152,13 @@ public class SnowTableView extends TableView<LogicalLine> {
                 theLine.getCellAsStringProperty(1, mainForm).set(new Cell("Comment", "    ", theLine));
             }
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
-            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
-            Cell copy = cell.getValue().copy();
-            copy.triggerDocumentationNext = true;
-            cell.set(copy);
-            keyEvent.consume();
+            if (getSelectionModel().getSelectedCells().size() > 0) {
+                SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+                Cell copy = cell.getValue().copy();
+                copy.triggerDocumentationNext = true;
+                cell.set(copy);
+                keyEvent.consume();
+            }
         } else if (keyEvent.getCode() == KeyCode.TAB) {
             this.getSelectionModel().clearSelection();
             this.getSelectionModel().selectNext();

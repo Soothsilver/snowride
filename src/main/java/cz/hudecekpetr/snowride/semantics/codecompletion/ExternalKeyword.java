@@ -13,8 +13,9 @@ import java.util.stream.Collectors;
 public class ExternalKeyword implements IKnownKeyword {
 
     public static final int PRIORITY_USER_KEYWORD = 0; // highest priority
-    private static final int PRIORITY_EXTERNAL_LIBRARY = 1;
-    private static final int PRIORITY_PACKED_IN = 2;
+    public static final int PRIORITY_EXTERNAL_LIBRARY = 1;
+    public static final int PRIORITY_PACKED_IN = 2;
+    public static final int VARARGS_MEANS_INFINITE = 1000;
     private final String canonicalName;
     private final ExternalLibrary library;
     private String documentation;
@@ -26,7 +27,7 @@ public class ExternalKeyword implements IKnownKeyword {
         this.canonicalName = canonicalName;
         this.documentation = documentation;
         this.numberOfMandatoryArguments = (int) (parameters.stream().filter(p -> p.kind == ParameterKind.STANDARD)).count();
-        this.numberOfOptionalArguments = (int) ((parameters.stream().filter(p -> p.kind == ParameterKind.NAMED)).count() + (parameters.stream().filter(p -> p.kind == ParameterKind.VARARGS)).count() * 100);
+        this.numberOfOptionalArguments = (int) ((parameters.stream().filter(p -> p.kind == ParameterKind.NAMED)).count() + (parameters.stream().filter(p -> p.kind == ParameterKind.VARARGS)).count() * VARARGS_MEANS_INFINITE);
         if (parameters.size() > 0) {
             this.documentation = "*Args:* " + parameters.stream().map(p -> p.text).collect(Collectors.joining(", ")) + "\n" + documentation;
         }

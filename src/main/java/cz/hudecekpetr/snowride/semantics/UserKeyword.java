@@ -7,21 +7,39 @@ import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 
+import java.util.List;
+
 public class UserKeyword implements IKnownKeyword {
     private String name;
     private String documentation;
+    private final int numberOfMandatoryArguments;
+    private final int numberOfOptionalArguments;
     private Suite owningSuite;
     private Scenario scenario;
 
-    public UserKeyword(String name, String documentation, Suite owningSuite, Scenario scenario) {
+    public UserKeyword(String name, String documentation, int mandatoryArguments, int optionalArguments,  Suite owningSuite, Scenario scenario) {
         this.name = name;
         this.documentation = documentation;
+        numberOfMandatoryArguments = mandatoryArguments;
+        numberOfOptionalArguments = optionalArguments;
         this.owningSuite = owningSuite;
         this.scenario = scenario;
     }
 
     public static UserKeyword fromScenario(Scenario s) {
-        return new UserKeyword(s.getShortName(), s.getDocumentation(), (Suite) s.parent, s);
+        List<String> arguments = s.getSemanticsArguments();
+        int optionals = 0;
+        int mandatories = 0;
+        for (String arg : arguments) {
+            if (arg.contains("*") || arg.contains("@") || arg.contains("&")) {
+                optionals += ExternalKeyword.VARARGS_MEANS_INFINITE;
+            } else if (arg.contains("=")) {
+                optionals++;
+            } else {
+                mandatories++;
+            }
+        }
+        return new UserKeyword(s.getShortName(), s.getDocumentation(), mandatories, optionals, (Suite) s.parent, s);
     }
 
     @Override
@@ -51,12 +69,12 @@ public class UserKeyword implements IKnownKeyword {
 
     @Override
     public int getNumberOfMandatoryArguments() {
-        return 0;
+        return numberOfMandatoryArguments;
     }
 
     @Override
     public int getNumberOfOptionalArguments() {
-        return 1000; // not yet implemented
+        return numberOfOptionalArguments;
     }
 
     @Override

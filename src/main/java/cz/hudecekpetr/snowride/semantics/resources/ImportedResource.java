@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.ImportException;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
 import cz.hudecekpetr.snowride.tree.FileSuite;
@@ -11,11 +10,29 @@ import cz.hudecekpetr.snowride.tree.Suite;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public class ImportedResource {
+    public String getName() {
+        return name;
+    }
+
+    public ImportedResourceKind getKind() {
+        return kind;
+    }
+
     private final String name;
     private final ImportedResourceKind kind;
+    private boolean successfullyImported = false;
+
+    public boolean isSuccessfullyImported() {
+        return successfullyImported;
+    }
+
+    public Suite getImportsSuite() {
+        return importsSuite;
+    }
+
+    private Suite importsSuite = null;
 
     private static long indexOfIteration = 0;
 
@@ -32,13 +49,17 @@ public class ImportedResource {
         owningSuite.importedResourcesLastRecursedDuringIteration = iterationCounter;
         switch (kind) {
             case LIBRARY:
+                importsSuite = null;
                 if (ExternalLibrary.otherPackedInLibraries.containsKey(name)) {
                     gatherIntoThis.add(new LibraryKeywordSource(ExternalLibrary.otherPackedInLibraries.get(name)));
+                    successfullyImported = true;
                 } else if (ExternalLibrary.knownExternalLibraries.containsKey(name)) {
                     gatherIntoThis.add(new LibraryKeywordSource(ExternalLibrary.knownExternalLibraries.get(name)));
+                    successfullyImported = true;
                 } else {
                     // Unknown library
                     // Ignore it here. We'll put in the error list and such later.
+                    successfullyImported = false;
                 }
                 break;
             case RESOURCE:
@@ -56,7 +77,11 @@ public class ImportedResource {
                         suite = suite.parent;
                         if (suite == null) {
                             // we're getting out of the tree
-                            throw new ImportException("Snowride cannot import resource files from outside the root folder.");
+                            importsSuite = null;
+                            successfullyImported = false;
+                            return;
+                            // Eventually should be supported....
+                            //throw new ImportException("Snowride cannot import resource files from outside the root folder.");
                         }
                         continue;
                     }
@@ -76,13 +101,16 @@ public class ImportedResource {
                             }
                         }
                     }
-                    // TODO add it to import errors
+                    importsSuite = null;
+                    successfullyImported = false;
                     return;
                     // throw new ImportException("Path '" + path + "' doesn't lead to a resource file because '" + section.toString() + "' is not a suite.");
                 }
                 if (suite instanceof Suite) {
                     Suite asSuite = (Suite)suite;
                     gatherIntoThis.add(new ResourceFileKeywordSource(asSuite));
+                    successfullyImported = true;
+                    importsSuite = asSuite;
                     if (asSuite.importedResourcesLastRecursedDuringIteration == iterationCounter) {
                         // Already been there.
                     } else {
@@ -91,7 +119,11 @@ public class ImportedResource {
                         }
                     }
                 } else {
-                    throw new ImportException("Path '" + path + "' somehow leads to something that is not a suite.");
+
+                    importsSuite = null;
+                    successfullyImported = false;
+// TODO report these errors somehow
+                    //                    throw new ImportException("Path '" + path + "' somehow leads to something that is not a suite.");
                 }
                 break;
             default:

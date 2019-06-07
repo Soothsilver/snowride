@@ -136,6 +136,7 @@ public class MainForm {
         errorsTab = new ErrorsTab(this);
         Tab tabErrors = errorsTab.tab;
         tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing, tabErrors);
+        tabs.getSelectionModel().select(tabGrid);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(this::selectedTabChanged);
@@ -518,9 +519,7 @@ public class MainForm {
             gridTab.loadElement(focusedNode.getValue());
             serializingTab.loadElement(focusedNode.getValue());
             switchingTextEditContents = false;
-            if (focusedNode.getValue() instanceof Scenario) {
-                tabs.getSelectionModel().select(gridTab.getTabGrid());
-            }
+            tabs.getSelectionModel().select(gridTab.getTabGrid());
         }
     }
 
