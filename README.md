@@ -37,3 +37,7 @@ shortcuts, smart autocompletion, inspections, quick fixes, or good navigation.
 **Test runner screenshot:**
 ![Screenshot 2](screenshots/Alpha2.PNG)
 
+# Contributing
+Submit an issue or a pull request or request maintainer access to the repository.
+
+I'll be happy to have your contribution.
