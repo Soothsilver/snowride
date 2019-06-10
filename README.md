@@ -10,7 +10,7 @@ Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copie
 ![Screenshot](screenshots/Alpha1.PNG)
 
 **Download.**
-As a prerequisite, you must have Java 8 installed. Snowride doesn't work with any other version of Java.
+As a prerequisite, you must have Java 8 installed. Snowride doesn't work with any other version of Java. Use the blue button "Download" at the top of this readme file to download the executable JAR file, then run it.
 
 **Design principles of *Snowride*:**
 * **Responsive.** Every operation should happen immediately. Snowride should load within a second. 
