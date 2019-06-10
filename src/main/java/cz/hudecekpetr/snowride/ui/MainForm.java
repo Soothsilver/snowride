@@ -78,6 +78,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
+    public static final Font BIGGEST_FONT = new Font("System Regular", 18);
     public static final Font BIGGER_FONT = new Font("System Regular", 14);
     public static final Font TEXT_EDIT_FONT = new Font("Courier New", 12);
     public static MainForm INSTANCE;

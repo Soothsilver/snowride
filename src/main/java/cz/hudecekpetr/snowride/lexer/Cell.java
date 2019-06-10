@@ -35,7 +35,7 @@ public class Cell implements IHasQuickDocumentation {
     private boolean isKeyword;
     private ArgumentStatus argumentStatus;
     private int cellIndex;
-    private IKnownKeyword keywordOfThisLine; // TODO to be reimplemented at the line level
+    public IKnownKeyword keywordOfThisLine; // TODO to be reimplemented at the line level
     private List<IKnownKeyword> permissibleKeywords;
     private Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
@@ -143,7 +143,7 @@ public class Cell implements IHasQuickDocumentation {
         return style;
     }
 
-    private void updateSemanticsStatus() {
+    public void updateSemanticsStatus() {
         keywordOfThisLine = null;
         isComment = false;
         cellIndex = partOfLine.cells.indexOf(this);

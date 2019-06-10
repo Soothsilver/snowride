@@ -28,7 +28,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     public SnowTableKind snowTableKind;
     public boolean triggerAutocompletionNext;
-    private HighElement scenario;
+    public HighElement scenario;
     private MainForm mainForm;
 
     public SnowTableView(MainForm mainForm, SnowTableKind snowTableKind) {

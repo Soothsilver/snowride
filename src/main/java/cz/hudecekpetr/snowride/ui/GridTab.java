@@ -3,17 +3,26 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
+import cz.hudecekpetr.snowride.semantics.FindUsages;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -24,16 +33,46 @@ public class GridTab {
 
     private final SnowTableView tableSettings;
     private final SnowTableView tableVariables;
+    private final Button bFindUsages;
     Label lblParseError;
-    SnowTableView spreadsheetView;
+    SnowTableView spreadsheetViewTable;
     SplitPane suiteView;
+    VBox spreadsheetView;
     private MainForm mainForm;
     private Tab tabGrid;
+    private final Label lblName;
+    private ContextMenu findUsagesContextMenu;
 
     public GridTab(MainForm mainForm) {
         this.mainForm = mainForm;
         lblParseError = new Label("No file loaded yet.");
-        spreadsheetView = new SnowTableView(mainForm, SnowTableKind.SCENARIO);
+        spreadsheetViewTable = new SnowTableView(mainForm, SnowTableKind.SCENARIO);
+        lblName = new Label("Test or keyword name here");
+        lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt;");
+        bFindUsages = new Button("Find usages");
+        bFindUsages.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (spreadsheetViewTable.scenario instanceof Scenario) {
+                    MenuItem placeholder = new MenuItem("(this keyword is not used anywhere)");
+                    placeholder.setDisable(true);
+                    List<MenuItem> items = FindUsages.findUsages(((Scenario) spreadsheetViewTable.scenario), mainForm.getRootElement());
+                    if (findUsagesContextMenu != null) {
+                        findUsagesContextMenu.hide();
+                    }
+                    if (items.size() == 0) {
+                        findUsagesContextMenu = new ContextMenu(placeholder);
+                    } else {
+                        findUsagesContextMenu = new ContextMenu(items.toArray(new MenuItem[0]));
+                    }
+                    findUsagesContextMenu.show(bFindUsages, Side.BOTTOM, 0, 0);
+                }
+            }
+        });
+        HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
+        hboxNameAndFindUsages.setPadding(new Insets(5,0,0,5));
+        spreadsheetView = new VBox(5, hboxNameAndFindUsages, spreadsheetViewTable);
+        VBox.setVgrow(spreadsheetViewTable, Priority.ALWAYS);
         tableSettings = new SnowTableView(mainForm, SnowTableKind.SETTINGS);
         tableVariables = new SnowTableView(mainForm, SnowTableKind.VARIABLES);
         Label settings = new Label("Settings");
@@ -78,7 +117,9 @@ public class GridTab {
                 loadSuiteTables(fsuite);
             }
         } else if (value instanceof Scenario) {
-            spreadsheetView.loadLines(value, ((Scenario) value).getLines());
+            spreadsheetViewTable.loadLines(value, ((Scenario) value).getLines());
+            lblName.setText(value.getShortName());
+            bFindUsages.setVisible(!((Scenario) value).isTestCase());
             tabGrid.setContent(spreadsheetView);
         } else {
             tabGrid.setContent(lblParseError);
