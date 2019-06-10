@@ -46,9 +46,9 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         if (focusedCell.hasDocumentation()) {
             MainForm.documentationPopup.setData(focusedCell);
             Window parent = IceCell.this.getScene().getWindow();
-            MainForm.documentationPopup.show(parent,
+            MainForm.documentationPopup.showRightIfPossible(parent,
                     parent.getX() + IceCell.this.localToScene(0.0D, 0.0D).getX() +
-                            IceCell.this.getScene().getX() + IceCell.this.getWidth(),
+                            IceCell.this.getScene().getX(), IceCell.this.getWidth(),
                     parent.getY() + IceCell.this.localToScene(0.0D, 0.0D).getY() +
                             IceCell.this.getScene().getY() + 0);
         }
