@@ -7,6 +7,7 @@ import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
@@ -150,6 +151,10 @@ public class Cell implements IHasQuickDocumentation {
         isKeyword = false;
         boolean skipFirst = true;
         int indexOfThisAsArgument = -2;
+        if ((partOfLine.belongsToHighElement instanceof Scenario) && (((Scenario) partOfLine.belongsToHighElement)).semanticsIsTemplateTestCase) {
+            pastTheKeyword = true;
+            indexOfThisAsArgument = -1;
+        }
         for (Cell cell : partOfLine.cells) {
             if (indexOfThisAsArgument >= -1) {
                 indexOfThisAsArgument++;
@@ -163,8 +168,9 @@ public class Cell implements IHasQuickDocumentation {
                 isComment = true;
                 break;
             }
-            if (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{")) {
-                // Is the return value.
+            if (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\")) {
+                // TODO the last thing should only trigger a non-keyword if there is a nonempty cell afterwards still on the same row
+                // Is the return value, or an indent due to the FOR loop.
             } else if (!pastTheKeyword) {
                 // This is the keyword.
                 isKeyword = true;

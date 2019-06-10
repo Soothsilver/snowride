@@ -52,4 +52,12 @@ public class NavigationStack {
         displayingWhat = -1;
         updatePossibilities();
     }
+
+    public void remove(HighElement he) {
+        if (navigationStack.removeIf(hh -> hh.equals(he))) {
+            // Snowride would be confused if we removed elements from its navigation stack.
+            clear();
+        }
+
+    }
 }

@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
+import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
@@ -90,8 +91,8 @@ public class MainForm {
     boolean humanInControl = true;
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
-    private GateParser gateParser = new GateParser();
-    private NavigationStack navigationStack = new NavigationStack();
+    public GateParser gateParser = new GateParser();
+    public NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
     private TreeView<HighElement> projectTree;
     private SearchSuites searchSuitesAutoCompletion;
@@ -103,7 +104,7 @@ public class MainForm {
     private TextField tbSearchTests;
     private ContextMenu treeContextMenu;
     private GridTab gridTab;
-    private LongRunningOperation projectLoad = new LongRunningOperation();
+    public LongRunningOperation projectLoad = new LongRunningOperation();
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;
@@ -526,13 +527,17 @@ public class MainForm {
             if (humanInControl) {
                 navigationStack.standardEnter(focusedNode.getValue());
             }
-            switchingTextEditContents = true;
-            textEditTab.loadElement(focusedNode.getValue());
-            gridTab.loadElement(focusedNode.getValue());
-            serializingTab.loadElement(focusedNode.getValue());
-            switchingTextEditContents = false;
-            tabs.getSelectionModel().select(gridTab.getTabGrid());
+            reloadElementIntoTabs(focusedNode.getValue());
         }
+    }
+
+    public void reloadElementIntoTabs(HighElement element) {
+        switchingTextEditContents = true;
+        textEditTab.loadElement(element);
+        gridTab.loadElement(element);
+        serializingTab.loadElement(element);
+        switchingTextEditContents = false;
+        tabs.getSelectionModel().select(gridTab.getTabGrid());
     }
 
     public void saveAll(ActionEvent event) {
@@ -639,8 +644,18 @@ public class MainForm {
                 aboutChangelog.show();
             }
         });
+        MenuItem bSettings2 = new MenuItem("Settings", loadIcon(Images.keywordIcon)); // we have to create another menu item, because a menu item can have only one parent
+        // And we need this in Tools, because that's what people are used to.
+        bSettings2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
+                settingsWindow.show();
+            }
+        });
+        Menu toolsMenu = new Menu("Tools", null, bSettings2);
         Menu helpMenu = new Menu("Help", null, about, shortcuts, robotFrameworkUserGuide, robotFrameworkLibrariesDocumentation, releaseNotes);
-        mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, helpMenu);
+        mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, toolsMenu, helpMenu);
         return mainMenu;
     }
 
@@ -696,8 +711,11 @@ public class MainForm {
 
     public void loadProjectFromFolder(File path) {
         projectLoad.progress.set(0);
+        navigationStack.clear();
+        reloadElementIntoTabs(null);
         projectLoader.submit(() -> {
             try {
+                FilesystemWatcher.getInstance().forgetEverything();
                 File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 1);
                 folderSuite.selfAndDescendantHighElements().forEachOrdered(he -> {
@@ -708,6 +726,7 @@ public class MainForm {
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
+                    reloadElementIntoTabs(null);
                     humanInControl = false;
                     projectTree.setRoot(folderSuite.treeNode);
                     tbSearchTests.requestFocus();

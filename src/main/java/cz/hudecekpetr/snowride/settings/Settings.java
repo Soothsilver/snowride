@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.settings;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -33,6 +34,7 @@ public class Settings {
     @SuppressWarnings("unused") // Kept for backwards compatibility with previous versions of the Settings file.
     public String additionalXmlFiles = "";
     public String additionalFolders = "";
+    public boolean cbAlsoImportTxtFiles = true;
 
     public static Settings getInstance() {
         if (instance == null) {
@@ -54,7 +56,7 @@ public class Settings {
 
     public static void load() {
         try {
-            XStream xStream = new XStream(new StaxDriver());
+            XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
             XStream.setupDefaultSecurity(xStream);
             xStream.allowTypesByWildcard(new String[] { "cz.**" });
             instance = (Settings) xStream.fromXML(getFile());

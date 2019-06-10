@@ -82,7 +82,7 @@ public class TextEditTab {
     }
 
     public void loadElement(HighElement value) {
-        if (value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED && value instanceof Suite) {
+        if (value != null && value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED && value instanceof Suite) {
             Suite asSuite = (Suite) value;
             asSuite.optimizeStructure();
             asSuite.contents = asSuite.serialize();
@@ -90,8 +90,11 @@ public class TextEditTab {
         this.lastLoaded = value;
         if (value instanceof Scenario) {
             tabTextEdit.setContent(warningPane);
-        } else {
+        } else if (value != null) {
             tbTextEdit.setText(value.contents);
+            tabTextEdit.setContent(editorPane);
+        } else {
+            tbTextEdit.setText("");
             tabTextEdit.setContent(editorPane);
         }
     }

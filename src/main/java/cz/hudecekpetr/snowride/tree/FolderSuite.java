@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -9,7 +10,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +48,7 @@ public class FolderSuite extends Suite implements ISuite {
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.getShortName());
             FileUtils.write(initFile, contents, "utf-8");
+            FilesystemWatcher.getInstance().ignoreNextChangeOf(directoryPath.toPath());
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 if (child instanceof Scenario) {
@@ -63,6 +64,7 @@ public class FolderSuite extends Suite implements ISuite {
         try {
             if (initFile == null) {
                 initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
+                FilesystemWatcher.getInstance().ignoreNextChangeOf(initFile.toPath());
                 if (!initFile.createNewFile()) {
                     throw new RuntimeException("Could not create __init__.robot");
                 }
@@ -75,6 +77,7 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public void deleteSelf(MainForm mainForm) {
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
         if (this.directoryPath.delete()) {
             this.dead = true;
             this.parent.dissociateSelfFromChild(this);
@@ -84,6 +87,7 @@ public class FolderSuite extends Suite implements ISuite {
                     " Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
                     == deleteType) {
                 try {
+                    FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
                     FileUtils.deleteDirectory(this.directoryPath);
                     this.selfAndDescendantHighElements().forEach(he -> he.dead = true);
                     this.children.clear();
@@ -100,6 +104,8 @@ public class FolderSuite extends Suite implements ISuite {
     public void renameSelfTo(String newName, MainForm mainForm) {
         File oldFile = this.directoryPath;
         File newFile = this.directoryPath.getParentFile().toPath().resolve(newName).toFile();
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(oldFile.toPath());
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (this.directoryPath.renameTo(newFile)) {
             this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.directoryPath = newFile;
@@ -172,5 +178,14 @@ public class FolderSuite extends Suite implements ISuite {
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
         mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
+    }
+
+    public void replaceChildWithAnotherChild(HighElement oldElement, Suite newElement) {
+        int indexOld = children.indexOf(oldElement);
+        int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
+        dissociateSelfFromChild(oldElement);
+        newElement.parent = this;
+        children.add(indexOld, newElement);
+        treeNode.getChildren().add(indexTreeOld, newElement.treeNode);
     }
 }

@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.semantics.resources;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.semantics.ImportException;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Suite;
@@ -95,7 +96,7 @@ public class ImportedResource {
                                 suite = child;
                                 break outerFor;
                             }
-                            if (Extensions.toInvariant(child.getShortName() + ".txt").equals(sectionString)) {
+                            if (Extensions.toInvariant(child.getShortName() + ".txt").equals(sectionString) && Settings.getInstance().cbAlsoImportTxtFiles) {
                                 suite = child;
                                 break outerFor;
                             }

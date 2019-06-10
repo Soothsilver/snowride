@@ -24,6 +24,7 @@ public class Scenario extends HighElement {
     private boolean isTestCase;
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
     public HashSet<Tag> actualTags = new HashSet<>();
+    public boolean semanticsIsTemplateTestCase;
 
     public List<String> getSemanticsArguments() {
         return semanticsArguments;
@@ -155,6 +156,8 @@ public class Scenario extends HighElement {
     }
 
     public void analyzeSemantics() {
+        // TODO template-ness can also be inherited from parent suites
+        semanticsIsTemplateTestCase = false;
         ArrayList<String> argCells = new ArrayList<>();
         for (LogicalLine line : getLines()) {
             if (line.cells.size() >= 3) {
@@ -170,6 +173,9 @@ public class Scenario extends HighElement {
                         argCells.add(line.cells.get(i).contents);
                     }
 
+                }
+                else if (line.cells.get(1).contents.equalsIgnoreCase("[Template]")) {
+                    semanticsIsTemplateTestCase = true;
                 }
             }
         }

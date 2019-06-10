@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride;
 
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.Tag;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -86,6 +87,14 @@ public class Extensions {
         return false;
     }
 
+    public static String english(int number, String singular, String twoOrMore) {
+        if (number == 1) {
+            return singular;
+        } else {
+            return number + " " + twoOrMore;
+        }
+    }
+
     public static void optimizeLines(ObservableList<LogicalLine> lines) {
         int lineIndex = lines.size() - 1;
         boolean permitOne = true;
@@ -100,6 +109,14 @@ public class Extensions {
                 permitOne = false;
             }
             lineIndex--;
+        }
+    }
+
+    public static boolean hasLegalExtension(File filename) {
+        if (filename.getName().contains(".robot") || (filename.getName().contains(".txt") && Settings.getInstance().cbAlsoImportTxtFiles)) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

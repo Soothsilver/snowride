@@ -138,7 +138,7 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public abstract void deleteSelf(MainForm mainForm);
 
-    protected void dissociateSelfFromChild(HighElement child) {
+    public void dissociateSelfFromChild(HighElement child) {
         this.children.remove(child);
         this.treeNode.getChildren().remove(child.treeNode);
     }

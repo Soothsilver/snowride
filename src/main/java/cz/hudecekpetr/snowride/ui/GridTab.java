@@ -3,7 +3,12 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
-import cz.hudecekpetr.snowride.tree.*;
+import cz.hudecekpetr.snowride.tree.FileSuite;
+import cz.hudecekpetr.snowride.tree.FolderSuite;
+import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.RobotFile;
+import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
@@ -17,19 +22,13 @@ import java.util.stream.Collectors;
 
 public class GridTab {
 
+    private final SnowTableView tableSettings;
+    private final SnowTableView tableVariables;
     Label lblParseError;
     SnowTableView spreadsheetView;
     SplitPane suiteView;
     private MainForm mainForm;
-    private final SnowTableView tableSettings;
-    private final SnowTableView tableVariables;
-
-    public Tab getTabGrid() {
-        return tabGrid;
-    }
-
     private Tab tabGrid;
-
 
     public GridTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -49,6 +48,10 @@ public class GridTab {
         suiteView.setOrientation(Orientation.VERTICAL);
     }
 
+    public Tab getTabGrid() {
+        return tabGrid;
+    }
+
     public Tab createTab() {
         tabGrid = new Tab("Assisted grid editing");
         tabGrid.setClosable(false);
@@ -57,7 +60,9 @@ public class GridTab {
     }
 
     public void loadElement(HighElement value) {
-        value.asSuite().reparseAndRecalculateResources();
+        if (value != null) {
+            value.asSuite().reparseAndRecalculateResources();
+        }
         if (value instanceof FolderSuite) {
             FolderSuite fsuite = (FolderSuite) value;
             if (fsuite.getInitFileParsed() != null && fsuite.getInitFileParsed().errors.size() > 0) {
@@ -77,16 +82,18 @@ public class GridTab {
             tabGrid.setContent(spreadsheetView);
         } else {
             tabGrid.setContent(lblParseError);
-            lblParseError.setText("Unknown high element.");
+            lblParseError.setText("No element is loaded.");
             tabGrid.setContent(lblParseError);
         }
     }
 
     private void loadSuiteTables(Suite fsuite) {
-        if (fsuite.fileParsed != null) {
-            tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
-            tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
+        if (fsuite.fileParsed == null) {
+            fsuite.fileParsed = new RobotFile();
         }
+        tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
+        tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
+
         tabGrid.setContent(suiteView);
     }
 

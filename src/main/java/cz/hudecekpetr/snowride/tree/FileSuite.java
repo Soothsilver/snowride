@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -32,6 +33,7 @@ public class FileSuite extends Suite implements ISuite {
             System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
+            FilesystemWatcher.getInstance().ignoreNextChangeOf(file.toPath());
             FileUtils.write(file, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
@@ -44,6 +46,7 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public void deleteSelf(MainForm mainForm) {
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(this.file.toPath());
         if (this.file.delete()) {
             this.dead = true;
             this.parent.dissociateSelfFromChild(this);
@@ -61,6 +64,8 @@ public class FileSuite extends Suite implements ISuite {
         File selfsParent = getParentAsFolder().directoryPath;
         File currentFile = this.file;
         File newFile = selfsParent.toPath().resolve(newName + ".robot").toFile();
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(currentFile.toPath());
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (currentFile.renameTo(newFile)) {
             this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.file = newFile;

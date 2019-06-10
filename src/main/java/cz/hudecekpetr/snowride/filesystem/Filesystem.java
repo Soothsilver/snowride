@@ -2,7 +2,6 @@ package cz.hudecekpetr.snowride.filesystem;
 
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
-import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.ui.MainForm;
 
 import java.io.File;
@@ -21,6 +20,7 @@ public class Filesystem {
     public void createNewFolderInTree(FolderSuite parentFolder, String newFolder) {
         Path createWhat = parentFolder.directoryPath.toPath().resolve(newFolder);
         File asFile = createWhat.toAbsolutePath().toFile();
+        FilesystemWatcher.getInstance().ignoreNextChangeOf(asFile.toPath());
         if (!asFile.mkdir()) {
             throw new RuntimeException("Failed to create the folder.");
         }

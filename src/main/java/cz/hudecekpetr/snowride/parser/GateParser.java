@@ -1,7 +1,9 @@
 package cz.hudecekpetr.snowride.parser;
 
+import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.listener.AntlrGate;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class GateParser {
     private static AntlrGate gate = new AntlrGate();
@@ -30,12 +33,11 @@ public class GateParser {
                 if (inFile.isDirectory()) {
                     FolderSuite inThing = loadDirectory(inFile, partOfOperation, perFile);
                     fileSuites.add(inThing);
-                } else if (inFile.getName().equalsIgnoreCase("__init__.robot") ||
-                           inFile.getName().equalsIgnoreCase("__init__.txt")) {
+                } else if (isInitFile(inFile)) {
                     contents = FileUtils.readFileToString(inFile, "utf-8");
                     initFile = inFile;
                     partOfOperation.success(perFile);
-                } else if (inFile.getName().toLowerCase().endsWith(".robot") || inFile.getName().toLowerCase().endsWith(".txt")) {
+                } else if (endsWithRobotExtension(inFile)) {
                     FileSuite inThing = loadFile(inFile);
                     fileSuites.add(inThing);
                     partOfOperation.success(perFile);
@@ -49,13 +51,23 @@ public class GateParser {
             for(HighElement fs : fileSuites) {
                 fs.parent = folderSuite;
             }
+            FilesystemWatcher.getInstance().startWatching(directoryPath);
             return folderSuite;
         } catch (IOException exc) {
             throw new RuntimeException(exc);
         }
     }
 
-    private FileSuite loadFile(File inFile) throws IOException {
+    private boolean endsWithRobotExtension(File inFile) {
+        return inFile.getName().toLowerCase().endsWith(".robot") || (inFile.getName().toLowerCase().endsWith(".txt") && Settings.getInstance().cbAlsoImportTxtFiles);
+    }
+
+    private boolean isInitFile(File inFile) {
+        return inFile.getName().equalsIgnoreCase("__init__.robot") ||
+                   (inFile.getName().equalsIgnoreCase("__init__.txt") && Settings.getInstance().cbAlsoImportTxtFiles);
+    }
+
+    public FileSuite loadFile(File inFile) throws IOException {
         String name = FilenameUtils.removeExtension(inFile.getName());
         String contents = FileUtils.readFileToString(inFile, "utf-8");
         return new FileSuite(inFile, name, contents);
