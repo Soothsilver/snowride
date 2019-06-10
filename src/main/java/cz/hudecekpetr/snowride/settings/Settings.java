@@ -4,7 +4,7 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +43,29 @@ public class Settings {
         return instance;
     }
 
+    public static void load() {
+        try {
+            XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
+            XStream.setupDefaultSecurity(xStream);
+            xStream.allowTypesByWildcard(new String[]{"cz.**"});
+            xStream.ignoreUnknownElements();
+            instance = (Settings) xStream.fromXML(getFile());
+            instance.correctWindowExcesses();
+        } catch (Exception exception) {
+            System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
+                    "you launch Snowride, this is fine and ignore this message.");
+            instance = new Settings();
+        }
+    }
+
+    private static File getFile() {
+        String appdata = System.getenv("APPDATA");
+        Path path = Paths.get(appdata, "Snowride");
+        File fileFolder = path.toFile();
+        fileFolder.mkdir();
+        return path.resolve("settings.xml").toFile();
+    }
+
     public void addToRecentlyOpen(String path) {
         if (lastOpenedProjects.size() > 0 && lastOpenedProjects.get(lastOpenedProjects.size() - 1).equals(path)) {
             // reloading the last one doesn't do anything
@@ -51,20 +74,6 @@ public class Settings {
         lastOpenedProjects.add(path);
         if (lastOpenedProjects.size() > 4) {
             lastOpenedProjects.remove(0);
-        }
-    }
-
-    public static void load() {
-        try {
-            XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
-            XStream.setupDefaultSecurity(xStream);
-            xStream.allowTypesByWildcard(new String[] { "cz.**" });
-            instance = (Settings) xStream.fromXML(getFile());
-            instance.correctWindowExcesses();
-        } catch (Exception exception) {
-            System.err.println("Could not load settings file " + getFile().toString() + ". If this is the first time " +
-                    "you launch Snowride, this is fine and ignore this message.");
-            instance = new Settings();
         }
     }
 
@@ -78,7 +87,7 @@ public class Settings {
     }
 
     public void save() {
-        XStream xStream = new XStream(new StaxDriver());
+        XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
         String data = xStream.toXML(this);
         File settingsFile = getFile();
         try {
@@ -88,11 +97,14 @@ public class Settings {
         }
     }
 
-    private static File getFile() {
-        String appdata = System.getenv("APPDATA");
-        Path path = Paths.get(appdata, "Snowride");
-        File fileFolder = path.toFile();
-        fileFolder.mkdir();
-        return path.resolve("settings.xml").toFile();
+    public List<File> getAdditionalFoldersAsFiles() {
+        List<File> files = new ArrayList<>();
+        String[] foldersSplit = StringUtils.split(additionalFolders, '\n');
+        for (String folder : foldersSplit) {
+            String folderPath = folder.trim();
+            File folderAsFile = new File(folderPath);
+            files.add(folderAsFile);
+        }
+        return files;
     }
 }

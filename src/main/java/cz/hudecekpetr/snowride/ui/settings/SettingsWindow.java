@@ -14,6 +14,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -31,6 +32,8 @@ public class SettingsWindow extends Stage {
         this.mainForm = mainForm;
         Tab tabImporting = createTabImporting();
         TabPane tabs = new TabPane(tabImporting);
+        Button buttonSuperOK = new Button("Apply, close, and reload project", new ImageView(Images.refresh));
+        buttonSuperOK.setOnAction(this::applyCloseAndRefresh);
         Button buttonOK = new Button("Apply and close");
         buttonOK.setOnAction(this::applyAndClose);
         Button buttonCancel = new Button("Cancel");
@@ -40,7 +43,7 @@ public class SettingsWindow extends Stage {
                  SettingsWindow.this.close();
             }
         });
-        HBox buttonRow = new HBox(5, buttonOK, buttonCancel);
+        HBox buttonRow = new HBox(5, buttonSuperOK, buttonOK, buttonCancel);
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
         VBox all = new VBox(5, tabs, buttonRow);
         VBox.setVgrow(tabs, Priority.ALWAYS);
@@ -48,6 +51,14 @@ public class SettingsWindow extends Stage {
         this.setScene(new Scene(all, 500, 600));
         this.getIcons().add(Images.keywordIcon);
         this.setTitle("Settings");
+    }
+
+    private void applyCloseAndRefresh(ActionEvent actionEvent) {
+        Settings.getInstance().additionalFolders = additionalXmlFilesBox.getText();
+        Settings.getInstance().cbAlsoImportTxtFiles = cbAlsoImportTxtFiles.isSelected();
+        Settings.getInstance().save();
+        this.close();
+        mainForm.reloadAll(actionEvent);
     }
 
     private Tab createTabImporting() {

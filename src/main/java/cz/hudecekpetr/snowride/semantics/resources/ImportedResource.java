@@ -7,35 +7,18 @@ import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.ui.MainForm;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
 public class ImportedResource {
-    public String getName() {
-        return name;
-    }
-
-    public ImportedResourceKind getKind() {
-        return kind;
-    }
-
+    private static long indexOfIteration = 0;
     private final String name;
     private final ImportedResourceKind kind;
     private boolean successfullyImported = false;
-
-    public boolean isSuccessfullyImported() {
-        return successfullyImported;
-    }
-
-    public Suite getImportsSuite() {
-        return importsSuite;
-    }
-
     private Suite importsSuite = null;
-
-    private static long indexOfIteration = 0;
 
     public ImportedResource(String name, ImportedResourceKind kind) {
         this.name = name;
@@ -44,6 +27,22 @@ public class ImportedResource {
 
     public static long incrementAndGetIterationCount() {
         return ++indexOfIteration;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public ImportedResourceKind getKind() {
+        return kind;
+    }
+
+    public boolean isSuccessfullyImported() {
+        return successfullyImported;
+    }
+
+    public Suite getImportsSuite() {
+        return importsSuite;
     }
 
     public void gatherSelfInto(Set<KeywordSource> gatherIntoThis, Suite owningSuite, long iterationCounter) {
@@ -69,13 +68,16 @@ public class ImportedResource {
                 if (suite instanceof FileSuite) {
                     suite = suite.parent;
                 }
-                outerFor: for (Path section : path) {
+                boolean isFirstSection = true;
+                outerFor:
+                for (Path section : path) {
                     String sectionString = Extensions.toInvariant(section.toString());
                     if (sectionString.equals(".")) {
+                        isFirstSection = false;
                         continue;
-                    }
-                    else if (sectionString.equals("..")) {
+                    } else if (sectionString.equals("..")) {
                         suite = suite.parent;
+                        isFirstSection = false;
                         if (suite == null) {
                             // we're getting out of the tree
                             importsSuite = null;
@@ -85,20 +87,32 @@ public class ImportedResource {
                             //throw new ImportException("Snowride cannot import resource files from outside the root folder.");
                         }
                         continue;
-                    }
-                    else {
+                    } else {
                         for (HighElement child : suite.children) {
-                            if (Extensions.toInvariant(child.getShortName()).equals(sectionString)) {
+                            MatchStatus matchStatus = getMatchStatus(child.getShortName(), sectionString);
+                            if (matchStatus == MatchStatus.MATCHES_AND_IS_DIRECTORY) {
                                 suite = child;
+                                isFirstSection = false;
                                 continue outerFor;
-                            }
-                            if (Extensions.toInvariant(child.getShortName() + ".robot").equals(sectionString)) {
+                            } else if (matchStatus == MatchStatus.MATCHES_AND_IS_FILE) {
                                 suite = child;
                                 break outerFor;
                             }
-                            if (Extensions.toInvariant(child.getShortName() + ".txt").equals(sectionString) && Settings.getInstance().cbAlsoImportTxtFiles) {
-                                suite = child;
-                                break outerFor;
+                        }
+
+                        if (isFirstSection) {
+                            for (HighElement importedResourceFolder : MainForm.INSTANCE.getExternalResourcesElement().children) {
+                                for (HighElement child : importedResourceFolder.children) {
+                                    MatchStatus matchStatus = getMatchStatus(child.getShortName(), sectionString);
+                                    if (matchStatus == MatchStatus.MATCHES_AND_IS_DIRECTORY) {
+                                        suite = child;
+                                        isFirstSection = false;
+                                        continue outerFor;
+                                    } else if (matchStatus == MatchStatus.MATCHES_AND_IS_FILE) {
+                                        suite = child;
+                                        break outerFor;
+                                    }
+                                }
                             }
                         }
                     }
@@ -108,7 +122,7 @@ public class ImportedResource {
                     // throw new ImportException("Path '" + path + "' doesn't lead to a resource file because '" + section.toString() + "' is not a suite.");
                 }
                 if (suite instanceof Suite) {
-                    Suite asSuite = (Suite)suite;
+                    Suite asSuite = (Suite) suite;
                     gatherIntoThis.add(new ResourceFileKeywordSource(asSuite));
                     successfullyImported = true;
                     importsSuite = asSuite;
@@ -131,5 +145,24 @@ public class ImportedResource {
                 // not yet supported
                 throw new ImportException("You can only import resources or libraries with Snowride. This error cannot happen.");
         }
+    }
+
+    private MatchStatus getMatchStatus(String shortName, String sectionString) {
+        if (Extensions.toInvariant(shortName).equals(sectionString)) {
+            return MatchStatus.MATCHES_AND_IS_DIRECTORY;
+        }
+        if (Extensions.toInvariant(shortName + ".robot").equals(sectionString)) {
+            return MatchStatus.MATCHES_AND_IS_FILE;
+        }
+        if (Extensions.toInvariant(shortName + ".txt").equals(sectionString) && Settings.getInstance().cbAlsoImportTxtFiles) {
+            return MatchStatus.MATCHES_AND_IS_FILE;
+        }
+        return MatchStatus.NO_MATCH;
+    }
+
+    enum MatchStatus {
+        MATCHES_AND_IS_FILE,
+        MATCHES_AND_IS_DIRECTORY,
+        NO_MATCH
     }
 }

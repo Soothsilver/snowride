@@ -24,11 +24,11 @@ public class SearchSuites {
         HighElement root = mainForm.getProjectTree().getRoot().getValue();
         List<HighElement> validElements = new ArrayList<>();
         root.childrenRecursively.forEach((highElement -> {
-            if (highElement.getInvariantName().contains(requestText)) {
+            if (highElement.getInvariantName().contains(requestText) && !highElement.getInvariantName().isEmpty()) {
                 validElements.add(highElement);
             }
         }));
-        if (root.getInvariantName().contains(requestText)) {
+        if (!root.getInvariantName().isEmpty() && root.getInvariantName().contains(requestText)) {
             validElements.add(root);
         }
         validElements.sort(new Comparator<HighElement>() {

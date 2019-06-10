@@ -4,10 +4,12 @@ import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.listener.AntlrGate;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.ExternalResourcesElement;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
+import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.LongRunningOperation;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -75,5 +77,16 @@ public class GateParser {
 
     public static RobotFile parse(String contents) {
         return gate.parse(contents);
+    }
+
+    public ExternalResourcesElement createExternalResourcesElement(List<File> additionalFoldersAsFiles, LongRunningOperation operation, double progressPart) {
+        List<HighElement> suites = new ArrayList<>();
+        for (File file : additionalFoldersAsFiles) {
+            FolderSuite newSuite = loadDirectory(file, operation, progressPart / additionalFoldersAsFiles.size());
+            suites.add(newSuite);
+        }
+
+        ExternalResourcesElement externalResourcesElement = new ExternalResourcesElement(suites);
+        return externalResourcesElement;
     }
 }

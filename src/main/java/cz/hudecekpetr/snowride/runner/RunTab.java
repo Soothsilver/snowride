@@ -457,7 +457,7 @@ public class RunTab {
         }
         String[] args = StringUtils.splitByWholeSeparator(this.tbArguments.getText(), " ");
         result.addAll(Arrays.asList(args));
-        result.add(((FolderSuite) mainForm.getProjectTree().getRoot().getValue()).directoryPath.toString());
+        result.add(mainForm.getRootDirectoryElement().directoryPath.toString());
         return result;
     }
 

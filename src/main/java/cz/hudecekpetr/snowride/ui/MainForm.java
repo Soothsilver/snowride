@@ -8,12 +8,14 @@ import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.ExternalResourcesElement;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.ISuite;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.UltimateRoot;
 import cz.hudecekpetr.snowride.ui.about.AboutChangelog;
 import cz.hudecekpetr.snowride.ui.about.AboutKeyboardShortcuts;
 import cz.hudecekpetr.snowride.ui.about.AboutSnowride;
@@ -68,6 +70,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -190,8 +193,8 @@ public class MainForm {
     /**
      * Gets the folder suite that's the root of the project.
      */
-    public HighElement getRootElement() {
-        return getProjectTree().getRoot().getValue();
+    public UltimateRoot getRootElement() {
+        return (UltimateRoot) getProjectTree().getRoot().getValue();
     }
 
     public TreeView<HighElement> getProjectTree() {
@@ -245,6 +248,7 @@ public class MainForm {
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<HighElement>();
         projectTree.setFixedCellSize(16);
+        projectTree.setShowRoot(false);
         projectTree.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -513,7 +517,7 @@ public class MainForm {
         return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop, bReloadAll);
     }
 
-    private void reloadAll(ActionEvent actionEvent) {
+    public void reloadAll(ActionEvent actionEvent) {
         loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
     }
 
@@ -537,7 +541,9 @@ public class MainForm {
         gridTab.loadElement(element);
         serializingTab.loadElement(element);
         switchingTextEditContents = false;
-        tabs.getSelectionModel().select(gridTab.getTabGrid());
+        if (element != null) {
+            tabs.getSelectionModel().select(gridTab.getTabGrid());
+        }
     }
 
     public void saveAll(ActionEvent event) {
@@ -622,14 +628,14 @@ public class MainForm {
                 aboutSnowride.show();
             }
         });
-        MenuItem robotFrameworkUserGuide = new MenuItem("Navigate to Robot Framework User Guide");
+        MenuItem robotFrameworkUserGuide = new MenuItem("Navigate to Robot Framework User Guide", loadIcon(Images.internet));
         robotFrameworkUserGuide.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 navigateToWebsite("http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html");
             }
         });
-        MenuItem robotFrameworkLibrariesDocumentation = new MenuItem("Navigate to Robot Framework libraries documentation");
+        MenuItem robotFrameworkLibrariesDocumentation = new MenuItem("Navigate to Robot Framework libraries documentation", loadIcon(Images.internet));
         robotFrameworkLibrariesDocumentation.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -717,8 +723,13 @@ public class MainForm {
             try {
                 FilesystemWatcher.getInstance().forgetEverything();
                 File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
-                FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 1);
-                folderSuite.selfAndDescendantHighElements().forEachOrdered(he -> {
+                FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 0.8);
+
+                List<HighElement> twoChildren = new ArrayList<>();
+                List<File> additionalFiles = Settings.getInstance().getAdditionalFoldersAsFiles();
+                ExternalResourcesElement externalResources = gateParser.createExternalResourcesElement(additionalFiles, projectLoad,0.2);
+                UltimateRoot ultimateRoot = new UltimateRoot(folderSuite, externalResources);
+                ultimateRoot.selfAndDescendantHighElements().forEachOrdered(he -> {
                     if (he instanceof Suite) {
                         ((Suite) he).analyzeSemantics();
                     }
@@ -728,7 +739,7 @@ public class MainForm {
                     navigationStack.clear();
                     reloadElementIntoTabs(null);
                     humanInControl = false;
-                    projectTree.setRoot(folderSuite.treeNode);
+                    projectTree.setRoot(ultimateRoot.treeNode);
                     tbSearchTests.requestFocus();
                     projectTree.getSelectionModel().select(0);
                     projectTree.getFocusModel().focus(0);
@@ -811,5 +822,13 @@ public class MainForm {
             }
             humanInControl = true;
         });
+    }
+
+    public FolderSuite getRootDirectoryElement() {
+        return getRootElement().getRootDirectory();
+    }
+
+    public ExternalResourcesElement getExternalResourcesElement() {
+        return getRootElement().getExternalResourcesElement();
     }
 }

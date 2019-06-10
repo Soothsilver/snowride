@@ -27,9 +27,14 @@ public class Images {
     public static Image warning = staticImage("warning16.png");
     public static Image refresh = staticImage("refresh16.png");
     public static Image error = staticImage("error16.png");
+    public static Image internet = staticImage("internet16.png");
     public static Image snowflake = new Image(Images.class.getResourceAsStream("/icons/Snowflake3.png"));
 
     private static Image staticImage(final String filename) {
-        return new Image(Images.class.getResourceAsStream("/icons/" + filename), 16, 16, false, false);
+        try {
+            return new Image(Images.class.getResourceAsStream("/icons/" + filename), 16, 16, false, false);
+        } catch (Exception e) {
+            throw new RuntimeException("The file '/icons/" + filename + "' could not be loaded from bundled resources.", e);
+        }
     }
 }

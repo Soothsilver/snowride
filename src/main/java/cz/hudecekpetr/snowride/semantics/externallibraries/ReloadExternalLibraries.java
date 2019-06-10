@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,14 +33,10 @@ public class ReloadExternalLibraries {
     }
 
     public static void reload(Runnable callbackOnUIThread) {
-        String folders = Settings.getInstance().additionalFolders;
+        List<File> folders = Settings.getInstance().getAdditionalFoldersAsFiles();
         executor.submit(() -> {
             try {
-                String[] foldersSplit = StringUtils.split(folders, '\n');
-                for (String folder : foldersSplit) {
-                    String folderPath = folder.trim();
-                    File folderAsFile = new File(folderPath);
-
+                for (File folderAsFile : folders) {
                     // XML libraries
                     File[] xmlFiles = folderAsFile.listFiles((file) -> file.getName().endsWith(".xml"));
                     for (File xmlFile : xmlFiles) {
