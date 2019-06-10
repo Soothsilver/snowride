@@ -27,6 +27,11 @@ import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Skin<AutoCompletePopup<T>> {
     private final AutoCompletePopup<T> control;
+
+    public ListView<T> getSuggestionList() {
+        return suggestionList;
+    }
+
     private final ListView<T> suggestionList;
     final int LIST_CELL_HEIGHT = 24;
     private int suppressUpTo = 0;
@@ -75,9 +80,9 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
                 if (MainForm.documentationPopup.getOwnerWindow() != parent) {
                     MainForm.documentationPopup.hide();
                 }
-                MainForm.documentationPopup.show(parent,
+                MainForm.documentationPopup.showRightIfPossible(parent,
                         parent.getX() + suggestionList.localToScene(0.0D, 0.0D).getX() +
-                                suggestionList.getScene().getX() + suggestionList.getWidth(),
+                                suggestionList.getScene().getX(), suggestionList.getWidth(),
                         parent.getY() + suggestionList.localToScene(0.0D, 0.0D).getY() +
                                 suggestionList.getScene().getY() + suggestionList.getSelectionModel().getSelectedIndex() * 24);
             }
