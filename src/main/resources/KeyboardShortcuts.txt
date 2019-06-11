@@ -8,3 +8,5 @@ Ctrl+A: Append row below selected cell
 Ctrl+/: Comment line out
 Ctrl+Shift+/: Uncomment line
 Ctrl+Q, F1: Show quick documentation for selected cell
+Ctrl+Z: Undo (you must have a table focused)
+Ctrl+Y: Redo

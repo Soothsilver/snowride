@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -76,6 +77,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     @Override
     public void commitEdit(Cell newValue) {
+        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
         super.commitEdit(newValue);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
             ((Suite) snowTableView.getScenario()).reparseResources();

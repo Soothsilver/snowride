@@ -7,6 +7,7 @@ import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.undo.UndoStack;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -41,6 +42,7 @@ public abstract class HighElement implements IAutocompleteOption {
     protected String semanticsDocumentation;
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
     private String invariantName;
+    private UndoStack undoStack = new UndoStack();
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
         HBox graphic = new HBox();
@@ -169,5 +171,9 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public String getInvariantName() {
         return invariantName;
+    }
+
+    public UndoStack getUndoStack() {
+        return undoStack;
     }
 }

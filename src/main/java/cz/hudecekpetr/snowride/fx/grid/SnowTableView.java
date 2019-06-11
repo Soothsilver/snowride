@@ -12,6 +12,9 @@ import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.undo.AddRowOperation;
+import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
+import cz.hudecekpetr.snowride.undo.MassOperation;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -126,6 +129,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
             }
             this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
+            this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, () -> createNewLine()));
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             // Append
@@ -136,7 +140,12 @@ public class SnowTableView extends TableView<LogicalLine> {
                 column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
             }
             this.getSelectionModel().clearAndSelect(whatFocused + 1, getVisibleLeafColumn(column));
+            this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused + 1, () -> createNewLine()));
             keyEvent.consume();
+        } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
+            getScenario().getUndoStack().undoIfAble();
+        } else if (keyEvent.getCode() == KeyCode.Y && keyEvent.isControlDown()) {
+            getScenario().getUndoStack().redoIfAble();
         } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.triggerAutocompletionNext = true;
@@ -144,10 +153,15 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.triggerAutocompletionNext = false;
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
-            this.getSelectionModel().getSelectedCells().forEach(tablePosition -> {
+            List<ChangeTextOperation> coordinates = new ArrayList<>();
+            for (TablePosition tablePosition : this.getSelectionModel().getSelectedCells()) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
+                coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
                 cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
-            });
+            }
+            if (coordinates.size() > 0) {
+                getScenario().getUndoStack().iJustDid(new MassOperation(coordinates));
+            }
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
             cutOrCopy(false);
@@ -202,6 +216,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
         String[] lines = StringUtils.split(clipboardData, '\n');
         int atRow = startingPosition.getRow();
+        List<ChangeTextOperation> operations = new ArrayList<>();
         for (String line : lines) {
             // Create lines if there's not enough of them:
             if (this.getItems().size() <= atRow) {
@@ -212,13 +227,24 @@ public class SnowTableView extends TableView<LogicalLine> {
             for (int xi = 0; xi < cellSplit.length; xi++) {
                 int x = atColumn + xi;
                 int y = atRow;
-                getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm).set(
-                        new Cell(cellSplit[xi].trim(), "    ", getItems().get(y)));
-
+                SimpleObjectProperty<Cell> replacedCell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
+                operations.add(new ChangeTextOperation(getItems(), replacedCell.getValue().contents, cellSplit[xi].trim(),  y, tableXToLogicalX(x)));
+                replacedCell.set(new Cell(cellSplit[xi].trim(), "    ", getItems().get(y)));
             }
             atRow++;
         }
+        if (operations.size() > 0) {
+            getScenario().getUndoStack().iJustDid(new MassOperation(operations));
+        }
         // t
+    }
+
+    private int tableXToLogicalX(int tableX) {
+        if (snowTableKind == SnowTableKind.SCENARIO) {
+            return tableX;
+        } else {
+            return tableX - 1;
+        }
     }
 
     private void cutOrCopy(boolean alsoCut) {
@@ -241,12 +267,16 @@ public class SnowTableView extends TableView<LogicalLine> {
             }
         }
         StringBuilder clipboardContents = new StringBuilder();
+
+        List<ChangeTextOperation> coordinates = new ArrayList<>();
         for (int y = minY; y <= maxY; y++) {
             for (int x = minX; x <= maxX; x++) {
                 SimpleObjectProperty<Cell> cell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
                 clipboardContents.append(cell.getValue().contents);
                 if (alsoCut) {
+                    coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", y, tableXToLogicalX(x)));
                     cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+
                 }
                 if (x != maxX) {
                     clipboardContents.append("\t");
@@ -258,6 +288,9 @@ public class SnowTableView extends TableView<LogicalLine> {
             }
         }
         TableClipboard.store(clipboardContents.toString());
+        if (coordinates.size() > 0) {
+            getScenario().getUndoStack().iJustDid(new MassOperation(coordinates));
+        }
     }
 
     private LogicalLine createNewLine() {
