@@ -32,7 +32,6 @@ public class KeyValuePairSection extends RobotSection {
             }
         }
         header.serializeInto(sb);
-        optimizeStructure();
         for (LogicalLine line : pairs) {
             line.serializeInto(sb);
         }

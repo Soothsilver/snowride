@@ -70,7 +70,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,12 +90,13 @@ public class MainForm {
     private final NotificationPane notificationPane;
     public BooleanProperty canSave = new SimpleBooleanProperty(false);
     public RunTab runTab;
+    public GateParser gateParser = new GateParser();
+    public NavigationStack navigationStack = new NavigationStack();
+    public LongRunningOperation projectLoad = new LongRunningOperation();
     boolean switchingTextEditContents = false;
     boolean humanInControl = true;
     BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
     BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
-    public GateParser gateParser = new GateParser();
-    public NavigationStack navigationStack = new NavigationStack();
     private Stage stage;
     private TreeView<HighElement> projectTree;
     private SearchSuites searchSuitesAutoCompletion;
@@ -108,7 +108,6 @@ public class MainForm {
     private TextField tbSearchTests;
     private ContextMenu treeContextMenu;
     private GridTab gridTab;
-    public LongRunningOperation projectLoad = new LongRunningOperation();
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;
@@ -140,7 +139,10 @@ public class MainForm {
         VBox searchableTree = createLeftPane();
         errorsTab = new ErrorsTab(this);
         Tab tabErrors = errorsTab.tab;
-        tabs = new TabPane(tabTextEdit, tabGrid, tabRun, tabSerializing, tabErrors);
+        tabs = new TabPane(tabTextEdit, tabGrid, tabRun,
+                // Serializing is now mostly stable, so we don't need the debugging tab:
+                //  tabSerializing,
+                tabErrors);
         tabs.getSelectionModel().select(tabGrid);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
@@ -416,32 +418,41 @@ public class MainForm {
             });
             menu.add(deselect_all_tests);
         }
-        maybeAddSeparator(menu);
-        MenuItem rename = new MenuItem("Rename");
-        rename.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
-                if (newName != null) {
-                    element.renameSelfTo(newName, MainForm.this);
+        if (element != getRootElement() && element.parent != getRootElement()
+                && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
+            maybeAddSeparator(menu);
+            // Everything except for root directories and the two special elements can be deleted or renamed
+            MenuItem rename = new MenuItem("Rename");
+            rename.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
+                    if (newName != null) {
+                        element.renameSelfTo(newName, MainForm.this);
+                    }
                 }
-            }
-        });
-        menu.add(rename);
-        MenuItem delete = new MenuItem("Delete");
-        delete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                ButtonType deleteAnswer = new ButtonType("Delete");
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
-                        deleteAnswer,
-                        ButtonType.NO);
-                if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
-                    delete(element);
+            });
+            menu.add(rename);
+            MenuItem delete = new MenuItem("Delete");
+            delete.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    ButtonType deleteAnswer = new ButtonType("Delete");
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
+                            deleteAnswer,
+                            ButtonType.NO);
+                    if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
+                        delete(element);
+                    }
                 }
-            }
-        });
-        menu.add(delete);
+            });
+            menu.add(delete);
+        }
+        if (menu.size() == 0) {
+            MenuItem menuItemNothing = new MenuItem("(you can't do anything with this tree node)");
+            menuItemNothing.setDisable(true);
+            menu.add(menuItemNothing);
+        }
         return menu;
     }
 
@@ -537,12 +548,16 @@ public class MainForm {
     }
 
     public void reloadElementIntoTabs(HighElement element) {
+        reloadElementIntoTabs(element, true);
+    }
+
+    public void reloadElementIntoTabs(HighElement element, boolean andSwitchToGrid) {
         switchingTextEditContents = true;
         textEditTab.loadElement(element);
         gridTab.loadElement(element);
         serializingTab.loadElement(element);
         switchingTextEditContents = false;
-        if (element != null) {
+        if (element != null && andSwitchToGrid) {
             tabs.getSelectionModel().select(gridTab.getTabGrid());
         }
     }
@@ -728,7 +743,7 @@ public class MainForm {
 
                 List<HighElement> twoChildren = new ArrayList<>();
                 List<File> additionalFiles = Settings.getInstance().getAdditionalFoldersAsFiles();
-                ExternalResourcesElement externalResources = gateParser.createExternalResourcesElement(additionalFiles, projectLoad,0.2);
+                ExternalResourcesElement externalResources = gateParser.createExternalResourcesElement(additionalFiles, projectLoad, 0.2);
                 UltimateRoot ultimateRoot = new UltimateRoot(folderSuite, externalResources);
                 ultimateRoot.selfAndDescendantHighElements().forEachOrdered(he -> {
                     if (he instanceof Suite) {
@@ -817,10 +832,8 @@ public class MainForm {
     public void reloadExternalLibraries() {
         ReloadExternalLibraries.reload(() -> {
             humanInControl = false;
-            if (getFocusedElement() != null) {
-                // Reload current thing
-                focusTreeNode(getFocusedElement().treeNode);
-            }
+            // Reload current thing
+            reloadElementIntoTabs(getFocusedElement(), false);
             humanInControl = true;
         });
     }

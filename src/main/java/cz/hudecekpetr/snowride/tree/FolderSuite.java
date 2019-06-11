@@ -47,8 +47,9 @@ public class FolderSuite extends Suite implements ISuite {
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.getShortName());
-            FileUtils.write(initFile, contents, "utf-8");
             FilesystemWatcher.getInstance().ignoreNextChangeOf(directoryPath.toPath());
+            FilesystemWatcher.getInstance().ignoreNextChangeOf(initFile.toPath());
+            FileUtils.write(initFile, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 if (child instanceof Scenario) {
@@ -68,6 +69,8 @@ public class FolderSuite extends Suite implements ISuite {
                 if (!initFile.createNewFile()) {
                     throw new RuntimeException("Could not create __init__.robot");
                 }
+            }
+            if (fileParsed == null) {
                 fileParsed = new RobotFile();
             }
         } catch (IOException e) {
@@ -173,19 +176,11 @@ public class FolderSuite extends Suite implements ISuite {
             throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
         }
         Scenario newKeyword = new Scenario(new Cell(name, "", null), false, new ArrayList<>());
+        newKeyword.parent = this;
         this.fileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);
         this.children.add(newKeyword);
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
         mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
-    }
-
-    public void replaceChildWithAnotherChild(HighElement oldElement, Suite newElement) {
-        int indexOld = children.indexOf(oldElement);
-        int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
-        dissociateSelfFromChild(oldElement);
-        newElement.parent = this;
-        children.add(indexOld, newElement);
-        treeNode.getChildren().add(indexTreeOld, newElement.treeNode);
     }
 }

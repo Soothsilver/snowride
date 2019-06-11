@@ -14,6 +14,8 @@ public class UltimateRoot extends Suite {
     public UltimateRoot(FolderSuite rootDirectory, ExternalResourcesElement externalResourcesElement) {
         super("Ultimate root element", null, Lists.newArrayList(rootDirectory, externalResourcesElement));
         this.imageView.setImage(Images.internet);
+        rootDirectory.parent = this;
+        externalResourcesElement.parent = this;
     }
 
     @Override

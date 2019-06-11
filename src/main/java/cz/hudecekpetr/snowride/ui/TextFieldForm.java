@@ -128,6 +128,7 @@ public class TextFieldForm extends Dialog<String> {
         grid.add(label, 0, 0);
         grid.add(textField, 1, 0);
         getDialogPane().setContent(grid);
+        grid.setMinWidth(500);
 
         Platform.runLater(() -> textField.requestFocus());
     }

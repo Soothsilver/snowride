@@ -20,6 +20,7 @@ public class ErrorsTab {
 
     public ErrorsTab(MainForm mainForm) {
         tableErrors = new TableView<>();
+        tableErrors.setPlaceholder(new Label("Snowride detects no parse errors in this project."));
         TableColumn<SnowrideError, HighElement> locationColumn = new TableColumn<>("Location");
         locationColumn.setCellValueFactory(param -> param.getValue().where);
         locationColumn.setPrefWidth(150);

@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.fx.grid;
 
+import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -16,12 +17,21 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.scene.control.*;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Skin;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
+import javafx.scene.control.TableView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
@@ -46,12 +56,18 @@ public class SnowTableView extends TableView<LogicalLine> {
                 header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
             }
         });
-        addColumn(-1);
-        this.getColumns().get(0).setText("Row");
-        this.getColumns().get(0).setPrefWidth(30);
-        this.getColumns().get(0).setStyle("-fx-alignment: center;");
+        TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
+        rowColumn.setText("Row");
+        rowColumn.setPrefWidth(30);
+        rowColumn.setStyle("-fx-alignment: center;");
+        this.getColumns().add(rowColumn);
         this.setOnKeyPressed(this::onKeyPressed);
         this.setOnMouseClicked(this::onMouseClicked);
+    }
+
+    @Override
+    protected Skin<?> createDefaultSkin() {
+        return new PrecursorTableViewSkin<>(this);
     }
 
     private void onMouseClicked(MouseEvent mouseEvent) {
@@ -82,6 +98,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
         return cellSimpleObjectProperty.getValue();
     }
+
     private Cell getFocusedCellInSettingsTable() {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
         int colIndex = focusedCell.getColumn() - 1;
@@ -104,12 +121,21 @@ public class SnowTableView extends TableView<LogicalLine> {
             // Insert
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused, createNewLine());
-            this.getFocusModel().focusAboveCell();
+            int column = 1;
+            if (this.getSelectionModel().getSelectedCells().size() > 0) {
+                column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
+            }
+            this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
+            keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             // Append
             int whatFocused = this.getFocusModel().getFocusedIndex();
             this.getItems().add(whatFocused + 1, createNewLine());
-            this.getFocusModel().focusBelowCell();
+            int column = 1;
+            if (this.getSelectionModel().getSelectedCells().size() > 0) {
+                column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
+            }
+            this.getSelectionModel().clearAndSelect(whatFocused + 1, getVisibleLeafColumn(column));
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
@@ -124,17 +150,14 @@ public class SnowTableView extends TableView<LogicalLine> {
             });
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
-            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
-            TableClipboard.store(cell.getValue().contents);
+            cutOrCopy(false);
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
-            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
-            TableClipboard.store(cell.getValue().contents);
-            cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+            cutOrCopy(true);
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
-            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
-            cell.set(new Cell(Clipboard.getSystemClipboard().getString(), cell.getValue().postTrivia, cell.getValue().partOfLine));
+            TablePosition<LogicalLine, Cell> focusedTablePosition = getFocusedTablePosition();
+            pasteStartingAt(focusedTablePosition);
             keyEvent.consume();
         } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isControlDown()) {
             SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
@@ -172,6 +195,71 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
+    private void pasteStartingAt(TablePosition<LogicalLine, Cell> startingPosition) {
+        String clipboardData = Clipboard.getSystemClipboard().getString();
+        if (clipboardData == null) {
+            return;
+        }
+        String[] lines = StringUtils.split(clipboardData, '\n');
+        int atRow = startingPosition.getRow();
+        for (String line : lines) {
+            // Create lines if there's not enough of them:
+            if (this.getItems().size() <= atRow) {
+                this.getItems().add(createNewLine());
+            }
+            String[] cellSplit = StringUtils.split(line, '\t');
+            int atColumn = startingPosition.getColumn();
+            for (int xi = 0; xi < cellSplit.length; xi++) {
+                int x = atColumn + xi;
+                int y = atRow;
+                getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm).set(
+                        new Cell(cellSplit[xi].trim(), "    ", getItems().get(y)));
+
+            }
+            atRow++;
+        }
+        // t
+    }
+
+    private void cutOrCopy(boolean alsoCut) {
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        for (TablePosition tp : getSelectionModel().getSelectedCells()) {
+            if (tp.getRow() < minY) {
+                minY = tp.getRow();
+            }
+            if (tp.getRow() > maxY) {
+                maxY = tp.getRow();
+            }
+            if (tp.getColumn() < minX) {
+                minX = tp.getColumn();
+            }
+            if (tp.getColumn() > maxX) {
+                maxX = tp.getColumn();
+            }
+        }
+        StringBuilder clipboardContents = new StringBuilder();
+        for (int y = minY; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                SimpleObjectProperty<Cell> cell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
+                clipboardContents.append(cell.getValue().contents);
+                if (alsoCut) {
+                    cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+                }
+                if (x != maxX) {
+                    clipboardContents.append("\t");
+                }
+            }
+            if (y != maxY) {
+                clipboardContents.append("\n"); // Single newline only: this is important because JavaFX or Windows automatically replaces "\n"
+                // and "\r" in clipboard with \r\n so "\r\n" translates to "\r\n\r\n".
+            }
+        }
+        TableClipboard.store(clipboardContents.toString());
+    }
+
     private LogicalLine createNewLine() {
         LogicalLine newLine = new LogicalLine();
         newLine.belongsToHighElement = scenario;
@@ -181,7 +269,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         return newLine;
     }
 
-    private void addColumn(int cellIndex) {
+    private TableColumn<LogicalLine, Cell> createColumn(int cellIndex) {
         TableColumn<LogicalLine, Cell> column = new TableColumn<>();
         column.setSortable(false);
         column.setMinWidth(40);
@@ -205,7 +293,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 }
             }
         });
-        this.getColumns().add(column);
+        return column;
     }
 
     public void loadLines(HighElement highElement, ObservableList<LogicalLine> lines) {
@@ -224,20 +312,22 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (this.getColumns().size() > columnCount) {
             this.getColumns().remove(columnCount, this.getColumns().size());
         } else {
-            // TODO performance bottleneck in adding columns
-            while (this.getColumns().size() < columnCount) {
+            int numberOfColumnsToAdd = columnCount - this.getColumns().size();
+            List<TableColumn<LogicalLine, Cell>> newColumns = new ArrayList<>(numberOfColumnsToAdd);
+            for (int i = this.getColumns().size(); i < columnCount; i++) {
                 if (snowTableKind.isScenario()) {
-                    addColumn(this.getColumns().size()); // start at cell 1, not 0 (0 is blank for test cases and keywords)
+                    newColumns.add(createColumn(i)); // start at cell 1, not 0 (0 is blank for test cases and keywords)
                 } else {
-                    addColumn(this.getColumns().size() - 1);
+                    newColumns.add(createColumn(i - 1));
                 }
             }
+            this.getColumns().addAll(newColumns);
         }
         this.considerAddingVirtualRowsAndColumns();
     }
 
     private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition position) {
-        return this.getItems().get(position.getRow()).getCellAsStringProperty(position.getColumn(), mainForm);
+        return this.getItems().get(position.getRow()).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? position.getColumn() : position.getColumn() - 1, mainForm);
     }
 
 

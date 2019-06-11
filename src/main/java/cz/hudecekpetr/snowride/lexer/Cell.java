@@ -59,7 +59,7 @@ public class Cell implements IHasQuickDocumentation {
 
     public void updateStyle(int cellIndex) {
         leadsToSuite = null;
-        String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
+        String style = "";//-fx-padding: 0; -fx-background-insets: 0.0; ";
         if (isLineNumberCell) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
         } else {
@@ -128,6 +128,8 @@ public class Cell implements IHasQuickDocumentation {
             case FORBIDDEN:
                 if (!isComment && !StringUtils.isBlank(contents)) {
                     style += "-fx-background-color: #ff7291; ";
+                } else {
+                    style += "-fx-background-color: #c0c0c0; ";
                 }
                 break;
             case VARARG:

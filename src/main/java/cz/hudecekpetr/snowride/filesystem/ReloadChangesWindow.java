@@ -82,7 +82,7 @@ public class ReloadChangesWindow extends Stage {
                     mainForm.selectProgrammatically(mainForm.getProjectTree().getRoot().getValue());
                 }
             });
-            FolderSuite remainingParent = (FolderSuite) rl.parent;
+            Suite remainingParent = rl.parent;
             Suite newElement = null;
             if (rl instanceof FolderSuite) {
                 newElement = mainForm.gateParser.loadDirectory(((FolderSuite) rl).directoryPath, mainForm.projectLoad, progressPerFile);

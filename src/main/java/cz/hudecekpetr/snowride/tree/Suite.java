@@ -193,4 +193,15 @@ public abstract class Suite extends HighElement {
     public final Suite asSuite() {
         return this;
     }
+
+
+
+    public void replaceChildWithAnotherChild(HighElement oldElement, Suite newElement) {
+        int indexOld = children.indexOf(oldElement);
+        int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
+        dissociateSelfFromChild(oldElement);
+        newElement.parent = this;
+        children.add(indexOld, newElement);
+        treeNode.getChildren().add(indexTreeOld, newElement.treeNode);
+    }
 }

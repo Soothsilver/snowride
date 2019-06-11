@@ -37,6 +37,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.snowTableView = snowTableView;
         this.setPadding(new Insets(0));
         if (cellIndex < 0) {
+            // Only the "Row" column has cells with 'cellIndex" less than 0 (it's -1).
             this.setEditable(false);
         }
     }
