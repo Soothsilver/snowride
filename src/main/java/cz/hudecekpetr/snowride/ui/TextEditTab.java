@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -102,6 +103,11 @@ public class TextEditTab {
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
             mainForm.selectProgrammatically(lastLoaded.parent);
+            Platform.runLater(() -> {
+                if (mainForm.getTabs().getSelectionModel().getSelectedItem() != this.tabTextEdit) {
+                    mainForm.getTabs().getSelectionModel().select(this.tabTextEdit);
+                }
+            });
         }
         if (newValue == this.tabTextEdit) {
             TreeItem<HighElement> focusedItem = mainForm.getProjectTree().getFocusModel().getFocusedItem();
