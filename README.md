@@ -2,7 +2,7 @@
 A faster RIDE-like IDE for Robot Framework test suites 
 
 [![Build Status](https://travis-ci.com/Soothsilver/snowride.svg?branch=master)](https://travis-ci.com/Soothsilver/snowride)
-[![Download](https://api.bintray.com/packages/soothsilver/snowride/snowride/images/download.svg?version=1.1) ](https://bintray.com/soothsilver/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F1.1%2Fsnowride-1.1-jar-with-dependencies.jar)
+[![Download](https://api.bintray.com/packages/soothsilver/snowride/snowride/images/download.svg?version=1.2.1) ](https://bintray.com/soothsilver/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F1.2.1%2Fsnowride-1.2.1-jar-with-dependencies.jar)
 
 Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copies many elements of its user interface but it adds features RIDE doesn't have and is faster.
 
