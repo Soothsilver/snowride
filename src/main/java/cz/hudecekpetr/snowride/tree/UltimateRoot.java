@@ -7,7 +7,6 @@ import javafx.scene.image.Image;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class UltimateRoot extends Suite {
 
@@ -86,5 +85,10 @@ public class UltimateRoot extends Suite {
 
     public ExternalResourcesElement getExternalResourcesElement() {
         return ((ExternalResourcesElement) children.get(1));
+    }
+
+    @Override
+    public boolean excludedFromQualifiedName() {
+        return true;
     }
 }

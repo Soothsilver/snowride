@@ -33,4 +33,9 @@ public class TestCasesSection extends RobotSection {
     public void addScenario(Scenario scenario) {
         testCases.add(scenario);
     }
+
+    @Override
+    public void removeChildIfAble(Scenario scenario) {
+        testCases.removeIf(tc -> tc == scenario);
+    }
 }

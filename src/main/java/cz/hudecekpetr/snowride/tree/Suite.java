@@ -6,16 +6,21 @@ import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
-import cz.hudecekpetr.snowride.semantics.*;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.Setting;
+import cz.hudecekpetr.snowride.semantics.UserKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
-import cz.hudecekpetr.snowride.semantics.resources.*;
+import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
+import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
+import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
+import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
+import cz.hudecekpetr.snowride.semantics.resources.ResourceFileKeywordSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,15 +28,9 @@ import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement {
     public RobotFile fileParsed;
-
-    public Suite(String shortName, String contents, List<HighElement> children) {
-        super(Extensions.toPrettyName(shortName), contents, children);
-        if (contents != null && contents.indexOf('\r') != -1) {
-            // If you load it with \r, it's Windows-style line endings.
-            newlineStyle = NewlineStyle.CRLF;
-        }
-    }
-
+    public long importedResourcesLastRecursedDuringIteration = 0;
+    public Set<Tag> forceTagsCumulative = new HashSet<>();
+    public Set<Tag> defaultTags = new HashSet<>();
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
@@ -40,16 +39,22 @@ public abstract class Suite extends HighElement {
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
     private NewlineStyle newlineStyle = NewlineStyle.LF;
-    public long importedResourcesLastRecursedDuringIteration = 0;
-    public Set<Tag> forceTagsCumulative = new HashSet<>();
-    public Set<Tag> defaultTags = new HashSet<>();
+    public Suite(String shortName, String contents, List<HighElement> children) {
+        super(Extensions.toPrettyName(shortName), contents, children);
+        if (contents != null && contents.indexOf('\r') != -1) {
+            // If you load it with \r, it's Windows-style line endings.
+            newlineStyle = NewlineStyle.CRLF;
+        }
+    }
 
     public List<ImportedResource> getImportedResources() {
         return importedResources;
     }
+
     public String serialize() {
         return fileParsed.serialize(newlineStyle);
     }
+
     public void reparseResources() {
         this.importedResources.clear();
         if (fileParsed != null) {
@@ -79,7 +84,7 @@ public abstract class Suite extends HighElement {
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
         });
-        importedKeywordsRecursively.sort((kw1,kw2)->{
+        importedKeywordsRecursively.sort((kw1, kw2) -> {
             return Integer.compare(kw1.getCompletionPriority(), kw2.getCompletionPriority());
         });
         importedKeywordsRecursivelyByInvariantName.clear();
@@ -97,6 +102,7 @@ public abstract class Suite extends HighElement {
     public List<IKnownKeyword> getKeywordsPermissibleInSuite() {
         return importedKeywordsRecursively;
     }
+
     public Map<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {
         return importedKeywordsRecursivelyByInvariantName;
     }
@@ -195,7 +201,6 @@ public abstract class Suite extends HighElement {
     }
 
 
-
     public void replaceChildWithAnotherChild(HighElement oldElement, Suite newElement) {
         int indexOld = children.indexOf(oldElement);
         int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
@@ -203,5 +208,21 @@ public abstract class Suite extends HighElement {
         newElement.parent = this;
         children.add(indexOld, newElement);
         treeNode.getChildren().add(indexTreeOld, newElement.treeNode);
+    }
+
+    public boolean excludedFromQualifiedName() {
+        return this.parent instanceof ExternalResourcesElement;
+    }
+
+    @Override
+    public void dissociateSelfFromChild(HighElement child) {
+        super.dissociateSelfFromChild(child);
+        if (child instanceof Scenario) {
+            if (fileParsed != null) {
+                for (RobotSection section : fileParsed.sections) {
+                    section.removeChildIfAble((Scenario) child);
+                }
+            }
+        }
     }
 }

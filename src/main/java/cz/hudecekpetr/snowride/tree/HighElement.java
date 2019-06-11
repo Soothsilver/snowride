@@ -129,7 +129,7 @@ public abstract class HighElement implements IAutocompleteOption {
     }
 
     public String getQualifiedName() {
-        if (parent == null) {
+        if (parent == null || parent.excludedFromQualifiedName()) {
             return getShortName();
         } else {
             return parent.getQualifiedName() + "." + getShortName();

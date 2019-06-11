@@ -34,4 +34,9 @@ public class KeywordsSection extends RobotSection {
     public void addScenario(Scenario scenario) {
         keywords.add(scenario);
     }
+
+    @Override
+    public void removeChildIfAble(Scenario scenario) {
+        keywords.removeIf(sc -> sc == scenario);
+    }
 }

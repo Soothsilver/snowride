@@ -15,4 +15,8 @@ public abstract class RobotSection {
     public abstract List<? extends HighElement> getHighElements();
 
     public abstract void optimizeStructure();
+
+    public void removeChildIfAble(Scenario scenario) {
+        // Most sections can't have children.
+    }
 }
