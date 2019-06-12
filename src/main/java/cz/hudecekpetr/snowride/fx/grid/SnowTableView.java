@@ -19,6 +19,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Skin;
@@ -63,9 +64,29 @@ public class SnowTableView extends TableView<LogicalLine> {
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
         rowColumn.setStyle("-fx-alignment: center;");
+        this.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>)this::cellSelectionChanged);
         this.getColumns().add(rowColumn);
         this.setOnKeyPressed(this::onKeyPressed);
         this.setOnMouseClicked(this::onMouseClicked);
+    }
+
+    private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
+        while (change.next()) {
+            boolean atLeastOneFirstColumnCellSelected = false;
+            for (TablePosition tablePosition : change.getAddedSubList()) {
+                if (tablePosition.getColumn() == 0) {
+                    atLeastOneFirstColumnCellSelected = true;
+                    this.getSelectionModel().clearSelection(tablePosition.getRow(), tablePosition.getTableColumn());
+                }
+            }
+            if (atLeastOneFirstColumnCellSelected) {
+                for (TablePosition tablePosition : change.getRemoved()) {
+                    if (tablePosition.getColumn() != 0) {
+                        this.getSelectionModel().select(tablePosition.getRow(), tablePosition.getTableColumn());
+                    }
+                }
+            }
+        }
     }
 
     @Override

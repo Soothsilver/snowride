@@ -12,6 +12,9 @@ public class ExternalResourcesElement extends Suite {
 
     public ExternalResourcesElement(List<HighElement> children) {
         super("External resources", null, children);
+        for (HighElement child : children) {
+            child.parent = this;
+        }
         this.imageView.setImage(Images.internet);
     }
 

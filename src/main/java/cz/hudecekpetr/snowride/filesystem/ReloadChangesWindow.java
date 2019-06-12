@@ -99,6 +99,9 @@ public class ReloadChangesWindow extends Stage {
                     ((Suite) he).analyzeSemantics();
                 }
             });
+            if (remainingParent == null) {
+                throw new RuntimeException("The suite '" + rl.getQualifiedName() + "' appears to have no parent.");
+            }
             remainingParent.replaceChildWithAnotherChild(rl, newElement);
         }
         mainForm.runTab.maybeRunNumberChanged();
@@ -130,7 +133,7 @@ public class ReloadChangesWindow extends Stage {
     }
 
     private String getInfo() {
-        return Extensions.englishCount(changedPaths.size(), "file or folder", "files or folders") + " were changed from outside Snowride (" +
+        return Extensions.englishCount(changedPaths.size(), "file or folder was changed", "files or folders were changed") + " from outside Snowride (" +
                 StringUtils.join(changedPaths.stream().limit(5).map(Path::getFileName).iterator(), ", ") + "). Reload them from disk?";
     }
 

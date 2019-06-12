@@ -397,7 +397,7 @@ public class RunTab {
     }
 
     public void appendAnsiText(String text) {
-        ansiOutputStream.add(text);
+        ansiOutputStream.addFromOutside(text);
         ansiOutputStream.flushInto(this::flushIntoTbOutputPlusDefault);
     }
 
