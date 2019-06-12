@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -84,9 +85,7 @@ public abstract class Suite extends HighElement {
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
         });
-        importedKeywordsRecursively.sort((kw1, kw2) -> {
-            return Integer.compare(kw1.getCompletionPriority(), kw2.getCompletionPriority());
-        });
+        importedKeywordsRecursively.sort(Comparator.comparingInt(IKnownKeyword::getCompletionPriority));
         importedKeywordsRecursivelyByInvariantName.clear();
         importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
     }

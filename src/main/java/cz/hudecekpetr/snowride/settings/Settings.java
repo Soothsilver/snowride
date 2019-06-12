@@ -35,6 +35,8 @@ public class Settings {
     public String additionalXmlFiles = "";
     public String additionalFolders = "";
     public boolean cbAlsoImportTxtFiles = true;
+    public boolean toolbarReloadAll = true;
+    public boolean toolbarDeselectEverything = true;
 
     public static Settings getInstance() {
         if (instance == null) {

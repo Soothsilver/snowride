@@ -27,6 +27,8 @@ public class SettingsWindow extends Stage {
     private TitledTextArea additionalXmlFilesBox;
     private MainForm mainForm;
     private CheckBox cbAlsoImportTxtFiles;
+    private CheckBox cbDeselectAll;
+    private CheckBox cbReloadAll;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -54,10 +56,7 @@ public class SettingsWindow extends Stage {
     }
 
     private void applyCloseAndRefresh(ActionEvent actionEvent) {
-        Settings.getInstance().additionalFolders = additionalXmlFilesBox.getText();
-        Settings.getInstance().cbAlsoImportTxtFiles = cbAlsoImportTxtFiles.isSelected();
-        Settings.getInstance().save();
-        this.close();
+        applyAndClose(actionEvent);
         mainForm.reloadAll(actionEvent);
     }
 
@@ -67,7 +66,11 @@ public class SettingsWindow extends Stage {
         folderDescription.setWrapText(true);
         cbAlsoImportTxtFiles = new CheckBox("Parse .txt files in addition to .robot files.");
         cbAlsoImportTxtFiles.setSelected(Settings.getInstance().cbAlsoImportTxtFiles);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles);
+        cbReloadAll = new CheckBox("Show 'Reload all' button in the toolbar.");
+        cbReloadAll.setSelected(Settings.getInstance().toolbarReloadAll);
+        cbDeselectAll = new CheckBox("Show 'Deselect all' button in the toolbar.");
+        cbDeselectAll.setSelected(Settings.getInstance().toolbarDeselectEverything);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll);
         vboxImportingOptions.setPadding(new Insets(5,0,0,0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -77,7 +80,10 @@ public class SettingsWindow extends Stage {
     private void applyAndClose(ActionEvent actionEvent) {
         Settings.getInstance().additionalFolders = additionalXmlFilesBox.getText();
         Settings.getInstance().cbAlsoImportTxtFiles = cbAlsoImportTxtFiles.isSelected();
+        Settings.getInstance().toolbarDeselectEverything = cbDeselectAll.isSelected();
+        Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().save();
+        mainForm.updateAdditionalToolbarButtonsVisibility();
         mainForm.reloadExternalLibraries();
         this.close();
     }

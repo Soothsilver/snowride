@@ -1,11 +1,13 @@
 package cz.hudecekpetr.snowride;
 
+import cz.hudecekpetr.snowride.fx.TooltipHack;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Tooltip;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -31,6 +33,7 @@ public class SnowrideApplication extends Application {
         mainForm.show();
         try {
             mainForm.loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
+            TooltipHack.hackDelayTimers(new Tooltip());
         } catch (Exception exception) {
             mainForm.loadProjectFromFolder(new File("."));
         }

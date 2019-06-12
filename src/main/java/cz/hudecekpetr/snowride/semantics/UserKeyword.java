@@ -84,6 +84,6 @@ public class UserKeyword implements IKnownKeyword {
 
     @Override
     public int getCompletionPriority() {
-        return ExternalKeyword.PRIORITY_USER_KEYWORD;
+        return ExternalKeyword.PRIORITY_USER_KEYWORD + name.length();
     }
 }

@@ -91,9 +91,9 @@ public class ExternalKeyword implements IKnownKeyword {
         switch (library.getKind()) {
             case XML:
             case PYTHON:
-                return PRIORITY_EXTERNAL_LIBRARY;
+                return PRIORITY_EXTERNAL_LIBRARY + canonicalName.length();
             case PACKED_IN:
-                return PRIORITY_PACKED_IN;
+                return PRIORITY_PACKED_IN + canonicalName.length();
             default:
                 return 100; // unknown
         }

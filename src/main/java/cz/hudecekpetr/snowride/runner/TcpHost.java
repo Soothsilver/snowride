@@ -185,6 +185,7 @@ public class TcpHost {
                     if (status.equals("PASS")) {
                         runTab.run.countPassedTests++;
                         endingTest.markTestStatus(TestResult.PASSED);
+                        runTab.possiblyDeselectPassingTest(endingTest);
                     } else {
                         runTab.run.countFailedTests++;
                         endingTest.markTestStatus(TestResult.FAILED);

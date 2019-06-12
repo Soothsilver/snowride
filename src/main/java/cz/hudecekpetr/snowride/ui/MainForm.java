@@ -111,6 +111,8 @@ public class MainForm {
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;
+    private final ToolBar toolBar;
+    private Button bStop;
 
     public MainForm(Stage stage) {
         INSTANCE = this;
@@ -128,8 +130,8 @@ public class MainForm {
         runTab = new RunTab(this);
         Tab tabRun = runTab.createTab();
         MenuBar mainMenu = buildMainMenu();
-        ToolBar toolBar = buildToolBar();
-
+        toolBar = buildToolBar();
+        updateAdditionalToolbarButtonsVisibility();
         textEditTab = new TextEditTab(this);
         tabTextEdit = textEditTab.createTab();
         gridTab = new GridTab(this);
@@ -512,7 +514,7 @@ public class MainForm {
         Button bSaveAll = new Button("Save all", loadIcon(Images.save));
         Button bRun = new Button("Run", loadIcon(Images.play));
         bRun.textProperty().bind(runTab.runCaption);
-        Button bStop = new Button("Stop", loadIcon(Images.stop));
+        bStop = new Button("Stop", loadIcon(Images.stop));
         bNavigateBack.disableProperty().bind(canNavigateBack.not());
         bNavigateBack.setOnAction(this::goBack);
         bNavigateForwards.disableProperty().bind(canNavigateForwards.not());
@@ -523,10 +525,31 @@ public class MainForm {
         bRun.setOnAction(runTab::clickRun);
         bStop.disableProperty().bind(runTab.canStop.not());
         bStop.setOnAction(runTab::clickStop);
-        Button bReloadAll = new Button("Reload all", loadIcon(Images.refresh));
-        bReloadAll.setTooltip(new Tooltip("Reloads the current Robot project as though you restarted Snowride."));
-        bReloadAll.setOnAction(this::reloadAll);
-        return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop, bReloadAll);
+        ToolBar toolBar = new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
+        return toolBar;
+    }
+
+    public void updateAdditionalToolbarButtonsVisibility() {
+        int removeAt = toolBar.getItems().indexOf(bStop) + 1;
+        while (toolBar.getItems().size() > removeAt) {
+            toolBar.getItems().remove(removeAt);
+        }
+        if (Settings.getInstance().toolbarReloadAll) {
+            Button bReloadAll = new Button("Reload all", loadIcon(Images.refresh));
+            bReloadAll.setTooltip(new Tooltip("Reloads the current Robot project as though you restarted Snowride."));
+            bReloadAll.setOnAction(this::reloadAll);
+            toolBar.getItems().add(bReloadAll);
+        }
+        if (Settings.getInstance().toolbarDeselectEverything) {
+            Button bDeselectAll = new Button("Deselect all");
+            bDeselectAll.setTooltip(new Tooltip("Deselects all tests so that everything would be run the next time you run tests."));
+            bDeselectAll.setOnAction(this::deselectAll);
+            toolBar.getItems().add(bDeselectAll);
+        }
+    }
+
+    private void deselectAll(ActionEvent actionEvent) {
+        setCheckboxes(getRootElement(), false);
     }
 
     public void reloadAll(ActionEvent actionEvent) {

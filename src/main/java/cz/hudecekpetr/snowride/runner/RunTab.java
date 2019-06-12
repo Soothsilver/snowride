@@ -231,6 +231,7 @@ public class RunTab {
     private ContextMenu buildAdvancedRunContextMenu() {
         MenuItem untilFailureOrStop = new MenuItem("...until failure");
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
+        CustomMenuItem runThenDeselect = new CustomMenuItem(new Label("...and then deselect passing tests"));
         untilFailureOrStop.disableProperty().bind(canRun.not());
         untilFailureOrStop.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -246,7 +247,15 @@ public class RunTab {
                 clickRun(event);
             }
         });
-        return new ContextMenu(untilFailureOrStop, runOnlyFailedTests);
+        runThenDeselect.disableProperty().bind(canRun.not());
+        Tooltip.install(runThenDeselect.getContent(), new Tooltip("Snowride will clear the selection of tests that pass so that only failed tests remain selected to be run next time."));
+        runThenDeselect.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                clickRun(event, true);
+            }
+        });
+        return new ContextMenu(untilFailureOrStop, runOnlyFailedTests, runThenDeselect);
     }
 
     private void timer() {
@@ -282,7 +291,14 @@ public class RunTab {
     }
 
     public void clickRun(ActionEvent actionEvent) {
+        clickRun(actionEvent, false);
+    }
+
+    private boolean thenDeselectPassingTests = false;
+
+    public void clickRun(ActionEvent actionEvent, boolean thenDeselectPassingTests) {
         try {
+            this.thenDeselectPassingTests = thenDeselectPassingTests;
             List<Scenario> testCases = getCheckedTestCases();
             if (testCases.size() == 0) {
                 String warningText = "You didn't choose any test case. Do you want to run the entire suite?";
@@ -599,6 +615,12 @@ public class RunTab {
         } else {
             allTestsAreChosen = false;
             runCaption.set("Run " + Extensions.englishCount(totalSelected[0], "test", "tests"));
+        }
+    }
+
+    public void possiblyDeselectPassingTest(Scenario endingTest) {
+        if (thenDeselectPassingTests) {
+            endingTest.checkbox.setSelected(false);
         }
     }
 }
