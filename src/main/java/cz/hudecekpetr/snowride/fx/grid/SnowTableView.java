@@ -15,6 +15,7 @@ import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.AddRowOperation;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
 import cz.hudecekpetr.snowride.undo.MassOperation;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -71,21 +72,35 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
+        List<TablePosition> toClear = new ArrayList<>();
+        List<TablePosition> toSelect = new ArrayList<>();
         while (change.next()) {
             boolean atLeastOneFirstColumnCellSelected = false;
             for (TablePosition tablePosition : change.getAddedSubList()) {
                 if (tablePosition.getColumn() == 0) {
                     atLeastOneFirstColumnCellSelected = true;
-                    this.getSelectionModel().clearSelection(tablePosition.getRow(), tablePosition.getTableColumn());
+                    toClear.add(tablePosition);
                 }
             }
             if (atLeastOneFirstColumnCellSelected) {
                 for (TablePosition tablePosition : change.getRemoved()) {
                     if (tablePosition.getColumn() != 0) {
-                        this.getSelectionModel().select(tablePosition.getRow(), tablePosition.getTableColumn());
+                        toSelect.add(tablePosition);
                     }
                 }
             }
+        }
+        if (toClear.size() > 0 || toSelect.size() > 0) {
+            // Has to be done later to avoid creating an inconsistent selection model (which throws exceptions) -
+            // it's not legal to clear/select stuff from within this list change listener. I tried.
+            Platform.runLater(() -> {
+                for (TablePosition tablePosition : toClear) {
+                    this.getSelectionModel().clearSelection(tablePosition.getRow(), tablePosition.getTableColumn());
+                }
+                for (TablePosition tablePosition : toSelect) {
+                    this.getSelectionModel().select(tablePosition.getRow(), tablePosition.getTableColumn());
+                }
+            });
         }
     }
 
