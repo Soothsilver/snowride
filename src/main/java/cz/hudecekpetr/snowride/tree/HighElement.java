@@ -43,6 +43,7 @@ public abstract class HighElement implements IAutocompleteOption {
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
     private String invariantName;
     private UndoStack undoStack = new UndoStack();
+    protected abstract boolean isResourceOnly();
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
         HBox graphic = new HBox();

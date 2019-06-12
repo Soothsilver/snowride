@@ -22,7 +22,7 @@ public class FolderSuite extends Suite implements ISuite {
 
     public FolderSuite(File directoryPath, File initFile, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
-        this.imageView.setImage(Images.folderIcon);
+        this.imageView.setImage(getAutocompleteIcon());
         this.directoryPath = directoryPath;
         this.initFile = initFile;
         if (this.initFile != null) {
@@ -146,7 +146,7 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public Image getAutocompleteIcon() {
-        return Images.folderIcon;
+        return isResourceOnly() ? Images.cogfolderIcon : Images.folderIcon;
     }
 
     @Override
@@ -166,7 +166,7 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
         this.applyText();
         if (asTestCase) {
             throw new RuntimeException("Folders can't contain test cases.");
@@ -182,5 +182,6 @@ public class FolderSuite extends Suite implements ISuite {
         this.treeNode.getChildren().add(newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
         mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
+        return newKeyword;
     }
 }

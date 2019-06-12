@@ -51,6 +51,11 @@ public class Scenario extends HighElement {
     }
 
     @Override
+    protected boolean isResourceOnly() {
+        return !isTestCase;
+    }
+
+    @Override
     public void saveAll() throws IOException {
         // Saved as part of the file suite.
     }

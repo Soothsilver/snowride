@@ -19,6 +19,7 @@ public class FileSuite extends Suite implements ISuite {
     public FileSuite(File file, String name, String contents) {
         super(name, contents, new ArrayList<>());
         this.file = file;
+        this.imageView.setImage(getAutocompleteIcon());
         this.reparse();
     }
 
@@ -96,7 +97,7 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public Image getAutocompleteIcon() {
-        return Images.fileIcon;
+        return isResourceOnly() ? Images.cogfileIcon : Images.fileIcon;
     }
 
     @Override
@@ -112,7 +113,7 @@ public class FileSuite extends Suite implements ISuite {
     }
 
     @Override
-    public void createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
         this.applyText();
         if (this.fileParsed.errors.size() > 0) {
             throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
@@ -127,5 +128,6 @@ public class FileSuite extends Suite implements ISuite {
         this.children.add(scenario);
         this.treeNode.getChildren().add(scenario.treeNode);
         mainForm.selectProgrammaticallyAndRememberInHistory(scenario);
+        return scenario;
     }
 }

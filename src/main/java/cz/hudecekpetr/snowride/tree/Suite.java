@@ -15,6 +15,7 @@ import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
 import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.ResourceFileKeywordSource;
+import javafx.collections.ListChangeListener;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
@@ -42,10 +43,15 @@ public abstract class Suite extends HighElement {
     private NewlineStyle newlineStyle = NewlineStyle.LF;
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
+        this.children.addListener((ListChangeListener)this::childrenChanged);
         if (contents != null && contents.indexOf('\r') != -1) {
             // If you load it with \r, it's Windows-style line endings.
             newlineStyle = NewlineStyle.CRLF;
         }
+    }
+
+    private void childrenChanged(ListChangeListener.Change change) {
+        this.imageView.setImage(getAutocompleteIcon());
     }
 
     public List<ImportedResource> getImportedResources() {
@@ -223,5 +229,15 @@ public abstract class Suite extends HighElement {
                 }
             }
         }
+    }
+
+    @Override
+    protected boolean isResourceOnly() {
+        for (HighElement child : children) {
+            if (!child.isResourceOnly()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

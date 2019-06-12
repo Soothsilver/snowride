@@ -56,7 +56,7 @@ public class GridTab {
                 if (spreadsheetViewTable.scenario instanceof Scenario) {
                     MenuItem placeholder = new MenuItem("(this keyword is not used anywhere)");
                     placeholder.setDisable(true);
-                    List<MenuItem> items = FindUsages.findUsages(((Scenario) spreadsheetViewTable.scenario), mainForm.getRootElement());
+                    List<MenuItem> items = FindUsages.findUsages(null, ((Scenario) spreadsheetViewTable.scenario), mainForm.getRootElement());
                     if (findUsagesContextMenu != null) {
                         findUsagesContextMenu.hide();
                     }

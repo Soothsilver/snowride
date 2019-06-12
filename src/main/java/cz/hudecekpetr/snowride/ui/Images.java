@@ -4,6 +4,8 @@ import javafx.scene.image.Image;
 
 public class Images {
     public static Image fileIcon = staticImage("file16.png");
+    public static Image cogfileIcon = staticImage("cogfile16.png");
+    public static Image cogfolderIcon = staticImage("cogfolder.png");
     public static Image folderIcon = staticImage("folder2_16.png");
     public static Image keywordIcon = staticImage("cog16.png");
     public static Image testIcon = staticImage("robot16.png");

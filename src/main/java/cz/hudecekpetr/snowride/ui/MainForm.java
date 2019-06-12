@@ -456,6 +456,22 @@ public class MainForm {
                 }
             });
             menu.add(delete);
+            if (element instanceof Scenario) {
+                MenuItem copy = new MenuItem("Copy");
+                String isWhat =((Scenario) element).isTestCase() ? "test case": "user keyword";
+                copy.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        String name = TextFieldForm.askForText("Copy a " + isWhat, "Name of the copy:", "Create new " + isWhat + " as a copy", element.getShortName() + " - copy");
+                        if (name != null) {
+                            Scenario newCopy = ((ISuite) element.parent).createNewChild(name, ((Scenario) element).isTestCase(), MainForm.this);
+                            DeepCopy.copyOldIntoNew((Scenario)element, newCopy);
+                            changeOccurredTo(element.parent, LastChangeKind.STRUCTURE_CHANGED);
+                        }
+                    }
+                });
+                menu.add(copy);
+            }
         }
         if (menu.size() == 0) {
             MenuItem menuItemNothing = new MenuItem("(you can't do anything with this tree node)");

@@ -8,6 +8,7 @@ import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.semantics.FindUsages;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
@@ -22,21 +23,31 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
@@ -65,10 +76,90 @@ public class SnowTableView extends TableView<LogicalLine> {
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
         rowColumn.setStyle("-fx-alignment: center;");
-        this.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>)this::cellSelectionChanged);
+        this.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) this::cellSelectionChanged);
         this.getColumns().add(rowColumn);
+        ContextMenu cmenu = new ContextMenu(new MenuItem("Something"));
+        this.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
+            @Override
+            public void handle(ContextMenuEvent event) {
+                cmenu.getItems().clear();
+                if (getSelectionModel().getSelectedItem() != null) {
+                    List<MenuItem> contextMenuItems = recreateContextMenu(event);
+                    cmenu.getItems().setAll(contextMenuItems);
+                } else {
+                    event.consume();
+                }
+            }
+        });
+        this.setContextMenu(cmenu);
         this.setOnKeyPressed(this::onKeyPressed);
         this.setOnMouseClicked(this::onMouseClicked);
+    }
+
+    private List<MenuItem> recreateContextMenu(ContextMenuEvent contextMenuEvent) {
+        List<MenuItem> contextMenuItems = new ArrayList<>();
+
+
+        MenuItem miInsert = new MenuItem("Insert row before this");
+        miInsert.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN));
+        miInsert.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                insertRowBefore();
+            }
+        });
+        MenuItem miAppend = new MenuItem("Append row after this");
+        miAppend.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN));
+        miAppend.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                appendRowAfter();
+            }
+        });
+        if (getSelectionModel().getSelectedCells().size() > 0) {
+            TablePosition lastPosition = getSelectionModel().getSelectedCells().get(0);
+            if (lastPosition.getColumn() != -1 && lastPosition.getRow() != -1) {
+                LogicalLine line = getItems().get(lastPosition.getRow());
+                IKnownKeyword keywordInThisCell = line.getCellAsStringProperty(tableXToLogicalX(lastPosition.getColumn()), mainForm).getValue().getKeywordInThisCell();
+                if (keywordInThisCell != null) {
+                    MenuItem miFindUsages = new MenuItem("Find usages");
+                    miFindUsages.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            MenuItem[] items = FindUsages.findUsages(keywordInThisCell, keywordInThisCell.getScenarioIfPossible(), mainForm.getRootElement()).toArray(new MenuItem[0]);
+                            ContextMenu menuUsages = new ContextMenu(items);
+                            menuUsages.show(mainForm.getStage(), contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
+                        }
+                    });
+                    contextMenuItems.add(miFindUsages);
+                    contextMenuItems.add(new SeparatorMenuItem());
+                }
+            }
+        }
+        if (snowTableKind == SnowTableKind.SCENARIO) {
+            MenuItem miComment = new MenuItem("Comment out");
+            miComment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN));
+            miComment.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    commentOutOrUncomment(false);
+                }
+            });
+            MenuItem miUncomment = new MenuItem("Uncomment");
+            miUncomment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
+            miUncomment.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    commentOutOrUncomment(true);
+                }
+            });
+            contextMenuItems.add(miComment);
+            contextMenuItems.add(miUncomment);
+        }
+
+        contextMenuItems.add(miInsert);
+        contextMenuItems.add(miAppend);
+        return contextMenuItems;
     }
 
     private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
@@ -158,25 +249,10 @@ public class SnowTableView extends TableView<LogicalLine> {
         MainForm.documentationPopup.hide();
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
             // Insert
-            int whatFocused = this.getFocusModel().getFocusedIndex();
-            this.getItems().add(whatFocused, createNewLine());
-            int column = 1;
-            if (this.getSelectionModel().getSelectedCells().size() > 0) {
-                column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
-            }
-            this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
-            this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, () -> createNewLine()));
+            insertRowBefore();
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
-            // Append
-            int whatFocused = this.getFocusModel().getFocusedIndex();
-            this.getItems().add(whatFocused + 1, createNewLine());
-            int column = 1;
-            if (this.getSelectionModel().getSelectedCells().size() > 0) {
-                column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
-            }
-            this.getSelectionModel().clearAndSelect(whatFocused + 1, getVisibleLeafColumn(column));
-            this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused + 1, () -> createNewLine()));
+            appendRowAfter();
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
             getScenario().getUndoStack().undoIfAble();
@@ -210,20 +286,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             pasteStartingAt(focusedTablePosition);
             keyEvent.consume();
         } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isControlDown()) {
-            SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
-            LogicalLine theLine = cell.getValue().partOfLine;
-            Cell firstCell = theLine.getCellAsStringProperty(1, mainForm).getValue();
-            if (keyEvent.isShiftDown()) {
-                // uncomment
-                if (Extensions.toInvariant(firstCell.contents).equalsIgnoreCase("Comment")) {
-                    theLine.shiftTrueCellsLeft(mainForm);
-                }
-                theLine.getCellAsStringProperty(0, mainForm).set(new Cell("", "    ", theLine));
-            } else {
-                // comment out
-                theLine.shiftTrueCellsRight(mainForm);
-                theLine.getCellAsStringProperty(1, mainForm).set(new Cell("Comment", "    ", theLine));
-            }
+            commentOutOrUncomment(keyEvent.isShiftDown());
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
             if (getSelectionModel().getSelectedCells().size() > 0) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
@@ -242,6 +305,51 @@ public class SnowTableView extends TableView<LogicalLine> {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             keyEvent.consume();
+        }
+    }
+
+    private void appendRowAfter() {
+        // Append
+        int whatFocused = this.getFocusModel().getFocusedIndex();
+        this.getItems().add(whatFocused + 1, createNewLine());
+        int column = 1;
+        if (this.getSelectionModel().getSelectedCells().size() > 0) {
+            column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
+        }
+        this.getSelectionModel().clearAndSelect(whatFocused + 1, getVisibleLeafColumn(column));
+        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused + 1, this::createNewLine));
+    }
+
+    private void insertRowBefore() {
+        int whatFocused = this.getFocusModel().getFocusedIndex();
+        this.getItems().add(whatFocused, createNewLine());
+        int column = 1;
+        if (this.getSelectionModel().getSelectedCells().size() > 0) {
+            column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
+        }
+        this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
+        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, this::createNewLine));
+    }
+
+    private void commentOutOrUncomment(boolean uncomment) {
+        Set<LogicalLine> lines = new HashSet<>();
+        for (TablePosition selectedCell : getSelectionModel().getSelectedCells()) {
+            int row = selectedCell.getRow();
+            lines.add(getItems().get(row));
+        }
+        for (LogicalLine theLine : lines) {
+            Cell firstCell = theLine.getCellAsStringProperty(1, mainForm).getValue();
+            if (uncomment) {
+                // uncomment
+                if (Extensions.toInvariant(firstCell.contents).equalsIgnoreCase("Comment")) {
+                    theLine.shiftTrueCellsLeft(mainForm);
+                }
+                theLine.getCellAsStringProperty(0, mainForm).set(new Cell("", "    ", theLine));
+            } else {
+                // comment out
+                theLine.shiftTrueCellsRight(mainForm);
+                theLine.getCellAsStringProperty(1, mainForm).set(new Cell("Comment", "    ", theLine));
+            }
         }
     }
 
@@ -264,7 +372,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 int x = atColumn + xi;
                 int y = atRow;
                 SimpleObjectProperty<Cell> replacedCell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
-                operations.add(new ChangeTextOperation(getItems(), replacedCell.getValue().contents, cellSplit[xi].trim(),  y, tableXToLogicalX(x)));
+                operations.add(new ChangeTextOperation(getItems(), replacedCell.getValue().contents, cellSplit[xi].trim(), y, tableXToLogicalX(x)));
                 replacedCell.set(new Cell(cellSplit[xi].trim(), "    ", getItems().get(y)));
             }
             atRow++;
