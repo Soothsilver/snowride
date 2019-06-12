@@ -32,6 +32,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
@@ -70,6 +71,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -124,6 +126,11 @@ public class MainForm {
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
+                boolean abort = maybeOfferSaveDiscardOrCancel();
+                if (abort) {
+                    event.consume();
+                    return;
+                }
                 System.exit(0);
             }
         });
@@ -755,6 +762,11 @@ public class MainForm {
     }
 
     public void loadProjectFromFolder(File path) {
+
+            boolean abort = maybeOfferSaveDiscardOrCancel();
+            if (abort){
+                return;
+            }
         projectLoad.progress.set(0);
         navigationStack.clear();
         reloadElementIntoTabs(null);
@@ -798,6 +810,41 @@ public class MainForm {
             }
         });
 
+    }
+
+    /**
+     * Opens a Save/Don't save/Cancel dialog.
+     * @return Returns true if the action that prompted this dialog should be aborted.
+     */
+    private boolean maybeOfferSaveDiscardOrCancel() {
+        if (canSave.getValue()) {
+            // dialog
+            ButtonType save = new ButtonType("Save changes");
+            ButtonType dontSave = new ButtonType("Don't save");
+            ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "You have unsaved changes.",
+                    save,
+                    dontSave,
+                    cancel);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent()) {
+                ButtonType pressedButton = result.get();
+                if (pressedButton == save) {
+                    saveAll(null);
+                    return false;
+                } else if (pressedButton == dontSave) {
+                    // proceed
+                    return false;
+                } else {
+                    // abort
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
     private void refreshRecentlyOpenMenu() {
