@@ -52,7 +52,7 @@ public class CodeCompletionBinding {
                 break;
             }
         }
-        if (!exactMatchFound && collectedOptions.size() == 0) {
+        if (!exactMatchFound && collectedOptions.size() != 0) {
 
             if (Settings.getInstance().cbShowNonexistentOptionFirst) {
                 collectedOptions.add(0, new SimpleAutocompleteOption(request.getUserText(), Images.help));
