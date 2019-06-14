@@ -1,11 +1,5 @@
 package cz.hudecekpetr.snowride.fx.autocompletion;
 
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by Fernflower decompiler)
-//
-
-
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -24,7 +18,6 @@ import org.controlsfx.control.textfield.AutoCompletionBinding;
 public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Skin<AutoCompletePopup<T>> {
     private final AutoCompletePopup<T> control;
     private final ListView<T> suggestionList;
-    final int LIST_CELL_HEIGHT = 24;
     private int suppressUpTo = 0;
 
     public AutoCompletePopupSkin(AutoCompletePopup<T> control) {
@@ -37,9 +30,12 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
         this.suggestionList.prefWidthProperty().bind(control.prefWidthProperty());
         this.suggestionList.maxWidthProperty().bind(control.maxWidthProperty());
         this.suggestionList.minWidthProperty().bind(control.minWidthProperty());
+        this.suggestionList.prefHeightProperty().addListener((ChangeListener<Number>)this::ln);
         this.control.setOnShown(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
+                System.out.println("shown: " + suggestionList.prefHeightProperty().getValue());
+                control.heightBecame(suggestionList.prefHeightProperty().getValue());
                 if (suggestionList.getFocusModel().getFocusedItem() != null) {
                     showOrHideDocumentation(suggestionList.getFocusModel().getFocusedItem());
                 }
@@ -54,7 +50,13 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
         this.registerEventListener();
     }
 
+    private void ln(ObservableValue<? extends Number> observableValue, Number number, Number number1) {
+        System.out.println("Prefheight changed from " + number + " to " + number1);
+        control.heightBecame(number1);
+    }
+
     private void showOrHideDocumentation(T newValue) {
+
         if (newValue == null) {
             suppressUpTo++;
             int[] suppressing = new int[] { suppressUpTo };
@@ -71,9 +73,9 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
                 if (MainForm.documentationPopup.getOwnerWindow() != parent) {
                     MainForm.documentationPopup.hide();
                 }
-                MainForm.documentationPopup.show(parent,
+                MainForm.documentationPopup.showRightIfPossible(parent,
                         parent.getX() + suggestionList.localToScene(0.0D, 0.0D).getX() +
-                                suggestionList.getScene().getX() + suggestionList.getWidth(),
+                                suggestionList.getScene().getX() , suggestionList.getWidth() + 3,
                         parent.getY() + suggestionList.localToScene(0.0D, 0.0D).getY() +
                                 suggestionList.getScene().getY() + suggestionList.getSelectionModel().getSelectedIndex() * 24);
             }

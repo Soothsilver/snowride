@@ -3,7 +3,10 @@ package cz.hudecekpetr.snowride.ui;
 import com.sun.javafx.util.Utils;
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
+import cz.hudecekpetr.snowride.fx.ScreenEdgeAvoidance;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -32,6 +35,7 @@ public class DocumentationPopup extends Popup {
 
 
     public DocumentationPopup() {
+        this.setAutoFix(false);
         this.setAnchorLocation(AnchorLocation.CONTENT_TOP_LEFT);
         keyword_name = new Label("No Operation");
         keyword_name.setStyle("-fx-font-size: 12pt; -fx-font-weight: bold;");
@@ -55,13 +59,7 @@ public class DocumentationPopup extends Popup {
     }
 
     public void showRightIfPossible(Window parent, double anchorLeft, double anchorWidth, double y) {
-        final Screen currentScreen = Utils.getScreenForPoint(anchorLeft, y);
-        final Rectangle2D screenBounds = currentScreen.getVisualBounds();
-        if (anchorLeft + 450 >= screenBounds.getMaxX()) {
-            // Would overflow screen
-            show(parent, anchorLeft - 450, y);
-        } else {
-            show(parent, anchorLeft + anchorWidth, y);
-        }
+        Point2D finalPoint = ScreenEdgeAvoidance.determineStartingPositionForDocumentationPopup(anchorLeft, y, anchorWidth, new Dimension2D(450, 500));
+        show(parent, finalPoint.getX(), finalPoint.getY());
     }
 }

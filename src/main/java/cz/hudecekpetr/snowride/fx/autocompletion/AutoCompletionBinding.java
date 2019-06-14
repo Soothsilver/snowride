@@ -36,6 +36,7 @@ import javafx.event.*;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
+import javafx.scene.control.TextField;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -61,7 +62,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Private fields                                                          *
      *                                                                         *
      **************************************************************************/
-    private final Node completionTarget;
+    private final TextField completionTarget;
     private final AutoCompletePopup<T> autoCompletionPopup;
     private final Object suggestionsTaskLock = new Object();
 
@@ -84,7 +85,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * @param suggestionProvider The strategy to retrieve suggestions 
      * @param converter The converter to be used to convert suggestions to strings 
      */
-    protected AutoCompletionBinding(Node completionTarget,
+    protected AutoCompletionBinding(TextField completionTarget,
                                     Callback<AutoCompletionBinding.ISuggestionRequest, Collection<? extends T>> suggestionProvider,
                                     StringConverter<T> converter){
 
@@ -142,7 +143,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Gets the target node for auto completion
      * @return the target node for auto completion
      */
-    public Node getCompletionTarget(){
+    public TextField getCompletionTarget(){
         return completionTarget;
     }
 
