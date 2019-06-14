@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.ExternalResourcesElement;
@@ -487,6 +488,39 @@ public class MainForm {
                     }
                 });
                 menu.add(copy);
+            }
+        }
+        if (element instanceof Scenario) {
+            Scenario asScenario = (Scenario) element;
+            maybeAddSeparator(menu);
+            if (asScenario.isTestCase()) {
+                MenuItem runThis = new MenuItem("Run just this test", loadIcon(Images.play));
+                runThis.disableProperty().bind(runTab.canRun.not());
+                runThis.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        deselectAll(event);
+                        asScenario.checkbox.setSelected(true);
+                        runTab.clickRun(event);
+                    }
+                });
+                menu.add(runThis);
+            } else {
+                MenuItem runThis = new MenuItem("Run all tests that use this keyword", loadIcon(Images.doublePlay));
+                runThis.disableProperty().bind(runTab.canRun.not());
+                runThis.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        deselectAll(event);
+                        withUpdateSuppression(() -> {
+                            FindUsages.findUsagesAsTestCases(null, asScenario, getRootElement()).forEach(sc -> {
+                                sc.checkbox.setSelected(true);
+                            });
+                            runTab.clickRun(event);
+                        });
+                    }
+                });
+                menu.add(runThis);
             }
         }
         if (menu.size() == 0) {
