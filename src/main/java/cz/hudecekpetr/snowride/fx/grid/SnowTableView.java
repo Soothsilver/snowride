@@ -32,7 +32,11 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.TableFocusModel;
 import javafx.scene.control.TablePosition;
+import javafx.scene.control.TablePositionBase;
+import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TableView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ContextMenuEvent;
@@ -223,11 +227,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
-    private Cell getFocusedCell() {
-        TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
-        SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
-        return cellSimpleObjectProperty.getValue();
-    }
+
 
     private Cell getFocusedCellInSettingsTable() {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
@@ -296,8 +296,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 keyEvent.consume();
             }
         } else if (keyEvent.getCode() == KeyCode.TAB) {
-            this.getSelectionModel().clearSelection();
-            this.getSelectionModel().selectNext();
+            selectCell(0,1);
             keyEvent.consume();
         } else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
                 && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()
@@ -532,5 +531,34 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     public HighElement getScenario() {
         return scenario;
+    }
+
+    public void selectCell(int rowDiff, int columnDiff) {
+        TableSelectionModel sm = getSelectionModel();
+        if (sm == null) return;
+
+        TableFocusModel fm = getFocusModel();
+        if (fm == null) return;
+
+        TablePositionBase<TableColumn> focusedCell = getFocusModel().getFocusedCell();
+        int currentRow = focusedCell.getRow();
+        int currentColumn = getVisibleLeafIndex(focusedCell.getTableColumn());
+
+        if (rowDiff < 0 && currentRow <= 0) return;
+        else if (rowDiff > 0 && currentRow >= getItems().size() - 1) return;
+        else if (columnDiff < 0 && currentColumn <= 0) return;
+        else if (columnDiff > 0 && currentColumn >= getVisibleLeafColumns().size() - 1) return;
+        else if (columnDiff > 0 && currentColumn == -1) return;
+
+        TableColumn tc = focusedCell.getTableColumn();
+        tc = getVisibleLeafColumn(getVisibleLeafIndex(tc) +  columnDiff);
+
+
+        int row = focusedCell.getRow() + rowDiff;
+        sm.clearAndSelect(row, tc);
+    }private Cell getFocusedCell() {
+        TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
+        SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
+        return cellSimpleObjectProperty.getValue();
     }
 }

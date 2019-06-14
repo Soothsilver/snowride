@@ -164,6 +164,11 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                         trueCancelEdit();
                         event.consume();
                     }
+                    if (event.getCode() == KeyCode.TAB) {
+                        commit();
+                        snowTableView.selectCell(0,1);
+                        event.consume();
+                    }
                 }
             });
             textField.widthProperty().addListener(new ChangeListener<Number>() {

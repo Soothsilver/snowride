@@ -912,6 +912,8 @@ public class MainForm {
                     save,
                     dontSave,
                     cancel);
+            Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+            stage.getIcons().add(Images.snowflake);
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent()) {
                 ButtonType pressedButton = result.get();
