@@ -11,6 +11,7 @@ import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -175,7 +176,9 @@ public class Scenario extends HighElement {
                 }
                 else if (line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")) {
                     for (int i = 2; i < line.cells.size(); i++) {
-                        argCells.add(line.cells.get(i).contents);
+                        if (!StringUtils.isBlank(line.cells.get(i).contents)) {
+                            argCells.add(line.cells.get(i).contents);
+                        }
                     }
 
                 }
