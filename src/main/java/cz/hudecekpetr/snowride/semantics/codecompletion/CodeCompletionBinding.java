@@ -52,14 +52,16 @@ public class CodeCompletionBinding {
                 break;
             }
         }
-        if (Settings.getInstance().cbShowNonexistentOptionFirst && !exactMatchFound) {
-            collectedOptions.add(0, new SimpleAutocompleteOption(request.getUserText(), Images.help));
+        if (!exactMatchFound && collectedOptions.size() == 0) {
+
+            if (Settings.getInstance().cbShowNonexistentOptionFirst) {
+                collectedOptions.add(0, new SimpleAutocompleteOption(request.getUserText(), Images.help));
+            } else {
+                collectedOptions.add(new SimpleAutocompleteOption(request.getUserText(), Images.help));
+            }
         }
         if ("".equals(text) && collectedOptions.size() > 0) {
             collectedOptions.add(0, new DummyAutocompleteOption());
-        }
-        if (!Settings.getInstance().cbShowNonexistentOptionFirst && !exactMatchFound) {
-            collectedOptions.add(new SimpleAutocompleteOption(request.getUserText(), Images.help));
         }
 
         return collectedOptions;
