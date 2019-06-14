@@ -15,9 +15,14 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
 import javafx.scene.control.TextField;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseDragEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
@@ -32,11 +37,42 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     private final SnowTableView snowTableView;
     private TextField textField;
 
+    private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
+
     public IceCell(TableColumn<LogicalLine, Cell> column, int cellIndex, SnowTableView snowTableView) {
         this.column = column;
         this.cellIndex = cellIndex;
         this.snowTableView = snowTableView;
         this.setPadding(new Insets(0));
+        this.setOnDragDetected(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (getItem() != null) {
+                    startFullDrag();
+                    fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                    event.consume();
+                }
+            }
+        });
+        this.setOnMouseDragEntered(new EventHandler<MouseDragEvent>() {
+            @Override
+            public void handle(MouseDragEvent event) {
+
+                if (fullDragStartedAt != null && getItem() != null) {
+                    TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                    snowTableView.getSelectionModel().clearSelection();
+                    snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(), fullDragStartedAt.getTableColumn(),
+                            fullDragEndedAt.getRow(), fullDragEndedAt.getTableColumn());
+                    event.consume();
+                }
+            }
+        });
+        this.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
+            @Override
+            public void handle(MouseDragEvent event) {
+                    fullDragStartedAt = null;
+            }
+        });
         if (cellIndex < 0) {
             // Only the "Row" column has cells with 'cellIndex" less than 0 (it's -1).
             this.setEditable(false);
