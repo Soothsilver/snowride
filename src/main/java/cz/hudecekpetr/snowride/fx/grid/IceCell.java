@@ -124,13 +124,24 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     }
 
     public void commit() {
+        Cell newCell = constructNewCell();
+        commitEdit(newCell);
+        snowTableView.considerAddingVirtualRowsAndColumns();
+    }
+
+    private Cell constructNewCell() {
         String oldTrivia = this.getItem().postTrivia;
         if (!oldTrivia.contains("\t") && !oldTrivia.contains("  ")) {
             oldTrivia = "    ";
         }
         // non-virtual:
-        commitEdit(new Cell(textField.getText(), oldTrivia, getItem().partOfLine));
-        snowTableView.considerAddingVirtualRowsAndColumns();
+        return new Cell(textField.getText(), oldTrivia, getItem().partOfLine);
+    }
+
+    private void trueCancelEdit() {
+        super.cancelEdit();
+        setGraphic(null);
+        setText(this.getItem().contents);
     }
 
     private TextField ensureTextField() {
@@ -150,7 +161,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 @Override
                 public void handle(KeyEvent event) {
                     if (event.getCode() == KeyCode.ESCAPE) {
-                        cancelEdit();
+                        trueCancelEdit();
                         event.consume();
                     }
                 }
@@ -170,9 +181,15 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     @Override
     public void cancelEdit() {
-        super.cancelEdit();
-        setGraphic(null);
-        setText(this.getItem().contents);
+        // Actually, we'd prefer a commit, thank you very much.
+        Cell newCell = constructNewCell();
+        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newCell.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
+        getItem().partOfLine.getCellAsStringProperty(cellIndex, MainForm.INSTANCE).set(newCell);
+        if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
+            ((Suite) snowTableView.getScenario()).reparseResources();
+        }
+        snowTableView.considerAddingVirtualRowsAndColumns();
+        trueCancelEdit();
     }
 
     @Override
