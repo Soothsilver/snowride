@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
 
 /*
  * Copyright (c) 2014, 2016 ControlsFX

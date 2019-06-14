@@ -1,6 +1,5 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
 
-import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
 

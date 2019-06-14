@@ -2,7 +2,6 @@ package cz.hudecekpetr.snowride.ui;
 
 import com.sun.javafx.util.Utils;
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -12,7 +11,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
-import javafx.stage.PopupWindow;
 import javafx.stage.Screen;
 import javafx.stage.Window;
 import org.fxmisc.flowless.VirtualizedScrollPane;

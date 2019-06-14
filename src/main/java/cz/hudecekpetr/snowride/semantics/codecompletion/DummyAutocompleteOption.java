@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import javafx.scene.image.Image;
 
 public class DummyAutocompleteOption implements IAutocompleteOption {

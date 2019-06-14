@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
 
 //
 // Source code recreated from a .class file by IntelliJ IDEA
@@ -6,7 +6,6 @@ package cz.hudecekpetr.snowride.fx;
 //
 
 
-import com.sun.javafx.PlatformUtil;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -15,14 +14,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
-import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import javafx.util.Callback;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Skin<AutoCompletePopup<T>> {

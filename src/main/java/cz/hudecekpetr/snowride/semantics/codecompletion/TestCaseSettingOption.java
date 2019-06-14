@@ -1,10 +1,9 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

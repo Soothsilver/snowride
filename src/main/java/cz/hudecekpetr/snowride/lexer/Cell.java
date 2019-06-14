@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;

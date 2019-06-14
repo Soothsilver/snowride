@@ -37,6 +37,7 @@ public class Settings {
     public boolean cbAlsoImportTxtFiles = true;
     public boolean toolbarReloadAll = true;
     public boolean toolbarDeselectEverything = true;
+    public boolean cbShowNonexistentOptionFirst = false;
 
     public static Settings getInstance() {
         if (instance == null) {

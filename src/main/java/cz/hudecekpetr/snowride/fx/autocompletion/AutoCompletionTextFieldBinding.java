@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
 
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.TextField;

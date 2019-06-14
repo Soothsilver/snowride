@@ -3,7 +3,7 @@ package cz.hudecekpetr.snowride.tree;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;

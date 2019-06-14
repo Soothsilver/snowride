@@ -29,6 +29,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbAlsoImportTxtFiles;
     private CheckBox cbDeselectAll;
     private CheckBox cbReloadAll;
+    private CheckBox cbFirstCompletionOption;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -50,7 +51,7 @@ public class SettingsWindow extends Stage {
         VBox all = new VBox(5, tabs, buttonRow);
         VBox.setVgrow(tabs, Priority.ALWAYS);
         all.setPadding(new Insets(8));
-        this.setScene(new Scene(all, 500, 600));
+        this.setScene(new Scene(all, 700, 600));
         this.getIcons().add(Images.keywordIcon);
         this.setTitle("Settings");
     }
@@ -70,7 +71,10 @@ public class SettingsWindow extends Stage {
         cbReloadAll.setSelected(Settings.getInstance().toolbarReloadAll);
         cbDeselectAll = new CheckBox("Show 'Deselect all' button in the toolbar.");
         cbDeselectAll.setSelected(Settings.getInstance().toolbarDeselectEverything);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll);
+        cbFirstCompletionOption = new CheckBox("If you type a nonexistent keyword, confirm it with Enter instead of choosing the first completion option.");
+        cbFirstCompletionOption.setWrapText(true);
+        cbFirstCompletionOption.setSelected(Settings.getInstance().cbShowNonexistentOptionFirst);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption);
         vboxImportingOptions.setPadding(new Insets(5,0,0,0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -81,6 +85,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().additionalFolders = additionalXmlFilesBox.getText();
         Settings.getInstance().cbAlsoImportTxtFiles = cbAlsoImportTxtFiles.isSelected();
         Settings.getInstance().toolbarDeselectEverything = cbDeselectAll.isSelected();
+        Settings.getInstance().cbShowNonexistentOptionFirst = cbFirstCompletionOption.isSelected();
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().save();
         mainForm.updateAdditionalToolbarButtonsVisibility();

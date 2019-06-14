@@ -1,12 +1,15 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.fx.AutoCompletionBinding;
-import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
-import cz.hudecekpetr.snowride.fx.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionBinding;
+import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionTextFieldBinding;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
+import cz.hudecekpetr.snowride.fx.autocompletion.SimpleAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.grid.IceCell;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.control.TextField;
 
 import java.util.Collection;
@@ -37,13 +40,28 @@ public class CodeCompletionBinding {
     private Collection<? extends IAutocompleteOption> getSuggestions(AutoCompletionBinding.ISuggestionRequest request) {
         String text = Extensions.toInvariant(request.getUserText());
         Cell cell = iceCell.getItem();
+
         Stream<? extends IAutocompleteOption> allOptions = cell.getCompletionOptions(snowTableKind).filter(option ->
                 Extensions.toInvariant(option.getAutocompleteText()).contains(text)
         );
         List<IAutocompleteOption> collectedOptions = allOptions.collect(Collectors.toList());
+        boolean exactMatchFound = false;
+        for (IAutocompleteOption collectedOption : collectedOptions) {
+            if (collectedOption.getAutocompleteText().equalsIgnoreCase(request.getUserText())) {
+                exactMatchFound = true;
+                break;
+            }
+        }
+        if (Settings.getInstance().cbShowNonexistentOptionFirst && !exactMatchFound) {
+            collectedOptions.add(0, new SimpleAutocompleteOption(request.getUserText(), Images.help));
+        }
         if ("".equals(text) && collectedOptions.size() > 0) {
             collectedOptions.add(0, new DummyAutocompleteOption());
         }
+        if (!Settings.getInstance().cbShowNonexistentOptionFirst && !exactMatchFound) {
+            collectedOptions.add(new SimpleAutocompleteOption(request.getUserText(), Images.help));
+        }
+
         return collectedOptions;
     }
 

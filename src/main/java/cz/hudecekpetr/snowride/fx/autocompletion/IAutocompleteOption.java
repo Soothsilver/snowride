@@ -1,4 +1,6 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
+
+import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 
 public interface IAutocompleteOption extends IHasQuickDocumentation {
 

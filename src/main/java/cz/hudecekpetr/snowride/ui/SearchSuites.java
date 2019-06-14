@@ -1,8 +1,8 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.fx.AutoCompletionBinding;
-import cz.hudecekpetr.snowride.fx.AutoCompletionTextFieldBinding;
+import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionBinding;
+import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import javafx.scene.control.TextField;
 

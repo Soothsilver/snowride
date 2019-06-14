@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.autocompletion;
 
 //
 // Source code recreated from a .class file by IntelliJ IDEA
