@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.UndoStack;
@@ -103,10 +104,10 @@ public abstract class HighElement implements IAutocompleteOption {
     @Override
     public String toString() {
         if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
-            return "[text changed] " + getShortName();
+            return (Settings.getInstance().cbUseStructureChanged ? "[text changed] " : "*")+ getShortName();
         }
         if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            return "[structure changed] " + getShortName();
+            return (Settings.getInstance().cbUseStructureChanged ? "[structure changed] " : "*") + getShortName();
         }
         return getShortName();
     }

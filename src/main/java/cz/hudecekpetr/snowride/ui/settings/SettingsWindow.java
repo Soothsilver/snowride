@@ -31,6 +31,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbReloadAll;
     private CheckBox cbFirstCompletionOption;
     private CheckBox cbAutoExpandSelectedTests;
+    private CheckBox cbUseStructureChanged;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -78,7 +79,10 @@ public class SettingsWindow extends Stage {
         cbAutoExpandSelectedTests = new CheckBox("When you 'select all tests' or 'select failed tests', also expand them all.");
         cbAutoExpandSelectedTests.setWrapText(true);
         cbAutoExpandSelectedTests.setSelected(Settings.getInstance().cbAutoExpandSelectedTests);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests);
+        cbUseStructureChanged = new CheckBox("Show [structure changed] or [text changed] instead of an asterisk (*) for changed files.");
+        cbUseStructureChanged.setWrapText(true);
+        cbUseStructureChanged.setSelected(Settings.getInstance().cbUseStructureChanged);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
         vboxImportingOptions.setPadding(new Insets(5,0,0,0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -92,6 +96,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().cbShowNonexistentOptionFirst = cbFirstCompletionOption.isSelected();
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().cbAutoExpandSelectedTests = cbAutoExpandSelectedTests.isSelected();
+        Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
         Settings.getInstance().save();
         mainForm.updateAdditionalToolbarButtonsVisibility();
         mainForm.reloadExternalLibraries();
