@@ -38,6 +38,7 @@ public class Settings {
     public boolean toolbarReloadAll = true;
     public boolean toolbarDeselectEverything = true;
     public boolean cbShowNonexistentOptionFirst = false;
+    public boolean cbAutoExpandSelectedTests = true;
 
     public static Settings getInstance() {
         if (instance == null) {

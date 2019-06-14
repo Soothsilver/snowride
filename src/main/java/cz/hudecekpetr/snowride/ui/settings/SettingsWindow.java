@@ -30,6 +30,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbDeselectAll;
     private CheckBox cbReloadAll;
     private CheckBox cbFirstCompletionOption;
+    private CheckBox cbAutoExpandSelectedTests;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -74,7 +75,10 @@ public class SettingsWindow extends Stage {
         cbFirstCompletionOption = new CheckBox("If you type a nonexistent keyword, confirm it with Enter instead of choosing the first completion option.");
         cbFirstCompletionOption.setWrapText(true);
         cbFirstCompletionOption.setSelected(Settings.getInstance().cbShowNonexistentOptionFirst);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption);
+        cbAutoExpandSelectedTests = new CheckBox("When you 'select all tests' or 'select failed tests', also expand them all.");
+        cbAutoExpandSelectedTests.setWrapText(true);
+        cbAutoExpandSelectedTests.setSelected(Settings.getInstance().cbAutoExpandSelectedTests);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests);
         vboxImportingOptions.setPadding(new Insets(5,0,0,0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -87,6 +91,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().toolbarDeselectEverything = cbDeselectAll.isSelected();
         Settings.getInstance().cbShowNonexistentOptionFirst = cbFirstCompletionOption.isSelected();
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
+        Settings.getInstance().cbAutoExpandSelectedTests = cbAutoExpandSelectedTests.isSelected();
         Settings.getInstance().save();
         mainForm.updateAdditionalToolbarButtonsVisibility();
         mainForm.reloadExternalLibraries();

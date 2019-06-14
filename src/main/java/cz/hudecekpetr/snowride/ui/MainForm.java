@@ -426,6 +426,22 @@ public class MainForm {
                 }
             });
             menu.add(deselect_all_tests);
+            MenuItem expandAll = new MenuItem("Expand all");
+            expandAll.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    setExpandedFlagRecursively(element.treeNode, true);
+                }
+            });
+            menu.add(expandAll);
+            MenuItem collapseAll = new MenuItem("Collapse all");
+            collapseAll.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    setExpandedFlagRecursively(element.treeNode, false);
+                }
+            });
+            menu.add(collapseAll);
         }
         if (element != getRootElement() && element.parent != getRootElement()
                 && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
@@ -481,10 +497,27 @@ public class MainForm {
         return menu;
     }
 
+    private void setExpandedFlagRecursively(TreeItem<HighElement> treeNode, boolean shouldBeExpanded) {
+        treeNode.setExpanded(shouldBeExpanded);
+        for (TreeItem<HighElement> child : treeNode.getChildren()) {
+            setExpandedFlagRecursively(child, shouldBeExpanded);
+        }
+    }
+
     public void selectFailedTests(HighElement element) {
-        element.checkbox.setSelected(element instanceof Scenario && ((Scenario) element).lastTestResult == TestResult.FAILED);
+        boolean isToBeChecked = element instanceof Scenario && ((Scenario) element).lastTestResult == TestResult.FAILED;
+        element.checkbox.setSelected(isToBeChecked);
+        if (isToBeChecked) {
+            maybeExpandUpTo(element);
+        }
         for (HighElement child : element.children) {
             selectFailedTests(child);
+        }
+    }
+
+    private void maybeExpandUpTo(HighElement element) {
+        if (Settings.getInstance().cbAutoExpandSelectedTests) {
+            expandUpTo(element.treeNode);
         }
     }
 
@@ -514,6 +547,9 @@ public class MainForm {
 
     private void setCheckboxesRecursive(HighElement element, boolean shouldBeChecked) {
         element.checkbox.setSelected(shouldBeChecked);
+        if (shouldBeChecked && element instanceof Scenario && ((Scenario) element).isTestCase()) {
+            maybeExpandUpTo(element);
+        }
         for (HighElement child : element.children) {
             setCheckboxesRecursive(child, shouldBeChecked);
         }
