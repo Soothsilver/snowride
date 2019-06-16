@@ -32,45 +32,20 @@ public class GridTab {
 
     private final SnowTableView tableSettings;
     private final SnowTableView tableVariables;
-    private final Button bFindUsages;
     Label lblParseError;
     SnowTableView spreadsheetViewTable;
-    SplitPane suiteView;
+    VBox suiteView;
     VBox spreadsheetView;
-    private MainForm mainForm;
     private Tab tabGrid;
-    private final Label lblName;
-    private ContextMenu findUsagesContextMenu;
+    private final UpperBox upperBox;
+    private final UpperBox upperBox2;
 
     public GridTab(MainForm mainForm) {
-        this.mainForm = mainForm;
         lblParseError = new Label("No file loaded yet.");
         spreadsheetViewTable = new SnowTableView(mainForm, SnowTableKind.SCENARIO);
-        lblName = new Label("Test or keyword name here");
-        lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt;");
-        bFindUsages = new Button("Find usages");
-        bFindUsages.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (spreadsheetViewTable.scenario instanceof Scenario) {
-                    MenuItem placeholder = new MenuItem("(this keyword is not used anywhere)");
-                    placeholder.setDisable(true);
-                    List<MenuItem> items = FindUsages.findUsages(null, ((Scenario) spreadsheetViewTable.scenario), mainForm.getRootElement());
-                    if (findUsagesContextMenu != null) {
-                        findUsagesContextMenu.hide();
-                    }
-                    if (items.size() == 0) {
-                        findUsagesContextMenu = new ContextMenu(placeholder);
-                    } else {
-                        findUsagesContextMenu = new ContextMenu(items.toArray(new MenuItem[0]));
-                    }
-                    findUsagesContextMenu.show(bFindUsages, Side.BOTTOM, 0, 0);
-                }
-            }
-        });
-        HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
-        hboxNameAndFindUsages.setPadding(new Insets(5,0,0,5));
-        spreadsheetView = new VBox(5, hboxNameAndFindUsages, spreadsheetViewTable);
+        upperBox = new UpperBox();
+        upperBox2 = new UpperBox();
+        spreadsheetView = new VBox(5, upperBox, spreadsheetViewTable);
         VBox.setVgrow(spreadsheetViewTable, Priority.ALWAYS);
         tableSettings = new SnowTableView(mainForm, SnowTableKind.SETTINGS);
         tableVariables = new SnowTableView(mainForm, SnowTableKind.VARIABLES);
@@ -82,8 +57,10 @@ public class GridTab {
         labelVariables.setPadding(new Insets(5, 0, 0, 5));
         VBox vboxVariables = new VBox(5, labelVariables, tableVariables);
         VBox.setVgrow(tableVariables, Priority.ALWAYS);
-        suiteView = new SplitPane(vboxSettings, vboxVariables);
-        suiteView.setOrientation(Orientation.VERTICAL);
+        SplitPane suiteViewSplitPane = new SplitPane(vboxSettings, vboxVariables);
+        suiteViewSplitPane.setOrientation(Orientation.VERTICAL);
+        suiteView = new VBox(5, upperBox2, suiteViewSplitPane);
+        VBox.setVgrow(suiteViewSplitPane, Priority.ALWAYS);
     }
 
     public Tab getTabGrid() {
@@ -100,6 +77,8 @@ public class GridTab {
     public void loadElement(HighElement value) {
         if (value != null) {
             value.asSuite().reparseAndRecalculateResources();
+            upperBox.update(value);
+            upperBox2.update(value);
         }
         if (value instanceof FolderSuite) {
             FolderSuite fsuite = (FolderSuite) value;
@@ -117,8 +96,6 @@ public class GridTab {
             }
         } else if (value instanceof Scenario) {
             spreadsheetViewTable.loadLines(value, ((Scenario) value).getLines());
-            lblName.setText(value.getShortName());
-            bFindUsages.setVisible(!((Scenario) value).isTestCase());
             tabGrid.setContent(spreadsheetView);
         } else {
             tabGrid.setContent(lblParseError);
