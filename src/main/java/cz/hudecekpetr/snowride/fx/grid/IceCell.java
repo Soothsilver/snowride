@@ -121,12 +121,12 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         if (getScene().getFocusOwner() == textField) {
              column.getTableView().requestFocus();
         }
+        snowTableView.considerAddingVirtualRowsAndColumns();
     }
 
     public void commit() {
         Cell newCell = constructNewCell();
         commitEdit(newCell);
-        snowTableView.considerAddingVirtualRowsAndColumns();
     }
 
     private Cell constructNewCell() {

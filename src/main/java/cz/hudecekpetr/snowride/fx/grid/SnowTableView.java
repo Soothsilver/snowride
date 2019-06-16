@@ -379,7 +379,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (operations.size() > 0) {
             getScenario().getUndoStack().iJustDid(new MassOperation(operations));
         }
-        // t
+        considerAddingVirtualRowsAndColumns();
     }
 
     private int tableXToLogicalX(int tableX) {
@@ -508,21 +508,51 @@ public class SnowTableView extends TableView<LogicalLine> {
 
 
     public void considerAddingVirtualRowsAndColumns() {
+        // Rows
         int virtualRows = 0;
+        int lastFullColumn = -1;
+
         for (int i = getItems().size() - 1; i >= 0; i--) {
             LogicalLine line = getItems().get(i);
+            int numberOfColumnsOfThisLine = line.cells.size();
+            if (numberOfColumnsOfThisLine > 0) {
+                int lastNonemptyThisLine = -1;
+                for (int j = line.cells.size()-1;j>0;j--) {
+                    Cell cell = line.cells.get(j);
+                    if (!StringUtils.isEmpty(cell.contents)) {
+                        lastNonemptyThisLine = j;
+                        break;
+                    }
+                }
+                if (lastNonemptyThisLine > lastFullColumn) {
+                    lastFullColumn = lastNonemptyThisLine;
+                }
+            }
             if (line.isFullyVirtual()) {
                 virtualRows++;
             }
-            if (virtualRows >= 4) {
-                // That's enough. That's fine. We don't need more.
-                return;
+        }
+        // The last cell that contains a value is at logical place "lastFullColumn"
+        // The actual number of columns in the TableView is columnCount.
+        // Of these, 1 is the "Row" column, so we ignore that.
+        // In scenario, we count from cell 1, so the table is full if there are as many columns as lastFullColumn  + 1 (the column itself) +1 (the first column) -1 (the ignored first cell)
+        // In settings, we count from cell 0, so the table is full if there are as many columns as lastFullColumn  + 1 (the column itself) +1 (the first column) )
+        int tableFullIfNumberOfColumnsIs = (snowTableKind.isScenario() ? lastFullColumn + 1 : lastFullColumn + 2);
+        int missingColumns = 1 + tableFullIfNumberOfColumnsIs - getColumns().size();
+        for (int missingId = 1; missingId <= missingColumns; missingId++) {
+            System.out.println("Adding column for cell " + (lastFullColumn + missingId));
+            // add a column
+            if (snowTableKind.isScenario()) {
+                getColumns().add(createColumn(getColumns().size()));
+            } else {
+                getColumns().add(createColumn(getColumns().size()-1));
             }
         }
         while (virtualRows < 4) {
             getItems().add(createNewLine());
             virtualRows++;
         }
+        // Columns
     }
 
     public void goRight() {
