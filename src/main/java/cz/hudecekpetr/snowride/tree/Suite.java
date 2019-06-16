@@ -160,6 +160,7 @@ public abstract class Suite extends HighElement {
     public void reparseAndRecalculateResources() {
         this.reparseResources();
         this.recalculateResources();
+        System.out.println("Recalculated.");
     }
 
     @Override

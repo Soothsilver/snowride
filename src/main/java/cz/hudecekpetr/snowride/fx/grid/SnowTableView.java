@@ -365,7 +365,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             if (this.getItems().size() <= atRow) {
                 this.getItems().add(createNewLine());
             }
-            String[] cellSplit = StringUtils.split(line, '\t');
+            String[] cellSplit = StringUtils.splitPreserveAllTokens(line, '\t');
             int atColumn = startingPosition.getColumn();
             for (int xi = 0; xi < cellSplit.length; xi++) {
                 int x = atColumn + xi;

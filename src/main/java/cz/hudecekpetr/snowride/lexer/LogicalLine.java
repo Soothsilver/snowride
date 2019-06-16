@@ -92,6 +92,8 @@ public class LogicalLine {
                     String previousValue = cells.get(index).contents;
                     cells.set(index, newValue);
                     recalcStyles();
+
+
                     if (belongsToHighElement != null && !previousValue.equals(newValue.contents)) {
                         belongsToHighElement.markAsStructurallyChanged(mainForm);
                     }

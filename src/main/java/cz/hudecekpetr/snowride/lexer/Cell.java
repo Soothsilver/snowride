@@ -10,6 +10,7 @@ import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,6 +32,7 @@ public class Cell implements IHasQuickDocumentation {
     public boolean virtual;
     public boolean triggerDocumentationNext;
     public boolean isLineNumberCell;
+    public String inspectionWarning;
     private boolean isComment;
     private boolean isKeyword;
     private ArgumentStatus argumentStatus;
@@ -79,6 +81,8 @@ public class Cell implements IHasQuickDocumentation {
                         Suite asSuite = (Suite) partOfLine.belongsToHighElement;
                         Optional<ImportedResource> resource = asSuite.getImportedResources().stream().filter(ir -> ir.getName().equals(contents)).findFirst();
                         if (resource.isPresent()) {
+
+                            System.out.println("Style set for '" + contents + "'.");
                             if (resource.get().isSuccessfullyImported()) {
                                 if (resource.get().getImportsSuite() != null) {
                                     style += "-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold; ";

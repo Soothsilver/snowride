@@ -5,11 +5,11 @@ Root Ahoy
 
 *** Settings ***
 Library    Collections
-Library    String
+Resource    infolder/ressurection.robot
 Test Timeout    5 minutes
 Test Setup    Log    Ahoy
-Test Teardown    Log    End
 
 *** Variables ***
 ${yourname}    Soothsilver
 ${realm}    Seven Mounting Heavens of Celestia
+

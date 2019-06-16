@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
 import javafx.beans.value.ChangeListener;
@@ -13,10 +14,8 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
@@ -24,6 +23,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
+
+import javax.tools.Tool;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
     private TableColumn<LogicalLine, Cell> column;
@@ -116,7 +117,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
         super.commitEdit(newValue);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
-            ((Suite) snowTableView.getScenario()).reparseResources();
+            ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
+            newValue.partOfLine.recalcStyles();
         }
         if (getScene().getFocusOwner() == textField) {
              column.getTableView().requestFocus();
@@ -140,8 +142,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     private void trueCancelEdit() {
         super.cancelEdit();
-        setGraphic(null);
-        setText(this.getItem().contents);
+        setTextAndGraphicTo(this.getItem());
     }
 
     private TextField ensureTextField() {
@@ -207,8 +208,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             setGraphic(null);
             setStyle(null);
         } else {
-            setText(item.contents);
-            setGraphic(null);
+            setTextAndGraphicTo(item);
             if (item.isLineNumberCell) {
                 String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
                 style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-alignment: center; ";
@@ -221,6 +221,17 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 triggerDocumentation();
                 item.triggerDocumentationNext = false;
             }
+        }
+    }
+
+    private void setTextAndGraphicTo(Cell item) {
+        setText(item.contents);
+        if (item.inspectionWarning != null) {
+            ImageView warning = new ImageView(Images.warning);
+            Tooltip.install(warning, new Tooltip(item.inspectionWarning));
+            setGraphic(warning);
+        } else {
+            setGraphic(null);
         }
     }
 }
