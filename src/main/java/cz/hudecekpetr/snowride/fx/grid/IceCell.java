@@ -1,9 +1,9 @@
 package cz.hudecekpetr.snowride.fx.grid;
 
+import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
-import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
@@ -13,37 +13,40 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 
-import javax.tools.Tool;
-
 public class IceCell extends TableCell<LogicalLine, Cell> {
+    private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
+    private final SnowTableView snowTableView;
     private TableColumn<LogicalLine, Cell> column;
     private CodeCompletionBinding codeCompletionBinding;
-
-    public int getCellIndex() {
-        return cellIndex;
-    }
-
     private int cellIndex;
-    private final SnowTableView snowTableView;
     private TextField textField;
-
-    private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
 
     public IceCell(TableColumn<LogicalLine, Cell> column, int cellIndex, SnowTableView snowTableView) {
         this.column = column;
         this.cellIndex = cellIndex;
         this.snowTableView = snowTableView;
+        this.setOnMouseEntered(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Underlining.updateCellTo(getItem());
+            }
+        });
+        this.setOnMouseExited(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (Underlining.getActiveCell() == getItem()) {
+                    Underlining.updateCellTo(null);
+                }
+            }
+        });
         this.setPadding(new Insets(0));
         this.setOnDragDetected(new EventHandler<MouseEvent>() {
             @Override
@@ -71,13 +74,17 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
             @Override
             public void handle(MouseDragEvent event) {
-                    fullDragStartedAt = null;
+                fullDragStartedAt = null;
             }
         });
         if (cellIndex < 0) {
             // Only the "Row" column has cells with 'cellIndex" less than 0 (it's -1).
             this.setEditable(false);
         }
+    }
+
+    public int getCellIndex() {
+        return cellIndex;
     }
 
     private void triggerDocumentation() {
@@ -121,7 +128,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             newValue.partOfLine.recalcStyles();
         }
         if (getScene().getFocusOwner() == textField) {
-             column.getTableView().requestFocus();
+            column.getTableView().requestFocus();
         }
         snowTableView.considerAddingVirtualRowsAndColumns();
     }
@@ -167,7 +174,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                     }
                     if (event.getCode() == KeyCode.TAB) {
                         commit();
-                        snowTableView.selectCell(0,1);
+                        snowTableView.selectCell(0, 1);
                         event.consume();
                     }
                 }
@@ -177,7 +184,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     int oldCaret = textField.getCaretPosition();
                     int oldAnchor = textField.getAnchor();
-                    textField.selectRange(0,0);
+                    textField.selectRange(0, 0);
                     textField.selectRange(oldAnchor, oldCaret);
                 }
             });

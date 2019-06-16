@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
@@ -218,6 +219,10 @@ public class MainForm {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.CONTROL) {
+                    Underlining.ctrlDown = true;
+                    Underlining.update();
+                }
                 if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                     runTab.clickRun(null);
                     event.consume();
@@ -231,6 +236,15 @@ public class MainForm {
                     tbSearchTests.requestFocus();
                     searchSuitesAutoCompletion.trigger();
                     event.consume();
+                }
+            }
+        });
+        scene.addEventFilter(KeyEvent.KEY_RELEASED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.CONTROL) {
+                    Underlining.ctrlDown = false;
+                    Underlining.update();
                 }
             }
         });

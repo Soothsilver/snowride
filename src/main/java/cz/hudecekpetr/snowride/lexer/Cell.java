@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
@@ -120,6 +121,9 @@ public class Cell implements IHasQuickDocumentation {
             if (knownKeyword != null) {
                 if (knownKeyword.getScenarioIfPossible() != null) {
                     style += "-fx-text-fill: blue; ";
+                    if (Underlining.getActiveCell() == this && Underlining.ctrlDown) {
+                        style += "-fx-underline: true; ";
+                    }
                 } else {
                     style += "-fx-text-fill: dodgerblue; ";
                 }
