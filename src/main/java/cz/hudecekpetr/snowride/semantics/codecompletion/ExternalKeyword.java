@@ -12,7 +12,8 @@ import java.util.stream.Collectors;
 
 public class ExternalKeyword implements IKnownKeyword {
 
-    public static final int PRIORITY_USER_KEYWORD = 0; // highest priority
+    public static final int PRIORITY_TEST_OPTION = -1; // highest priority
+    public static final int PRIORITY_USER_KEYWORD = 0;
     public static final int PRIORITY_EXTERNAL_LIBRARY = 1;
     public static final int PRIORITY_PACKED_IN = 2;
     public static final int VARARGS_MEANS_INFINITE = 1000;
@@ -97,5 +98,19 @@ public class ExternalKeyword implements IKnownKeyword {
             default:
                 return 100; // unknown
         }
+    }
+
+    @Override
+    public int getArgumentIndexOfKeywordArgument() {
+        if (library.getKind() != LibraryKind.PACKED_IN) {
+            return -1;
+        }
+        if (this.canonicalName.equals("Wait Until Keyword Succeeds")) {
+            return 2;
+        }
+        if (this.canonicalName.equals("Repeat Keyword")) {
+            return 1;
+        }
+        return -1;
     }
 }

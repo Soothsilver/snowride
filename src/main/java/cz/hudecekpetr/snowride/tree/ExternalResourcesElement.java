@@ -79,4 +79,9 @@ public class ExternalResourcesElement extends Suite {
     public String getInvariantName() {
         return "";
     }
+
+    @Override
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+        throw new RuntimeException("You can't add children to the external resources node.");
+    }
 }

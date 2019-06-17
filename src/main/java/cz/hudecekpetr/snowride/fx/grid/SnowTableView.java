@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.fx.grid;
 import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
 import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
@@ -11,7 +12,10 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.ISuite;
 import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.ui.DeepCopy;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.AddRowOperation;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
@@ -124,7 +128,8 @@ public class SnowTableView extends TableView<LogicalLine> {
             TablePosition lastPosition = getSelectionModel().getSelectedCells().get(0);
             if (lastPosition.getColumn() != -1 && lastPosition.getRow() != -1) {
                 LogicalLine line = getItems().get(lastPosition.getRow());
-                IKnownKeyword keywordInThisCell = line.getCellAsStringProperty(tableXToLogicalX(lastPosition.getColumn()), mainForm).getValue().getKeywordInThisCell();
+                Cell thisCell = line.getCellAsStringProperty(tableXToLogicalX(lastPosition.getColumn()), mainForm).getValue();
+                IKnownKeyword keywordInThisCell = thisCell.getKeywordInThisCell();
                 if (keywordInThisCell != null) {
                     MenuItem miFindUsages = new MenuItem("Find usages");
                     miFindUsages.setOnAction(new EventHandler<ActionEvent>() {
@@ -136,6 +141,19 @@ public class SnowTableView extends TableView<LogicalLine> {
                         }
                     });
                     contextMenuItems.add(miFindUsages);
+                    contextMenuItems.add(new SeparatorMenuItem());
+                } else if (thisCell.getSemantics().isKeyword) {
+                    MenuItem miCreateThis = new MenuItem("Create this keyword in the same file");
+                    miCreateThis.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            Suite suite = scenario.parent;
+                            Scenario newKeyword = suite.createNewChild(thisCell.contents, false, mainForm);
+                            // TODO add arguments and return value rows
+                            mainForm.changeOccurredTo(suite, LastChangeKind.STRUCTURE_CHANGED);
+                        }
+                    });
+                    contextMenuItems.add(miCreateThis);
                     contextMenuItems.add(new SeparatorMenuItem());
                 }
             }
@@ -169,6 +187,9 @@ public class SnowTableView extends TableView<LogicalLine> {
     private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
         List<TablePosition> toClear = new ArrayList<>();
         List<TablePosition> toSelect = new ArrayList<>();
+// We want to scroll to the new columm selected if it's not already visible in the viewport -- but not if it is.
+// I don't know how to do that, though.
+//        TablePosition any = null;
         while (change.next()) {
             boolean atLeastOneFirstColumnCellSelected = false;
             for (TablePosition tablePosition : change.getAddedSubList()) {
@@ -176,6 +197,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                     atLeastOneFirstColumnCellSelected = true;
                     toClear.add(tablePosition);
                 }
+//                any = tablePosition;
             }
             if (atLeastOneFirstColumnCellSelected) {
                 for (TablePosition tablePosition : change.getRemoved()) {
@@ -185,6 +207,9 @@ public class SnowTableView extends TableView<LogicalLine> {
                 }
             }
         }
+//        if (any != null) {
+//            scrollToColumn(any.getTableColumn());
+//        }
         if (toClear.size() > 0 || toSelect.size() > 0) {
             // Has to be done later to avoid creating an inconsistent selection model (which throws exceptions) -
             // it's not legal to clear/select stuff from within this list change listener. I tried.
@@ -436,7 +461,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
-    private LogicalLine createNewLine() {
+    public LogicalLine createNewLine() {
         LogicalLine newLine = new LogicalLine();
         newLine.belongsToHighElement = scenario;
         newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
@@ -455,7 +480,11 @@ public class SnowTableView extends TableView<LogicalLine> {
                 return new IceCell(param, cellIndex, SnowTableView.this);
             }
         });
-        column.setPrefWidth(200);
+        if (cellIndex == 0 || cellIndex == 1) {
+            column.setPrefWidth(240);
+        } else {
+            column.setPrefWidth(160);
+        }
         column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
             @Override
             public ObservableValue<Cell> call(TableColumn.CellDataFeatures<LogicalLine, Cell> param) {

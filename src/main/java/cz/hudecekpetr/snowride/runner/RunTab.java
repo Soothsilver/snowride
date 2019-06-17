@@ -1,9 +1,7 @@
 package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Tag;
@@ -17,7 +15,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -45,7 +42,6 @@ import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.zeroturnaround.process.ProcessUtil;
 import org.zeroturnaround.process.Processes;
-import sun.nio.ch.IOStatus;
 
 import java.awt.*;
 import java.io.File;
@@ -579,12 +575,12 @@ public class RunTab {
         List<Tag> whatTagsCannotBe = new ArrayList<>();
         if (tagsRequired) {
             for (String tag : StringUtils.split(tbWithTags.getText(), ',')) {
-                whatTagsMustBe.add(new Tag(tag.trim().toLowerCase()));
+                whatTagsMustBe.add(new Tag(tag.trim().toLowerCase(), null, null));
             }
         }
         if (tagsIgnored) {
             for (String tag : StringUtils.split(tbWithoutTags.getText(), ',')) {
-                whatTagsCannotBe.add(new Tag(tag.trim().toLowerCase()));
+                whatTagsCannotBe.add(new Tag(tag.trim().toLowerCase(), null, null));
             }
         }
         mainForm.getRootElement().selfAndDescendantHighElements().forEach(he -> {

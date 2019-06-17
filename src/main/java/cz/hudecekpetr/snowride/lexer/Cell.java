@@ -1,22 +1,19 @@
 package cz.hudecekpetr.snowride.lexer;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
-import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
-import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -33,15 +30,8 @@ public class Cell implements IHasQuickDocumentation {
     public boolean virtual;
     public boolean triggerDocumentationNext;
     public boolean isLineNumberCell;
-    public String inspectionWarning;
-    private boolean isComment;
-    private boolean isKeyword;
-    private ArgumentStatus argumentStatus;
-    private int cellIndex;
-    public IKnownKeyword keywordOfThisLine; // TODO to be reimplemented at the line level
-    private List<IKnownKeyword> permissibleKeywords;
-    private Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
+    private CellSemantics semantics;
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
         this.contents = contents;
@@ -62,7 +52,7 @@ public class Cell implements IHasQuickDocumentation {
 
     public void updateStyle(int cellIndex) {
         leadsToSuite = null;
-        String style = "";//-fx-padding: 0; -fx-background-insets: 0.0; ";
+        String style = "";
         if (isLineNumberCell) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
         } else {
@@ -101,23 +91,24 @@ public class Cell implements IHasQuickDocumentation {
         }
         styleProperty.set(style);
     }
+
     private String getStyle() {
-        updateSemanticsStatus();
+        partOfLine.recalculateSemantics();
 
         String style = "";
-        if (cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
+        if (semantics.cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
-        } else if (cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR")) {
+        } else if (semantics.cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR")) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
-        } else if (cellIndex == 1 && contents.equals("\\")) {
+        } else if (semantics.cellIndex == 1 && contents.equals("\\")) {
             style += "-fx-font-style: italic; -fx-background-color: darkgray; ";
-        } else if (isComment) {
+        } else if (semantics.isComment) {
             style += "-fx-text-fill: brown; ";
-        } else if (isKeyword) {
+        } else if (semantics.isKeyword) {
             style += "-fx-font-weight: bold; ";
-            IKnownKeyword knownKeyword = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
+            IKnownKeyword knownKeyword = semantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
             if (knownKeyword != null) {
                 if (knownKeyword.getScenarioIfPossible() != null) {
                     style += "-fx-text-fill: blue; ";
@@ -132,9 +123,9 @@ public class Cell implements IHasQuickDocumentation {
             style += "-fx-text-fill: green; ";
         }
         style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
-        switch (argumentStatus) {
+        switch (semantics.argumentStatus) {
             case FORBIDDEN:
-                if (!isComment && !StringUtils.isBlank(contents)) {
+                if (!semantics.isComment && !StringUtils.isBlank(contents)) {
                     style += "-fx-background-color: #ff7291; ";
                 } else {
                     style += "-fx-background-color: #c0c0c0; ";
@@ -153,78 +144,18 @@ public class Cell implements IHasQuickDocumentation {
         return style;
     }
 
-    public void updateSemanticsStatus() {
-        keywordOfThisLine = null;
-        isComment = false;
-        cellIndex = partOfLine.cells.indexOf(this);
-        boolean pastTheKeyword = false;
-        isKeyword = false;
-        boolean skipFirst = true;
-        int indexOfThisAsArgument = -2;
-        if ((partOfLine.belongsToHighElement instanceof Scenario) && (((Scenario) partOfLine.belongsToHighElement)).semanticsIsTemplateTestCase) {
-            pastTheKeyword = true;
-            indexOfThisAsArgument = -1;
-        }
-        for (Cell cell : partOfLine.cells) {
-            if (indexOfThisAsArgument >= -1) {
-                indexOfThisAsArgument++;
-            }
-            if (skipFirst) {
-                skipFirst = false;
-                continue;
-            }
-            isKeyword = false;
-            if (cell.contents.startsWith("#")) {
-                isComment = true;
-                break;
-            }
-            if (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\")) {
-                // TODO the last thing should only trigger a non-keyword if there is a nonempty cell afterwards still on the same row
-                // Is the return value, or an indent due to the FOR loop.
-            } else if (!pastTheKeyword) {
-                // This is the keyword.
-                isKeyword = true;
-                permissibleKeywords = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
-                permissibleKeywordsByInvariantName = partOfLine.belongsToHighElement.asSuite().getKeywordsPermissibleInSuiteByInvariantName();
-                keywordOfThisLine = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
-                pastTheKeyword = true;
-                indexOfThisAsArgument = -1;
-            }
-            if (cell == this) {
-                // The rest doesn't matter.
-                break;
-            }
-        }
-        argumentStatus = ArgumentStatus.UNKNOWN;
-        if (keywordOfThisLine != null) {
-            int maxMandatory = keywordOfThisLine.getNumberOfMandatoryArguments();
-            int maxOptional = keywordOfThisLine.getNumberOfOptionalArguments() + maxMandatory;
-            if (indexOfThisAsArgument >= 0) {
-                if (indexOfThisAsArgument < maxMandatory) {
-                    argumentStatus = ArgumentStatus.MANDATORY;
-                } else if (indexOfThisAsArgument < maxOptional) {
-                    argumentStatus = ArgumentStatus.VARARG;
-                } else {
-                    argumentStatus = ArgumentStatus.FORBIDDEN;
-                }
-            }
-        }
-    }
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind) {
         if (snowTableKind.isScenario()) {
-            updateSemanticsStatus();
+            partOfLine.recalculateSemantics();
             Stream<IAutocompleteOption> options = Stream.empty();
-            if (cellIndex == 1) {
-                options = Stream.concat(options, TestCaseSettingOption.testCaseTableOptions.stream());
-            }
-            if (isKeyword) {
-                options = Stream.concat(options, permissibleKeywords.stream());
+            if (semantics.isKeyword) {
+                options = Stream.concat(options, semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
             }
             return options;
         } else {
-            cellIndex = partOfLine.cells.indexOf(this);
-            if (cellIndex == 0 && snowTableKind == SnowTableKind.SETTINGS) {
+            semantics.cellIndex = partOfLine.cells.indexOf(this);
+            if (semantics.cellIndex == 0 && snowTableKind == SnowTableKind.SETTINGS) {
                 return TestCaseSettingOption.settingsTableOptions.stream();
             }
             return Stream.empty();
@@ -232,21 +163,17 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     public IKnownKeyword getKeywordInThisCell() {
-        updateSemanticsStatus();
-        if (isKeyword) {
-            IKnownKeyword first = permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
-            return first;
-        }
-        return null;
+        partOfLine.recalculateSemantics();
+        return semantics.thisHereKeyword;
     }
 
     public boolean hasDocumentation() {
-        return this.isKeyword;
+        return this.semantics.isKeyword;
     }
 
     @Override
     public Image getAutocompleteIcon() {
-        if (isKeyword) {
+        if (semantics.isKeyword) {
             IKnownKeyword kw = getKeywordInThisCell();
             if (kw != null) {
                 return kw.getAutocompleteIcon();
@@ -257,7 +184,7 @@ public class Cell implements IHasQuickDocumentation {
 
     @Override
     public String getQuickDocumentationCaption() {
-        if (isKeyword) {
+        if (semantics.isKeyword) {
             IKnownKeyword kw = getKeywordInThisCell();
             if (kw != null) {
                 return kw.getQuickDocumentationCaption();
@@ -268,7 +195,7 @@ public class Cell implements IHasQuickDocumentation {
 
     @Override
     public String getFullDocumentation() {
-        if (isKeyword) {
+        if (semantics.isKeyword) {
             IKnownKeyword kw = getKeywordInThisCell();
             if (kw != null) {
                 return kw.getFullDocumentation();
@@ -279,7 +206,7 @@ public class Cell implements IHasQuickDocumentation {
 
     @Override
     public String getItalicsSubheading() {
-        if (isKeyword) {
+        if (semantics.isKeyword) {
             IKnownKeyword kw = getKeywordInThisCell();
             if (kw != null) {
                 return kw.getItalicsSubheading();
@@ -292,7 +219,15 @@ public class Cell implements IHasQuickDocumentation {
         return styleProperty;
     }
 
-    private enum ArgumentStatus {
+    public void setSemantics(CellSemantics semantics) {
+        this.semantics = semantics;
+    }
+
+    public CellSemantics getSemantics() {
+        return this.semantics;
+    }
+
+    public enum ArgumentStatus {
         MANDATORY,
         VARARG,
         FORBIDDEN,

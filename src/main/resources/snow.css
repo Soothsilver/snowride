@@ -47,3 +47,10 @@
     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.5) , 10, 0.0 , 0 , 3 );
     -fx-font-size: 1em;
 }
+.hyperlink, .hyperlink:visited {
+    -fx-text-fill: dodgerblue;
+    -fx-underline: false;
+}
+.hyperlink:hover {
+    -fx-underline: true;
+}

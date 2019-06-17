@@ -10,7 +10,7 @@ public abstract class AboutDialogBase extends Stage {
         this.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.ESCAPE || event.getCode() == KeyCode.ENTER) {
+                if (event.getCode() == KeyCode.ESCAPE) {
                     AboutDialogBase.this.close();
                 }
             }

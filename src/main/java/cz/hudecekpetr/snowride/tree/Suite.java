@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.Setting;
@@ -15,7 +16,10 @@ import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
 import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.ResourceFileKeywordSource;
+import cz.hudecekpetr.snowride.semantics.resources.TestCaseSettingOptionLibrarySource;
+import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ListChangeListener;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
@@ -28,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public abstract class Suite extends HighElement {
+public abstract class Suite extends HighElement implements ISuite {
     public RobotFile fileParsed;
     public long importedResourcesLastRecursedDuringIteration = 0;
     public Set<Tag> forceTagsCumulative = new HashSet<>();
@@ -85,6 +89,7 @@ public abstract class Suite extends HighElement {
     private void recalculateResources() {
         importedResourcesRecursively.clear();
         importedKeywordsRecursively.clear();
+        importedResourcesRecursively.add(new TestCaseSettingOptionLibrarySource());
         importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
         importedResourcesRecursively.add(new ResourceFileKeywordSource(this));
         importedResources.forEach(ir -> ir.gatherSelfInto(importedResourcesRecursively, this, ImportedResource.incrementAndGetIterationCount()));
@@ -176,12 +181,16 @@ public abstract class Suite extends HighElement {
             for (Setting setting : settings) {
                 if (setting.key.toLowerCase().equals("force tags")) {
                     for (String val : setting.values) {
-                        forceTagsCumulative.add(new Tag(val));
+                        if (!StringUtils.isBlank(val)) {
+                            forceTagsCumulative.add(new Tag(val, TagKind.FORCED, this));
+                        }
                     }
                 }
                 if (setting.key.toLowerCase().equals("default tags")) {
                     for (String val : setting.values) {
-                        defaultTags.add(new Tag(val));
+                        if (!StringUtils.isBlank(val)) {
+                            defaultTags.add(new Tag(val, TagKind.DEFAULT, this));
+                        }
                     }
                 }
             }
@@ -240,5 +249,33 @@ public abstract class Suite extends HighElement {
             }
         }
         return true;
+    }
+
+    @Override
+    protected String getTagsDocumentation() {
+        String t = "";
+        if (forceTagsCumulative.size() > 0) {
+            t += "*Force tags:* " + StringUtils.join(forceTagsCumulative.stream().map(tg -> tg.prettyPrintFromSuite(this)).iterator(), ", ");
+        }
+        if (defaultTags.size() > 0) {
+            if (!StringUtils.isEmpty(t)) {
+                t+="\n";
+            }
+            t += "*Default tags:* " + StringUtils.join(defaultTags.stream().map(Tag::getTag).iterator(), ", ");
+        }
+        if (StringUtils.isEmpty(t)) {
+            return null;
+        } else {
+            return t;
+        }
+    }
+
+    public LogicalLine findLineWithTags() {
+        for (LogicalLine pair : fileParsed.findOrCreateSettingsSection().pairs) {
+            if (pair.getCellAsStringProperty(0, MainForm.INSTANCE).getValue().contents.equalsIgnoreCase("Force tags")) {
+                return pair;
+            }
+        }
+        return null;
     }
 }

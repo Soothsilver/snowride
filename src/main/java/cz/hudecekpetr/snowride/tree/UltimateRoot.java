@@ -91,4 +91,9 @@ public class UltimateRoot extends Suite {
     public boolean excludedFromQualifiedName() {
         return true;
     }
+
+    @Override
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+        throw new RuntimeException("You can't add children to the ultimate root.");
+    }
 }

@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
+import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
@@ -41,6 +42,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public Suite parent;
     public boolean dead;
     protected String semanticsDocumentation;
+    protected LogicalLine semanticsDocumentationLine;
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
     private String invariantName;
     private UndoStack undoStack = new UndoStack();
@@ -167,9 +169,13 @@ public abstract class HighElement implements IAutocompleteOption {
 
     @Override
     public String getFullDocumentation() {
+        String tagsDocumentation = getTagsDocumentation();
         return "*Qualified name:* " + this.getQualifiedName() +
-                (!StringUtils.isBlank(this.semanticsDocumentation) ? ("\n" + "*Documentation:* " + this.semanticsDocumentation) : "");
+                (tagsDocumentation != null ? ("\n" + tagsDocumentation) : "") +
+                (!StringUtils.isBlank(this.semanticsDocumentation) ? ("\n" + this.semanticsDocumentation) : "");
     }
+
+    protected abstract String getTagsDocumentation();
 
     public String getInvariantName() {
         return invariantName;
@@ -177,5 +183,9 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public UndoStack getUndoStack() {
         return undoStack;
+    }
+
+    public LogicalLine getDocumentationLine() {
+        return semanticsDocumentationLine;
     }
 }

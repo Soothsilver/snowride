@@ -233,12 +233,6 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     private void setTextAndGraphicTo(Cell item) {
         setText(item.contents);
-        if (item.inspectionWarning != null) {
-            ImageView warning = new ImageView(Images.warning);
-            Tooltip.install(warning, new Tooltip(item.inspectionWarning));
-            setGraphic(warning);
-        } else {
-            setGraphic(null);
-        }
+        setGraphic(null);
     }
 }

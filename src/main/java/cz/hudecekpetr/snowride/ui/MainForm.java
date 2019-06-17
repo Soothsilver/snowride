@@ -111,7 +111,7 @@ public class MainForm {
     private Menu projectMenu;
     private TextField tbSearchTests;
     private ContextMenu treeContextMenu;
-    private GridTab gridTab;
+    public GridTab gridTab;
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;

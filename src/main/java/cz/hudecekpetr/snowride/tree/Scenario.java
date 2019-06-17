@@ -102,6 +102,15 @@ public class Scenario extends HighElement {
         return (Suite) this.parent;
     }
 
+    @Override
+    protected String getTagsDocumentation() {
+        if (actualTags.size() > 0) {
+            return "*Tags: *" + StringUtils.join(actualTags.stream().map(tg -> tg.prettyPrint()).iterator(), ", ");
+        } else {
+            return null;
+        }
+    }
+
     public void serializeInto(StringBuilder sb) {
         sb.append(nameCell.contents);
         sb.append(nameCell.postTrivia);
@@ -172,6 +181,7 @@ public class Scenario extends HighElement {
                     for (int i = 2; i < line.cells.size(); i++) {
                         docCells.add(line.cells.get(i).contents);
                     }
+                    semanticsDocumentationLine = line;
                     semanticsDocumentation = String.join("\n", docCells);
                 }
                 else if (line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")) {
@@ -201,7 +211,9 @@ public class Scenario extends HighElement {
             if (line.cells.size() >= 2) {
                 if (line.cells.get(1).contents.equalsIgnoreCase("[tags]")) {
                     for (int i = 2; i < line.cells.size(); i++) {
-                        actualTags.add(new Tag(line.cells.get(i).contents));
+                        if (!StringUtils.isBlank(line.cells.get(i).contents)) {
+                            actualTags.add(new Tag(line.cells.get(i).contents, TagKind.STANDARD, this));
+                        }
                     }
                     foundTags = true;
                 }
@@ -212,4 +224,14 @@ public class Scenario extends HighElement {
         }
     }
 
+    public LogicalLine findLineWithTags() {
+        for (LogicalLine line : getLines()) {
+            if (line.cells.size() >= 2) {
+                if (line.cells.get(1).contents.equalsIgnoreCase("[tags]")) {
+                    return line;
+                }
+            }
+        }
+        return null;
+    }
 }

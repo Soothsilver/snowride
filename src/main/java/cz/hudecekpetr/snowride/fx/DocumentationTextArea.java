@@ -14,7 +14,9 @@ import java.util.function.BiConsumer;
 public class DocumentationTextArea extends StyledTextArea<String, String> {
     public static final String DOC_STYLE = "-fx-font-size: 10pt; ";
     public static final String BOLD_STYLE = DOC_STYLE + "-fx-font-weight: bold; ";
+    public static final String ITALICS_STYLE = DOC_STYLE + "-fx-font-style: italic; ";
     public static final String CODE_STYLE = DOC_STYLE + "-fx-font-family: monospace; ";
+    public static final String ITALICS_CHARACTER = "[[ITALICS]]";
 
     public DocumentationTextArea() {
         super("", TextFlow::setStyle,
@@ -39,7 +41,7 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
         int startFromIndex = 0;
         while (startFromIndex < fullDocumentation.length()) {
             int earliestAsterisk = fullDocumentation.indexOf('*', startFromIndex);
-            int earliestUnderscore = fullDocumentation.indexOf('_', startFromIndex);
+            int earliestUnderscore = fullDocumentation.indexOf(ITALICS_CHARACTER, startFromIndex);
             int earliestCode = fullDocumentation.indexOf("``", startFromIndex);
             int minimumSpecial = minNonMinusOne(earliestAsterisk, earliestUnderscore, earliestCode);
             if (minimumSpecial == -1) {
@@ -65,6 +67,16 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
                         int now = this.getLength();
                         setStyle(then, now, CODE_STYLE);
                         startFromIndex = finalCode + 2;
+                        continue;
+                    }
+                } else if (minimumSpecial == earliestUnderscore) {
+                    int finalUnderscore  = fullDocumentation.indexOf(ITALICS_CHARACTER, earliestUnderscore + ITALICS_CHARACTER.length());
+                    if (finalUnderscore != -1) {
+                        int then = this.getLength();
+                        appendText(fullDocumentation.substring(earliestUnderscore+ ITALICS_CHARACTER.length(), finalUnderscore));
+                        int now = this.getLength();
+                        setStyle(then, now, ITALICS_STYLE);
+                        startFromIndex = finalUnderscore + ITALICS_CHARACTER.length();
                         continue;
                     }
                 }

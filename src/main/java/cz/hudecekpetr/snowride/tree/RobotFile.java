@@ -1,8 +1,8 @@
 package cz.hudecekpetr.snowride.tree;
 
-import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
-import cz.hudecekpetr.snowride.semantics.Setting;
+import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.ui.MainForm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ public class RobotFile {
 
     public List<HighElement> getHighElements() {
         List<HighElement> he = new ArrayList<>();
-        for(RobotSection section : sections) {
+        for (RobotSection section : sections) {
             he.addAll(section.getHighElements());
         }
         return he;
@@ -21,13 +21,13 @@ public class RobotFile {
 
     public String serialize(NewlineStyle newlineStyle) {
         StringBuilder sb = new StringBuilder();
-        for(RobotSection robotSection : sections) {
+        for (RobotSection robotSection : sections) {
             robotSection.serializeInto(sb);
         }
         if (errors.size() > 0) {
             throw new RuntimeException("There were parse errors. Editing or saving is not possible.");
         }
-        String str =  sb.toString(); // RIDE leaves the final newline in //Extensions.removeFinalNewlineIfAny(sb.toString());
+        String str = sb.toString(); // RIDE leaves the final newline in //Extensions.removeFinalNewlineIfAny(sb.toString());
         return newlineStyle.convertToStyle(str);
     }
 
@@ -56,9 +56,14 @@ public class RobotFile {
     public void analyzeSemantics(Suite suite) {
         KeyValuePairSection settings = this.findSettingsSection();
         if (settings != null) {
-            for (Setting s : settings.createSettings()) {
-                if (s.key.equalsIgnoreCase("Documentation")) {
-                    suite.semanticsDocumentation = s.firstValue; // TODO make it all values concatenated
+            for (LogicalLine s : settings.pairs) {
+                if (s.cells.size() >= 1 && s.cells.get(0).contents.equalsIgnoreCase("Documentation")) {
+                    List<String> docCells = new ArrayList<>();
+                    for (int i = 1; i < s.cells.size(); i++) {
+                        docCells.add(s.cells.get(i).contents);
+                    }
+                    suite.semanticsDocumentationLine = s;
+                    suite.semanticsDocumentation = String.join("\n", docCells);
                 }
             }
         }
@@ -79,6 +84,7 @@ public class RobotFile {
         }
         return settings;
     }
+
     public KeyValuePairSection findOrCreateVariablesSection() {
         KeyValuePairSection settings = findVariablesSection();
         if (settings == null) {
@@ -88,6 +94,7 @@ public class RobotFile {
         }
         return settings;
     }
+
     private KeyValuePairSection findSettingsSection() {
         for (RobotSection section : sections) {
             if (section.header.sectionKind == SectionKind.SETTINGS) {
@@ -96,6 +103,7 @@ public class RobotFile {
         }
         return null;
     }
+
     private KeyValuePairSection findVariablesSection() {
         for (RobotSection section : sections) {
             if (section.header.sectionKind == SectionKind.VARIABLES) {

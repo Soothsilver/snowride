@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.findusages;
 
+import cz.hudecekpetr.snowride.lexer.Cell;
 import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -39,11 +40,13 @@ public class FindUsages {
                 ObservableList<LogicalLine> lines = asScenario.getLines();
                 for (LogicalLine line : lines) {
                     if (line.cells.size() >= 2) {
-                        line.cells.get(line.cells.size() - 1).updateSemanticsStatus();
-                        IKnownKeyword keywordInThisCell = line.cells.get(line.cells.size() - 1).keywordOfThisLine;
-                        if (keywordInThisCell != null && ((keywordInThisCell == needleAsKeyword && needleAsKeyword != null) || (keywordInThisCell.getScenarioIfPossible() == needleAsScenario && needleAsScenario != null))) {
-                            String text = he.getShortName() + ":" + (line.lineNumber.intValue() + 1) + " — " + StringUtils.join(line.cells.stream().map(cell -> cell.contents).iterator(), " ");
-                            usages.add(new Usage(text, he));
+                        line.recalculateSemantics();
+                        for (Cell cell : line.cells) {
+                            IKnownKeyword keywordInThisCell = cell.getSemantics().thisHereKeyword;
+                            if (keywordInThisCell != null && (keywordInThisCell == needleAsKeyword || keywordInThisCell.getScenarioIfPossible() == needleAsScenario && needleAsScenario != null)) {
+                                String text = he.getShortName() + ":" + (line.lineNumber.intValue() + 1) + " — " + StringUtils.join(line.cells.stream().map(thaCell -> thaCell.contents).iterator(), " ");
+                                usages.add(new Usage(text, he));
+                            }
                         }
                     }
                 }

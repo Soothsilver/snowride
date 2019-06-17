@@ -3,7 +3,10 @@ package cz.hudecekpetr.snowride.lexer;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.semantics.CellSemantics;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -117,6 +120,7 @@ public class LogicalLine {
 
     }
 
+
     public void recalcStyles() {
         for (int i = 0, cellsSize = cells.size(); i < cellsSize; i++) {
             Cell cell = cells.get(i);
@@ -140,5 +144,73 @@ public class LogicalLine {
                 getCellAsStringProperty(i - 1, mainForm).set(cells.get(i).copy());
             }
         }
+    }
+
+    public void recalculateSemantics() {
+
+        boolean thereHasBeenNoGuaranteedKeywordCellYet = true;
+        boolean isInScenario = belongsToHighElement instanceof Scenario;
+        boolean skipFirst = isInScenario;
+        int indexOfThisAsArgument = 0; // value before first keyword is not relevant
+        boolean everythingIsAComment = false;
+        IKnownKeyword currentKeyword = null;
+        for (int i = 0; i < cells.size(); i++) {
+            Cell cell = cells.get(i);
+            CellSemantics cellSemantics = new CellSemantics(i);
+            cell.setSemantics(cellSemantics);
+            indexOfThisAsArgument++;
+            if (isInScenario && ((Scenario) belongsToHighElement).semanticsIsTemplateTestCase) {
+                thereHasBeenNoGuaranteedKeywordCellYet = false;
+            }
+            if (everythingIsAComment) {
+                cellSemantics.isComment = true;
+                continue;
+            }
+            if (skipFirst) {
+                // Cell number "0" is always empty in scenarios.
+                skipFirst = false;
+                continue;
+            }
+            if (cell.contents.startsWith("#")) {
+                everythingIsAComment = true;
+                cellSemantics.isComment = true;
+                continue;
+            }
+
+            cellSemantics.argumentStatus = Cell.ArgumentStatus.UNKNOWN;
+            if (currentKeyword != null) {
+                int maxMandatory = currentKeyword.getNumberOfMandatoryArguments();
+                int maxOptional = currentKeyword.getNumberOfOptionalArguments() + maxMandatory;
+                if (indexOfThisAsArgument >= 0) {
+                    if (indexOfThisAsArgument < maxMandatory) {
+                        cellSemantics.argumentStatus = Cell.ArgumentStatus.MANDATORY;
+                    } else if (indexOfThisAsArgument < maxOptional) {
+                        cellSemantics.argumentStatus = Cell.ArgumentStatus.VARARG;
+                    } else {
+                        cellSemantics.argumentStatus = Cell.ArgumentStatus.FORBIDDEN;
+                    }
+                }
+            }
+
+            boolean isCertainlyNotAKeyword = (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\"));
+            boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
+            if (canKeywordBeHere) {
+                if (isCertainlyNotAKeyword) {
+                    // Don't prevent further cells from being a keyword.
+                } else {
+                    cellSemantics.isKeyword = true;
+                    thereHasBeenNoGuaranteedKeywordCellYet = false;
+                }
+                // This is the keyword.
+                cellSemantics.permissibleKeywords = belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
+                cellSemantics.permissibleKeywordsByInvariantName = belongsToHighElement.asSuite().getKeywordsPermissibleInSuiteByInvariantName();
+                cellSemantics.thisHereKeyword = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
+                currentKeyword = cellSemantics.thisHereKeyword;
+                indexOfThisAsArgument = -1;
+            }
+
+
+        }
+
     }
 }

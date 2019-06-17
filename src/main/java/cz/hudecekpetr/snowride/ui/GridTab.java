@@ -3,25 +3,18 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
-import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import cz.hudecekpetr.snowride.ui.upperbox.UpperBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Side;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -29,6 +22,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class GridTab {
+
+    public SnowTableView getTableSettings() {
+        return tableSettings;
+    }
 
     private final SnowTableView tableSettings;
     private final SnowTableView tableVariables;
