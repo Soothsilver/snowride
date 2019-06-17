@@ -60,8 +60,15 @@ public class UpperBox extends VBox {
             }
         });
         documentationTextArea = new DocumentationTextArea();
-        documentationTextArea.maxHeightProperty().bind(new UpperBoxBinding(documentationTextArea.totalHeightEstimateProperty()));
+        UpperBoxBinding theBinding = new UpperBoxBinding(this, documentationTextArea.totalHeightEstimateProperty());
+        documentationTextArea.minHeightProperty().bind(theBinding);
+        documentationTextArea.prefHeightProperty().bind(theBinding);
+        documentationTextArea.setMaxHeight(200);
         VirtualizedScrollPane<DocumentationTextArea> vPane = new VirtualizedScrollPane<>(documentationTextArea);
+        vPane.minHeightProperty().bind(theBinding);
+        vPane.prefHeightProperty().bind(theBinding);
+        vPane.setMaxHeight(200);
+        //vPane.prefHeightProperty().bind(theBinding);
         HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
         hboxNameAndFindUsages.setPadding(new Insets(5, 0, 0, 5));
         Hyperlink bEditDocumentation = new Hyperlink("(edit documentation...)");
@@ -116,18 +123,27 @@ public class UpperBox extends VBox {
         documentationTextArea.setDocumentation(value.getFullDocumentation().trim());
     }
 
+    public void updateSelf() {
+        if (this.forElement != null) {
+            this.update(forElement);
+        }
+    }
+
     private class UpperBoxBinding extends DoubleBinding {
 
+        private UpperBox box;
         private final ObservableValue<Double> estimatedHeight;
         private double lastKnownHeight = 0;
 
-        UpperBoxBinding(ObservableValue<Double> estimatedHeight) {
+        UpperBoxBinding(UpperBox box, ObservableValue<Double> estimatedHeight) {
+            this.box = box;
             this.estimatedHeight = estimatedHeight;
             super.bind(estimatedHeight);
         }
 
         @Override
         protected double computeValue() {
+            System.out.println(box.toString() + "'s height wants to become " + estimatedHeight.getValue());
             Double originValue = estimatedHeight.getValue();
             if (originValue != null && originValue != 0) {
                 lastKnownHeight = originValue;

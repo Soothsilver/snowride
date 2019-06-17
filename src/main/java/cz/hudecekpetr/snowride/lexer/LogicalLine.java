@@ -192,7 +192,7 @@ public class LogicalLine {
                 }
             }
 
-            boolean isCertainlyNotAKeyword = (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\"));
+            boolean isCertainlyNotAKeyword = isInScenario && (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\"));
             boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
             if (canKeywordBeHere) {
                 if (isCertainlyNotAKeyword) {

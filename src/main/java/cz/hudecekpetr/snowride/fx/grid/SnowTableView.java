@@ -232,21 +232,26 @@ public class SnowTableView extends TableView<LogicalLine> {
     private void onMouseClicked(MouseEvent mouseEvent) {
         MainForm.documentationPopup.hide();
         if (mouseEvent.isControlDown()) {
+            Cell cell = null;
             if (snowTableKind.isScenario()) {
-                Cell cell = getFocusedCell();
-                IKnownKeyword keyword = cell.getKeywordInThisCell();
-                if (keyword != null) {
-                    Scenario highElement = keyword.getScenarioIfPossible();
-                    if (highElement != null) {
-                        mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
-                    } else {
-                        mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
-                    }
-                }
+                cell = getFocusedCell();
             } else {
-                Cell cell = getFocusedCellInSettingsTable();
-                if (cell != null && cell.leadsToSuite != null) {
+                cell = getFocusedCellInSettingsTable();
+            }
+
+            if (cell != null) {
+                if (cell.leadsToSuite != null) {
                     mainForm.selectProgrammaticallyAndRememberInHistory(cell.leadsToSuite);
+                } else {
+                    IKnownKeyword keyword = cell.getKeywordInThisCell();
+                    if (keyword != null) {
+                        Scenario highElement = keyword.getScenarioIfPossible();
+                        if (highElement != null) {
+                            mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
+                        } else {
+                            mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
+                        }
+                    }
                 }
             }
         }

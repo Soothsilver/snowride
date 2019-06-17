@@ -5,6 +5,7 @@ Resource      ressurection.robot
 
 *** Test Cases ***
 Abcdefghijklmnopqrstuvwxyz
+    [Documentation]    Documentation has *come*.
 	[Tags]	Simplest    Norwegian
 	Hehe
     Log Many    arigatou    horro

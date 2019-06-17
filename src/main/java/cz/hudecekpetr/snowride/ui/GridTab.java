@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
+import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -10,13 +11,14 @@ import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.upperbox.UpperBox;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.control.Label;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,8 +41,8 @@ public class GridTab {
     VBox suiteView;
     VBox spreadsheetView;
     private Tab tabGrid;
-    private final UpperBox upperBox;
-    private final UpperBox upperBox2;
+    public final UpperBox upperBox;
+    public final UpperBox upperBox2;
 
     public GridTab(MainForm mainForm) {
         lblParseError = new Label("No file loaded yet.");
@@ -79,8 +81,8 @@ public class GridTab {
     public void loadElement(HighElement value) {
         if (value != null) {
             value.asSuite().reparseAndRecalculateResources();
-            upperBox.update(value);
             upperBox2.update(value);
+            upperBox.update(value);
         }
         if (value instanceof FolderSuite) {
             FolderSuite fsuite = (FolderSuite) value;

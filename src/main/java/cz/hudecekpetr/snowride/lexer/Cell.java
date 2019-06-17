@@ -7,7 +7,6 @@ import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
@@ -56,46 +55,40 @@ public class Cell implements IHasQuickDocumentation {
         if (isLineNumberCell) {
             style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
         } else {
-            if (partOfLine.belongsWhere.isScenario()) {
-                style += getStyle();
-            } else {
-                if (cellIndex == 0) {
-                    style += "-fx-font-weight: bold; ";
-                    if (partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
-                        style += "-fx-text-fill: darkmagenta; ";
-                    } else {
-                        style += "-fx-text-fill: green; ";
-                    }
-                }
-                if (cellIndex == 1 && partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
-                    if (partOfLine.belongsToHighElement instanceof Suite) {
-                        Suite asSuite = (Suite) partOfLine.belongsToHighElement;
-                        Optional<ImportedResource> resource = asSuite.getImportedResources().stream().filter(ir -> ir.getName().equals(contents)).findFirst();
-                        if (resource.isPresent()) {
-
-                            System.out.println("Style set for '" + contents + "'.");
-                            if (resource.get().isSuccessfullyImported()) {
-                                if (resource.get().getImportsSuite() != null) {
-                                    style += "-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold; ";
-                                    leadsToSuite = resource.get().getImportsSuite();
-                                } else {
-                                    style += "-fx-text-fill: dodgerblue; ";
-                                }
-                            } else {
-                                style += "-fx-text-fill: red; ";
-                            }
-                        }
-                    }
-                }
-            }
+            style += getStyle();
         }
         styleProperty.set(style);
     }
 
     private String getStyle() {
         partOfLine.recalculateSemantics();
-
         String style = "";
+        if (semantics.cellIndex == 0) {
+            style += "-fx-font-weight: bold; ";
+            if (partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
+                style += "-fx-text-fill: darkmagenta; ";
+            } else {
+                style += "-fx-text-fill: green; ";
+            }
+        }
+        if (semantics.cellIndex == 1 && partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
+            if (partOfLine.belongsToHighElement instanceof Suite) {
+                Suite asSuite = (Suite) partOfLine.belongsToHighElement;
+                Optional<ImportedResource> resource = asSuite.getImportedResources().stream().filter(ir -> ir.getName().equals(contents)).findFirst();
+                if (resource.isPresent()) {
+                    if (resource.get().isSuccessfullyImported()) {
+                        if (resource.get().getImportsSuite() != null) {
+                            style += "-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold; ";
+                            leadsToSuite = resource.get().getImportsSuite();
+                        } else {
+                            style += "-fx-text-fill: dodgerblue; ";
+                        }
+                    } else {
+                        style += "-fx-text-fill: red; ";
+                    }
+                }
+            }
+        }
         if (semantics.cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
@@ -146,20 +139,12 @@ public class Cell implements IHasQuickDocumentation {
 
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind) {
-        if (snowTableKind.isScenario()) {
-            partOfLine.recalculateSemantics();
-            Stream<IAutocompleteOption> options = Stream.empty();
-            if (semantics.isKeyword) {
-                options = Stream.concat(options, semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
-            }
-            return options;
-        } else {
-            semantics.cellIndex = partOfLine.cells.indexOf(this);
-            if (semantics.cellIndex == 0 && snowTableKind == SnowTableKind.SETTINGS) {
-                return TestCaseSettingOption.settingsTableOptions.stream();
-            }
-            return Stream.empty();
+        partOfLine.recalculateSemantics();
+        Stream<IAutocompleteOption> options = Stream.empty();
+        if (semantics.isKeyword) {
+            options = Stream.concat(options, semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
         }
+        return options;
     }
 
     public IKnownKeyword getKeywordInThisCell() {
@@ -219,12 +204,12 @@ public class Cell implements IHasQuickDocumentation {
         return styleProperty;
     }
 
-    public void setSemantics(CellSemantics semantics) {
-        this.semantics = semantics;
-    }
-
     public CellSemantics getSemantics() {
         return this.semantics;
+    }
+
+    public void setSemantics(CellSemantics semantics) {
+        this.semantics = semantics;
     }
 
     public enum ArgumentStatus {

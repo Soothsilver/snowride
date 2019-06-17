@@ -13,6 +13,6 @@ public interface IKnownKeyword extends IAutocompleteOption {
     int getArgumentIndexOfKeywordArgument();
 
     default boolean isLegalInContext(int cellIndex, SnowTableKind snowTableKind) {
-        return true;
+        return cellIndex >= 1;
     }
 }

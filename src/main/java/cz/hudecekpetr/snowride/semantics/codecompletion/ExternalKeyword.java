@@ -7,7 +7,9 @@ import cz.hudecekpetr.snowride.semantics.ParameterKind;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import javafx.scene.image.Image;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ExternalKeyword implements IKnownKeyword {
@@ -22,6 +24,7 @@ public class ExternalKeyword implements IKnownKeyword {
     private String documentation;
     private int numberOfMandatoryArguments = 0;
     private int numberOfOptionalArguments = 0;
+    private int indexOfNextKeyword = -1;
 
     public ExternalKeyword(String canonicalName, String documentation, List<Parameter> parameters, ExternalLibrary library) {
 
@@ -33,6 +36,35 @@ public class ExternalKeyword implements IKnownKeyword {
             this.documentation = "*Args:* " + parameters.stream().map(p -> p.text).collect(Collectors.joining(", ")) + "\n" + documentation;
         }
         this.library = library;
+        this.indexOfNextKeyword = determineIndexOfNextKeyword();
+    }
+
+    private static Map<String, Integer> keywordToNextIndex = new HashMap<>();
+    static {
+        keywordToNextIndex.put("Wait Until Keyword Succeeds", 2);
+        keywordToNextIndex.put("Repeat Keyword", 1);
+        keywordToNextIndex.put("Run Keyword", 0);
+        keywordToNextIndex.put("Run Keyword And Continue On Failure", 0);
+        keywordToNextIndex.put("Run Keyword And Expect Error", 1);
+        keywordToNextIndex.put("Run Keyword And Ignore Error", 0);
+        keywordToNextIndex.put("Run Keyword And Return", 0);
+        keywordToNextIndex.put("Run Keyword And Return If", 1);
+        keywordToNextIndex.put("Run Keyword And Return Status", 0);
+        keywordToNextIndex.put("Run Keyword If", 1);
+        keywordToNextIndex.put("Run Keyword If All Critical Tests Passed", 0);
+        keywordToNextIndex.put("Run Keyword If All Tests Passed", 0);
+        keywordToNextIndex.put("Run Keyword If Any Critical Tests Failed", 0);
+        keywordToNextIndex.put("Run Keyword If Any Tests Failed", 0);
+        keywordToNextIndex.put("Run Keyword If Test Failed", 0);
+        keywordToNextIndex.put("Run Keyword If Test Passed", 0);
+        keywordToNextIndex.put("Run Keyword If Timeout Occurred", 0);
+        keywordToNextIndex.put("Run Keyword Unless", 1);
+    }
+    private int determineIndexOfNextKeyword() {
+        if (library.getKind() != LibraryKind.PACKED_IN) {
+            return -1;
+        }
+        return keywordToNextIndex.getOrDefault(this.canonicalName, -1);
     }
 
     @Override
@@ -102,15 +134,6 @@ public class ExternalKeyword implements IKnownKeyword {
 
     @Override
     public int getArgumentIndexOfKeywordArgument() {
-        if (library.getKind() != LibraryKind.PACKED_IN) {
-            return -1;
-        }
-        if (this.canonicalName.equals("Wait Until Keyword Succeeds")) {
-            return 2;
-        }
-        if (this.canonicalName.equals("Repeat Keyword")) {
-            return 1;
-        }
-        return -1;
+        return indexOfNextKeyword;
     }
 }

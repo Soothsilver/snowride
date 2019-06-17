@@ -66,6 +66,8 @@ public class DocumentationEditWindow extends AboutDialogBase {
                     editedLine.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE).set(new Cell(lines[i].trim(), elSeparatorFinally, editedLine));
                 }
                 element.markAsStructurallyChanged(MainForm.INSTANCE);
+                MainForm.INSTANCE.gridTab.upperBox.updateSelf();
+                MainForm.INSTANCE.gridTab.upperBox2.updateSelf();
                 close();
             }
         });
