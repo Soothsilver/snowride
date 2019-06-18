@@ -1,5 +1,8 @@
 package cz.hudecekpetr.snowride.tree;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import cz.hudecekpetr.snowride.ErrorKind;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
@@ -40,7 +43,8 @@ public abstract class Suite extends HighElement implements ISuite {
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
-    private Map<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName = new HashMap<>();
+    private Multimap<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName =
+            MultimapBuilder.hashKeys().arrayListValues().build();
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
@@ -66,7 +70,7 @@ public abstract class Suite extends HighElement implements ISuite {
         return fileParsed.serialize(newlineStyle);
     }
 
-    public void reparseResources() {
+    private void reparseResources() {
         this.importedResources.clear();
         if (fileParsed != null) {
             for (RobotSection section : fileParsed.sections) {
@@ -113,7 +117,7 @@ public abstract class Suite extends HighElement implements ISuite {
         return importedKeywordsRecursively;
     }
 
-    public Map<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {
+    public Multimap<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {
         return importedKeywordsRecursivelyByInvariantName;
     }
 
@@ -121,7 +125,7 @@ public abstract class Suite extends HighElement implements ISuite {
         if (contents != null) {
             this.children.removeIf(he -> he instanceof Scenario);
             this.treeNode.getChildren().removeIf(ti -> ti.getValue() instanceof Scenario);
-            RobotFile parsed = GateParser.parse(contents);
+            RobotFile parsed = GateParser.parse(contents, this);
             this.fileParsed = parsed;
             this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
             for (Exception exception : parsed.errors) {

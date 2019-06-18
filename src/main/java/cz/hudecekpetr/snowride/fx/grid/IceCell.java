@@ -199,7 +199,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newCell.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
         getItem().partOfLine.getCellAsStringProperty(cellIndex, MainForm.INSTANCE).set(newCell);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
-            ((Suite) snowTableView.getScenario()).reparseResources();
+            ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
         }
         snowTableView.considerAddingVirtualRowsAndColumns();
         trueCancelEdit();

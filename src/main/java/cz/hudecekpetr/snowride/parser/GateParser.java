@@ -75,8 +75,8 @@ public class GateParser {
         return new FileSuite(inFile, name, contents);
     }
 
-    public static RobotFile parse(String contents) {
-        return gate.parse(contents);
+    public static RobotFile parse(String contents, Suite owningSuite) {
+        return gate.parse(contents, owningSuite);
     }
 
     public ExternalResourcesElement createExternalResourcesElement(List<File> additionalFoldersAsFiles, LongRunningOperation operation, double progressPart) {

@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.lexer;
 
-import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
@@ -49,7 +48,7 @@ public class Cell implements IHasQuickDocumentation {
         return contents;
     }
 
-    public void updateStyle(int cellIndex) {
+    public void updateStyle() {
         leadsToSuite = null;
         String style = "";
         if (isLineNumberCell) {
@@ -72,8 +71,8 @@ public class Cell implements IHasQuickDocumentation {
             }
         }
         if (semantics.cellIndex == 1 && partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
-            if (partOfLine.belongsToHighElement instanceof Suite) {
-                Suite asSuite = (Suite) partOfLine.belongsToHighElement;
+            if (partOfLine.getBelongsToHighElement() instanceof Suite) {
+                Suite asSuite = (Suite) partOfLine.getBelongsToHighElement();
                 Optional<ImportedResource> resource = asSuite.getImportedResources().stream().filter(ir -> ir.getName().equals(contents)).findFirst();
                 if (resource.isPresent()) {
                     if (resource.get().isSuccessfullyImported()) {
@@ -101,7 +100,7 @@ public class Cell implements IHasQuickDocumentation {
             style += "-fx-text-fill: brown; ";
         } else if (semantics.isKeyword) {
             style += "-fx-font-weight: bold; ";
-            IKnownKeyword knownKeyword = semantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(this.contents));
+            IKnownKeyword knownKeyword = semantics.thisHereKeyword;
             if (knownKeyword != null) {
                 if (knownKeyword.getScenarioIfPossible() != null) {
                     style += "-fx-text-fill: blue; ";

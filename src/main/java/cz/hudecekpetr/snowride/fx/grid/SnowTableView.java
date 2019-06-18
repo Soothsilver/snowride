@@ -12,10 +12,8 @@ import cz.hudecekpetr.snowride.lexer.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.ISuite;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
-import cz.hudecekpetr.snowride.ui.DeepCopy;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.AddRowOperation;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
@@ -36,7 +34,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumnBase;
 import javafx.scene.control.TableFocusModel;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TablePositionBase;
@@ -468,7 +465,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     public LogicalLine createNewLine() {
         LogicalLine newLine = new LogicalLine();
-        newLine.belongsToHighElement = scenario;
+        newLine.setBelongsToHighElement(scenario);
         newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
         newLine.belongsWhere = snowTableKind;
         newLine.recalcStyles();
@@ -510,7 +507,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         scenario = highElement;
         // For key-value tables:
         for (LogicalLine line : lines) {
-            line.belongsToHighElement = highElement;
+            line.setBelongsToHighElement(highElement);
             line.belongsWhere = snowTableKind;
             line.recalcStyles();
         }

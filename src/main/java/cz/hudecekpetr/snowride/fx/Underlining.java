@@ -9,13 +9,13 @@ public class Underlining {
         Cell updateStyleFor = activeCell;
         activeCell = newCell;
         if (updateStyleFor != null && updateStyleFor.partOfLine != null) {
-            updateStyleFor.updateStyle(updateStyleFor.partOfLine.cells.indexOf(updateStyleFor));
+            updateStyleFor.updateStyle();
         }
         update();
     }
     public static void update() {
         if (activeCell != null && activeCell.partOfLine != null) {
-            activeCell.updateStyle(activeCell.partOfLine.cells.indexOf(activeCell));
+            activeCell.updateStyle();
         }
     }
 

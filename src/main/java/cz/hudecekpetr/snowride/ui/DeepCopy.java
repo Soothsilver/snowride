@@ -17,7 +17,7 @@ public class DeepCopy {
         newScenario.getLines().setAll(copiedLines);
         for (int i = 0; i < copiedLines.size(); i++) {
             copiedLines.get(i).lineNumber = new PositionInListProperty<>(copiedLines.get(i), newScenario.getLines());
-            copiedLines.get(i).belongsToHighElement = newScenario;
+            copiedLines.get(i).setBelongsToHighElement(newScenario);
         }
     }
 

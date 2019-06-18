@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.semantics;
 
+import com.google.common.collect.Multimap;
 import cz.hudecekpetr.snowride.lexer.Cell;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public class CellSemantics {
     public boolean isComment;
     public boolean isKeyword;
     public List<IKnownKeyword> permissibleKeywords;
-    public Map<String, IKnownKeyword> permissibleKeywordsByInvariantName;
+    public Multimap<String, IKnownKeyword> permissibleKeywordsByInvariantName;
     public IKnownKeyword thisHereKeyword;
     public Cell.ArgumentStatus argumentStatus = Cell.ArgumentStatus.UNKNOWN;
 

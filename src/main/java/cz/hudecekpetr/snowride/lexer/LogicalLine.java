@@ -14,12 +14,13 @@ import javafx.beans.value.ObservableValue;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
-    public HighElement belongsToHighElement;
+    private HighElement belongsToHighElement;
     public PositionInListProperty lineNumber;
     public SnowTableKind belongsWhere;
     private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
@@ -97,8 +98,8 @@ public class LogicalLine {
                     recalcStyles();
 
 
-                    if (belongsToHighElement != null && !previousValue.equals(newValue.contents)) {
-                        belongsToHighElement.markAsStructurallyChanged(mainForm);
+                    if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
+                        getBelongsToHighElement().markAsStructurallyChanged(mainForm);
                     }
                 }
             });
@@ -124,7 +125,7 @@ public class LogicalLine {
     public void recalcStyles() {
         for (int i = 0, cellsSize = cells.size(); i < cellsSize; i++) {
             Cell cell = cells.get(i);
-            cell.updateStyle(i);
+            cell.updateStyle();
         }
     }
 
@@ -149,17 +150,18 @@ public class LogicalLine {
     public void recalculateSemantics() {
 
         boolean thereHasBeenNoGuaranteedKeywordCellYet = true;
-        boolean isInScenario = belongsToHighElement instanceof Scenario;
+        boolean isInScenario = getBelongsToHighElement() instanceof Scenario;
         boolean skipFirst = isInScenario;
         int indexOfThisAsArgument = 0; // value before first keyword is not relevant
         boolean everythingIsAComment = false;
+        SnowTableKind kind = isInScenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS;
         IKnownKeyword currentKeyword = null;
         for (int i = 0; i < cells.size(); i++) {
             Cell cell = cells.get(i);
             CellSemantics cellSemantics = new CellSemantics(i);
             cell.setSemantics(cellSemantics);
             indexOfThisAsArgument++;
-            if (isInScenario && ((Scenario) belongsToHighElement).semanticsIsTemplateTestCase) {
+            if (isInScenario && ((Scenario) getBelongsToHighElement()).semanticsIsTemplateTestCase) {
                 thereHasBeenNoGuaranteedKeywordCellYet = false;
             }
             if (everythingIsAComment) {
@@ -202,9 +204,14 @@ public class LogicalLine {
                     thereHasBeenNoGuaranteedKeywordCellYet = false;
                 }
                 // This is the keyword.
-                cellSemantics.permissibleKeywords = belongsToHighElement.asSuite().getKeywordsPermissibleInSuite();
-                cellSemantics.permissibleKeywordsByInvariantName = belongsToHighElement.asSuite().getKeywordsPermissibleInSuiteByInvariantName();
-                cellSemantics.thisHereKeyword = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
+                cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
+                cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
+                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
+                for (IKnownKeyword homonym : homonyms) {
+                    if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                        cellSemantics.thisHereKeyword = homonym;
+                    }
+                }
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
             }
@@ -212,5 +219,13 @@ public class LogicalLine {
 
         }
 
+    }
+
+    public HighElement getBelongsToHighElement() {
+        return belongsToHighElement;
+    }
+
+    public void setBelongsToHighElement(HighElement belongsToHighElement) {
+        this.belongsToHighElement = belongsToHighElement;
     }
 }

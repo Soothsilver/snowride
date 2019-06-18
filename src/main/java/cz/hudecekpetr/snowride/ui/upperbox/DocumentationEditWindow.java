@@ -18,6 +18,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -33,42 +35,15 @@ public class DocumentationEditWindow extends AboutDialogBase {
         bClose.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                LogicalLine editedLine = line;
-                int docStartsAt = element instanceof Scenario ? 2 : 1;
-                if (editedLine == null) {
-                    ObservableList<LogicalLine> allLogicalLines = null;
-                    if (element instanceof Scenario) {
-                        allLogicalLines = ((Scenario) element).getLines();
-                    } else {
-                        allLogicalLines = ((Suite) element).fileParsed.findOrCreateSettingsSection().pairs;
-                    }
-                    LogicalLine newLine = new LogicalLine();
-                    newLine.belongsToHighElement = element;
-                    newLine.lineNumber = new PositionInListProperty<>(newLine, allLogicalLines);
-                    newLine.belongsWhere = (element instanceof Scenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS);
-                    newLine.recalcStyles();
-                    allLogicalLines.add(0, newLine);
-                    newLine.getCellAsStringProperty(docStartsAt - 1, MainForm.INSTANCE).set(new Cell(element instanceof Scenario ? "[Documentation]" : "Documentation", "    ", newLine));
-                    editedLine = newLine;
+                clickOK(line, element, documentationArea);
+            }
+        });
+        this.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
+                    clickOK(line, element, documentationArea);
                 }
-                String[] lines = StringUtils.splitByWholeSeparatorPreserveAllTokens(documentationArea.getText().trim(), "\n");
-                String ellipsisSeparator = element instanceof Scenario ? "\n    ...    " : "\n...    ";
-                // Erase existing documentation:
-                for (int i = docStartsAt; i < editedLine.cells.size(); i++) {
-                    editedLine.getCellAsStringProperty(i, MainForm.INSTANCE).set(new Cell("", "    ", editedLine));
-                }
-                // Add new one
-                for (int i = 0; i < lines.length; i++) {
-                    String elSeparatorFinally = ellipsisSeparator;
-                    if (i == lines.length -1) {
-                        elSeparatorFinally = "";
-                    }
-                    editedLine.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE).set(new Cell(lines[i].trim(), elSeparatorFinally, editedLine));
-                }
-                element.markAsStructurallyChanged(MainForm.INSTANCE);
-                MainForm.INSTANCE.gridTab.upperBox.updateSelf();
-                MainForm.INSTANCE.gridTab.upperBox2.updateSelf();
-                close();
             }
         });
         HBox hButtons = new HBox(5, bClose);
@@ -86,5 +61,44 @@ public class DocumentationEditWindow extends AboutDialogBase {
         this.setScene(new Scene(vbAll, 500, 400));
         this.setTitle("Edit documentation");
         this.getIcons().add(Images.snowflake);
+    }
+
+    private void clickOK(LogicalLine line, HighElement element, TextArea documentationArea) {
+        LogicalLine editedLine = line;
+        int docStartsAt = element instanceof Scenario ? 2 : 1;
+        if (editedLine == null) {
+            ObservableList<LogicalLine> allLogicalLines = null;
+            if (element instanceof Scenario) {
+                allLogicalLines = ((Scenario) element).getLines();
+            } else {
+                allLogicalLines = ((Suite) element).fileParsed.findOrCreateSettingsSection().pairs;
+            }
+            LogicalLine newLine = new LogicalLine();
+            newLine.setBelongsToHighElement(element);
+            newLine.lineNumber = new PositionInListProperty<>(newLine, allLogicalLines);
+            newLine.belongsWhere = (element instanceof Scenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS);
+            newLine.recalcStyles();
+            allLogicalLines.add(0, newLine);
+            newLine.getCellAsStringProperty(docStartsAt - 1, MainForm.INSTANCE).set(new Cell(element instanceof Scenario ? "[Documentation]" : "Documentation", "    ", newLine));
+            editedLine = newLine;
+        }
+        String[] lines = StringUtils.splitByWholeSeparatorPreserveAllTokens(documentationArea.getText().trim(), "\n");
+        String ellipsisSeparator = element instanceof Scenario ? "\n    ...    " : "\n...    ";
+        // Erase existing documentation:
+        for (int i = docStartsAt; i < editedLine.cells.size(); i++) {
+            editedLine.getCellAsStringProperty(i, MainForm.INSTANCE).set(new Cell("", "    ", editedLine));
+        }
+        // Add new one
+        for (int i = 0; i < lines.length; i++) {
+            String elSeparatorFinally = ellipsisSeparator;
+            if (i == lines.length -1) {
+                elSeparatorFinally = "";
+            }
+            editedLine.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE).set(new Cell(lines[i].trim(), elSeparatorFinally, editedLine));
+        }
+        element.markAsStructurallyChanged(MainForm.INSTANCE);
+        MainForm.INSTANCE.gridTab.upperBox.updateSelf();
+        MainForm.INSTANCE.gridTab.upperBox2.updateSelf();
+        close();
     }
 }

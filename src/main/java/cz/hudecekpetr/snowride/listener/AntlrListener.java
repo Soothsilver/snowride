@@ -20,7 +20,12 @@ import java.util.stream.Collectors;
 
 public class AntlrListener extends RobotBaseListener implements ANTLRErrorListener {
 
+    private final Suite owningSuite;
     public List<Exception> errors = new ArrayList<>();
+
+    public AntlrListener(Suite owningSuite) {
+        this.owningSuite = owningSuite;
+    }
 
     @Override
     public void exitFile(RobotParser.FileContext ctx) {
@@ -134,6 +139,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitStepOrEmptyLine(RobotParser.StepOrEmptyLineContext ctx) {
         if (ctx.emptyLine() != null) {
             ctx.LogicalLine = LogicalLine.fromEmptyLine(ctx.emptyLine().getText());
+            ctx.LogicalLine.setBelongsToHighElement(owningSuite);
         } else {
             ctx.LogicalLine = ctx.step().LogicalLine;
         }
@@ -178,6 +184,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitOptionalKeyValuePair(RobotParser.OptionalKeyValuePairContext ctx) {
         if (ctx.emptyLine() != null) {
             ctx.Line = LogicalLine.fromEmptyLine(ctx.emptyLine().getText());
+            ctx.Line.setBelongsToHighElement(owningSuite);
         } else {
             ctx.Line = ctx.keyValuePair().Line;
         }
@@ -197,6 +204,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitKeyValuePair(RobotParser.KeyValuePairContext ctx) {
         ctx.Line = ctx.restOfRow().Line.prepend(ctx.ANY_CELL().getText());
+        ctx.Line.setBelongsToHighElement(owningSuite);
     }
 
     @Override
