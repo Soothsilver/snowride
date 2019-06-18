@@ -174,6 +174,7 @@ public class Scenario extends HighElement {
         // TODO template-ness can also be inherited from parent suites
         semanticsIsTemplateTestCase = false;
         ArrayList<String> argCells = new ArrayList<>();
+        semanticsDocumentation = "";
         for (LogicalLine line : getLines()) {
             if (line.cells.size() >= 3) {
                 if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {

@@ -9,6 +9,7 @@ import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -63,11 +64,11 @@ public class UpperBox extends VBox {
         UpperBoxBinding theBinding = new UpperBoxBinding(this, documentationTextArea.totalHeightEstimateProperty());
         documentationTextArea.minHeightProperty().bind(theBinding);
         documentationTextArea.prefHeightProperty().bind(theBinding);
-        documentationTextArea.setMaxHeight(200);
+        documentationTextArea.maxHeightProperty().bind(theBinding);
         VirtualizedScrollPane<DocumentationTextArea> vPane = new VirtualizedScrollPane<>(documentationTextArea);
         vPane.minHeightProperty().bind(theBinding);
         vPane.prefHeightProperty().bind(theBinding);
-        vPane.setMaxHeight(200);
+        vPane.maxHeightProperty().bind(theBinding);
         //vPane.prefHeightProperty().bind(theBinding);
         HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
         hboxNameAndFindUsages.setPadding(new Insets(5, 0, 0, 5));
@@ -148,7 +149,7 @@ public class UpperBox extends VBox {
             if (originValue != null && originValue != 0) {
                 lastKnownHeight = originValue;
             }
-            return lastKnownHeight;
+            return Math.min(200.0, lastKnownHeight);
         }
 
 
