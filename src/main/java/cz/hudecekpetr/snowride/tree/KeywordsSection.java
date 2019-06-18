@@ -39,4 +39,11 @@ public class KeywordsSection extends RobotSection {
     public void removeChildIfAble(Scenario scenario) {
         keywords.removeIf(sc -> sc == scenario);
     }
+
+    @Override
+    public void reformat() {
+        for (Scenario kw : keywords) {
+            kw.reformat();
+        }
+    }
 }

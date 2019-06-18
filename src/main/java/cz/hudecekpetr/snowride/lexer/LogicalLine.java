@@ -7,6 +7,7 @@ import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -20,9 +21,9 @@ import java.util.List;
 public class LogicalLine {
     public String preTrivia = "";
     public List<Cell> cells = new ArrayList<>();
-    private HighElement belongsToHighElement;
     public PositionInListProperty lineNumber;
     public SnowTableKind belongsWhere;
+    private HighElement belongsToHighElement;
     private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
 
     public static LogicalLine fromEmptyLine(String text) {
@@ -227,5 +228,34 @@ public class LogicalLine {
 
     public void setBelongsToHighElement(HighElement belongsToHighElement) {
         this.belongsToHighElement = belongsToHighElement;
+    }
+
+    public void reformat(SectionKind sectionKind) {
+        for (int i = cells.size() - 1; i >= 0; i--) {
+            Cell cell = cells.get(i);
+            if (StringUtils.isBlank(cell.contents) && StringUtils.isBlank(cell.postTrivia)) {
+                if (wrappers.size() == cells.size()) {
+                    wrappers.remove(i);
+                }
+                cells.remove(i);
+                continue;
+            } else {
+                break;
+            }
+        }
+        for (int i = 0; i < cells.size(); i++) {
+            Cell cell = cells.get(i);
+            if (StringUtils.isBlank(cell.postTrivia)) {
+                if (i == cells.size() - 1) {
+                    cell.postTrivia = "";
+                } else {
+                    if (i == 0 && sectionKind == SectionKind.SETTINGS) {
+                        cell.postTrivia = StringUtils.repeat(' ', 18 - cell.contents.length());
+                    } else {
+                        cell.postTrivia = "    ";
+                    }
+                }
+            }
+        }
     }
 }

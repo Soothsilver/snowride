@@ -3,24 +3,29 @@ package cz.hudecekpetr.snowride.runner;
 import cz.hudecekpetr.snowride.Extensions;
 
 public class Multirunner {
+    // https://vignette.wikia.nocookie.net/mylittleponyccg/images/8/88/MLP_CCG_Comprehensive_Rules_%28v3.7%29.pdf/revision/latest?cb=20171130021504
+    // Rule 802.3.
+    public static final Integer BLADES_OF_GRASS_ON_SWEET_APPLE_ACRES = 24567837;
     private RunTab runTab;
     private boolean multirunnerStartInProgress = false;
     private boolean multirunnerInProgress = false;
     private int numberOfSuccesses = 0;
+    private int maximumSuccesses = 0;
 
     public Multirunner(RunTab runTab) {
         this.runTab = runTab;
     }
 
-    public void runUntilFailure() {
+    public void runUntilFailure(Integer maximumSuccesses) {
         numberOfSuccesses = 0;
+        this.maximumSuccesses = maximumSuccesses;
         continueRunningUntilFailure();
     }
 
     private void continueRunningUntilFailure() {
         multirunnerStartInProgress = true;
         try {
-            runTab.clickRun(null);
+            runTab.startANewRun(false);
         } catch (Exception exception) {
             multirunnerStartInProgress = false;
             multirunnerInProgress = false;
@@ -37,7 +42,11 @@ public class Multirunner {
 
     private void refreshLabel() {
         if (multirunnerInProgress || multirunnerStartInProgress) {
-            runTab.lblMultirun.setText("Until failure mode (" + Extensions.englishCount(numberOfSuccesses, "success", "successes") + " so far)");
+            if (maximumSuccesses == BLADES_OF_GRASS_ON_SWEET_APPLE_ACRES) {
+                runTab.lblMultirun.setText("Until failure mode (" + Extensions.englishCount(numberOfSuccesses, "success", "successes") + " so far)");
+            } else {
+                runTab.lblMultirun.setText("Until failure mode (" + numberOfSuccesses + " / " + maximumSuccesses  + " successes so far)");
+            }
             runTab.lblMultirun.setVisible(true);
         } else {
             runTab.lblMultirun.setVisible(false);
@@ -45,12 +54,16 @@ public class Multirunner {
     }
 
     public void endedNormally() {
-        numberOfSuccesses++;
+        if (runTab.run.countFailedTests == 0) {
+            numberOfSuccesses++;
+        }
         if (multirunnerInProgress) {
             refreshLabel();
             multirunnerStartInProgress = false;
-            if (runTab.run.countFailedTests == 0) {
+            if (runTab.run.countFailedTests == 0 && numberOfSuccesses < maximumSuccesses) {
                 continueRunningUntilFailure();
+            } else {
+                multirunnerInProgress = false;
             }
         }
     }

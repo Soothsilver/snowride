@@ -40,6 +40,7 @@ public class Settings {
     public boolean cbShowNonexistentOptionFirst = false;
     public boolean cbAutoExpandSelectedTests = true;
     public boolean cbUseStructureChanged = false;
+    public int numberOfSuccessesBeforeEnd = 100;
 
     public static Settings getInstance() {
         if (instance == null) {

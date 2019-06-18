@@ -235,4 +235,11 @@ public class Scenario extends HighElement {
         }
         return null;
     }
+
+    public void reformat() {
+        optimizeStructure();
+        for (LogicalLine line : lines) {
+            line.reformat(SectionKind.TEST_CASES);
+        }
+    }
 }

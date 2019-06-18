@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.tree.HighElement;
 import cz.hudecekpetr.snowride.tree.Scenario;
 import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.ui.about.AboutDialogBase;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -13,6 +14,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -71,7 +74,23 @@ public class TextEditTab {
                 }
             }
         });
-        HBox hBox = new HBox(2, bApply, lblInfo);
+        Button bReformat = new Button("Reformat (Ctrl+L)");
+        bReformat.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                reformat();
+            }
+        });
+        Tooltip.install(bReformat, new Tooltip("Reformats the file so that it looks as close as RIDE would reformat it. Does nothing if the file cannot be parsed."));
+        mainForm.getStage().addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.L && event.isControlDown()) {
+                   reformat();
+                }
+            }
+        });
+        HBox hBox = new HBox(2, bReformat, bApply, lblInfo);
         hBox.setPadding(new Insets(2));
         hBox.setAlignment(Pos.CENTER_LEFT);
         VBox textVBox = new VBox(hBox, tbTextEdit);
@@ -80,6 +99,21 @@ public class TextEditTab {
         tabTextEdit = new Tab("Edit entire file as text", textVBox);
         tabTextEdit.setClosable(false);
         return tabTextEdit;
+    }
+
+    private void reformat() {
+        Suite reformattingWhat = lastLoaded.asSuite();
+        reformattingWhat.applyText();
+        if (reformattingWhat.fileParsed != null) {
+            if (reformattingWhat.fileParsed != null && reformattingWhat.fileParsed.errors.size() > 0) {
+                throw new RuntimeException("There are parse errors. Reformatting cannot happen.");
+            }
+            reformattingWhat.fileParsed.reformat();
+            reformattingWhat.contents = reformattingWhat.serialize();
+            mainForm.changeOccurredTo(reformattingWhat, LastChangeKind.TEXT_CHANGED);
+
+        }
+        loadElement(reformattingWhat);
     }
 
     public void loadElement(HighElement value) {

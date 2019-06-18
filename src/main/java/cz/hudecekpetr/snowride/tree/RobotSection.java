@@ -19,4 +19,6 @@ public abstract class RobotSection {
     public void removeChildIfAble(Scenario scenario) {
         // Most sections can't have children.
     }
+
+    public abstract void reformat();
 }

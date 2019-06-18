@@ -7,20 +7,19 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.util.Set;
 
 public class SettingsWindow extends Stage {
 
@@ -32,6 +31,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbFirstCompletionOption;
     private CheckBox cbAutoExpandSelectedTests;
     private CheckBox cbUseStructureChanged;
+    private TextField tbNumber;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -45,7 +45,7 @@ public class SettingsWindow extends Stage {
         buttonCancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                 SettingsWindow.this.close();
+                SettingsWindow.this.close();
             }
         });
         HBox buttonRow = new HBox(5, buttonSuperOK, buttonOK, buttonCancel);
@@ -82,8 +82,19 @@ public class SettingsWindow extends Stage {
         cbUseStructureChanged = new CheckBox("Show [structure changed] or [text changed] instead of an asterisk (*) for changed files.");
         cbUseStructureChanged.setWrapText(true);
         cbUseStructureChanged.setSelected(Settings.getInstance().cbUseStructureChanged);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
-        vboxImportingOptions.setPadding(new Insets(5,0,0,0));
+        Label lblNumber = new Label("In 'until failure' mode, how many successes should end testing even if there's no failure: ");
+        tbNumber = new TextField(Integer.toString(Settings.getInstance().numberOfSuccessesBeforeEnd));
+        //https://stackoverflow.com/a/36436243/1580088
+        tbNumber.setTextFormatter(new TextFormatter<String>(change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        }));
+        HBox num = new HBox(5, lblNumber, tbNumber);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num);
+        vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
         return tabImporting;
@@ -97,6 +108,12 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().cbAutoExpandSelectedTests = cbAutoExpandSelectedTests.isSelected();
         Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
+        try {
+            Settings.getInstance().numberOfSuccessesBeforeEnd = Integer.parseInt(tbNumber.getText());
+            mainForm.runTab.numberOfSuccessesToStop.setValue(Settings.getInstance().numberOfSuccessesBeforeEnd);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
         Settings.getInstance().save();
         mainForm.updateAdditionalToolbarButtonsVisibility();
         mainForm.reloadExternalLibraries();

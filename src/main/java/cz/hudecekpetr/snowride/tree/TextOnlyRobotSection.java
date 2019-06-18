@@ -26,4 +26,9 @@ public class TextOnlyRobotSection extends RobotSection {
     public void optimizeStructure() {
         // do nothing
     }
+
+    @Override
+    public void reformat() {
+        // do nothing
+    }
 }

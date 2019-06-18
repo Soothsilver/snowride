@@ -112,4 +112,10 @@ public class RobotFile {
         }
         return null;
     }
+
+    public void reformat() {
+        for (RobotSection robotSection : sections) {
+            robotSection.reformat();
+        }
+    }
 }

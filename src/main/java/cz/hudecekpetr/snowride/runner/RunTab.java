@@ -8,14 +8,17 @@ import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.ui.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WritableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -86,11 +89,13 @@ public class RunTab {
     private TextField tbWithoutTags;
     private TextField tbWithTags;
     private CheckBox cbWithTags;
+    public SimpleIntegerProperty numberOfSuccessesToStop;
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
         this.tcpHost = new TcpHost(this, mainForm);
         this.tcpHost.start();
+        this.numberOfSuccessesToStop = new SimpleIntegerProperty(Settings.getInstance().numberOfSuccessesBeforeEnd);
         this.multirunner = new Multirunner(this);
         this.temporaryDirectory = createTemporaryDirectory();
         openScriptFileDialog = new FileChooser();
@@ -226,13 +231,22 @@ public class RunTab {
     }
     private ContextMenu buildAdvancedRunContextMenu() {
         MenuItem untilFailureOrStop = new MenuItem("...until failure");
+        MenuItem untilFailureOrXSuccess = new MenuItem("");
+        untilFailureOrXSuccess.textProperty().bind(Bindings.concat("...until failure or ", numberOfSuccessesToStop , " successes"));
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
         CustomMenuItem runThenDeselect = new CustomMenuItem(new Label("...and then deselect passing tests"));
         untilFailureOrStop.disableProperty().bind(canRun.not());
         untilFailureOrStop.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                multirunner.runUntilFailure();
+                multirunner.runUntilFailure(Multirunner.BLADES_OF_GRASS_ON_SWEET_APPLE_ACRES);
+            }
+        });
+        untilFailureOrXSuccess.disableProperty().bind(canRun.not());
+        untilFailureOrXSuccess.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                multirunner.runUntilFailure(numberOfSuccessesToStop.getValue());
             }
         });
         runOnlyFailedTests.disableProperty().bind(canRun.not());
@@ -251,7 +265,7 @@ public class RunTab {
                 clickRun(event, true);
             }
         });
-        return new ContextMenu(untilFailureOrStop, runOnlyFailedTests, runThenDeselect);
+        return new ContextMenu(untilFailureOrStop, untilFailureOrXSuccess, runOnlyFailedTests, runThenDeselect);
     }
 
     private void timer() {
@@ -293,6 +307,10 @@ public class RunTab {
     private boolean thenDeselectPassingTests = false;
 
     public void clickRun(ActionEvent actionEvent, boolean thenDeselectPassingTests) {
+        startANewRun(thenDeselectPassingTests);
+    }
+
+    public void startANewRun(boolean thenDeselectPassingTests) {
         try {
             this.thenDeselectPassingTests = thenDeselectPassingTests;
             List<Scenario> testCases = getCheckedTestCases();

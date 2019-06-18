@@ -38,4 +38,11 @@ public class TestCasesSection extends RobotSection {
     public void removeChildIfAble(Scenario scenario) {
         testCases.removeIf(tc -> tc == scenario);
     }
+
+    @Override
+    public void reformat() {
+        for (Scenario kw : testCases) {
+            kw.reformat();
+        }
+    }
 }

@@ -48,6 +48,14 @@ public class KeyValuePairSection extends RobotSection {
         Extensions.optimizeLines(pairs);
     }
 
+    @Override
+    public void reformat() {
+        optimizeStructure();
+        for (LogicalLine pair : pairs) {
+            pair.reformat(header.sectionKind);
+        }
+    }
+
     public List<Setting> createSettings() {
         List<Setting> settings = new ArrayList<>();
         for (LogicalLine line : pairs) {
