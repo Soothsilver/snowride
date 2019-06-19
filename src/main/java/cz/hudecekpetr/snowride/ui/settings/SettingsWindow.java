@@ -34,6 +34,7 @@ public class SettingsWindow extends Stage {
     private TextField tbNumber;
     private CheckBox cbGarbageCollect;
     private CheckBox cbHighlightSameCells;
+    private CheckBox cbUseSystemColorWindow;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -106,7 +107,11 @@ public class SettingsWindow extends Stage {
         cbHighlightSameCells = new CheckBox("Highlight cells with the same content as the selected cell in yellow.");
         cbHighlightSameCells.setWrapText(true);
         cbHighlightSameCells.setSelected(Settings.getInstance().cbHighlightSameCells);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells);
+
+        cbUseSystemColorWindow = new CheckBox("Use system color 'window' for background of text boxes instead of the default off-white color (requires a Snowride restart).");
+        cbUseSystemColorWindow.setWrapText(true);
+        cbUseSystemColorWindow.setSelected(Settings.getInstance().cbUseSystemColorWindow);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow);
         vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -123,6 +128,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().cbRunGarbageCollection = cbGarbageCollect.isSelected();
         Settings.getInstance().cbHighlightSameCells = cbHighlightSameCells.isSelected();
         Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
+        Settings.getInstance().cbUseSystemColorWindow = cbUseSystemColorWindow.isSelected();
         try {
             Settings.getInstance().numberOfSuccessesBeforeEnd = Integer.parseInt(tbNumber.getText());
             mainForm.runTab.numberOfSuccessesToStop.setValue(Settings.getInstance().numberOfSuccessesBeforeEnd);

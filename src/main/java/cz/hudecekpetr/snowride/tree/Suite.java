@@ -72,6 +72,7 @@ public abstract class Suite extends HighElement implements ISuite {
 
     private void reparseResources() {
         this.importedResources.clear();
+        this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.IMPORT_ERROR);
         if (fileParsed != null) {
             for (RobotSection section : fileParsed.sections) {
                 if (section.header.sectionKind == SectionKind.SETTINGS) {
@@ -99,6 +100,12 @@ public abstract class Suite extends HighElement implements ISuite {
         importedResources.forEach(ir -> ir.gatherSelfInto(importedResourcesRecursively, this, ImportedResource.incrementAndGetIterationCount()));
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllKeywords).forEachOrdered(kk -> {
             importedKeywordsRecursively.add(kk);
+        });
+        importedResources.forEach(ir -> {
+            if (!ir.isSuccessfullyImported()) {
+                String text = ir.getName() + " is not a known resource or library.";
+                selfErrors.add(new SnowrideError(this, ErrorKind.IMPORT_ERROR, Severity.WARNING, text));
+            }
         });
         importedKeywordsRecursively.sort(Comparator.comparingInt(IKnownKeyword::getCompletionPriority));
         importedKeywordsRecursivelyByInvariantName.clear();
@@ -132,7 +139,6 @@ public abstract class Suite extends HighElement implements ISuite {
                 this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
             this.reparseResources();
-            this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.IMPORT_ERROR);
             this.addChildren(parsed.getHighElements());
         }
     }
@@ -142,7 +148,6 @@ public abstract class Suite extends HighElement implements ISuite {
             this.fileParsed.analyzeSemantics(this);
         }
         this.updateTagsForSelfAndChildren();
-        this.recheckSerialization();
     }
 
     @Override
@@ -155,21 +160,9 @@ public abstract class Suite extends HighElement implements ISuite {
         }
     }
 
-    private void recheckSerialization() {
-        this.selfErrors.removeIf(error -> error.type.getValue() == ErrorKind.SERIALIZATION_ERROR);
-        if (this.unsavedChanges == LastChangeKind.TEXT_CHANGED && this.fileParsed != null && this.fileParsed.errors.size() == 0) {
-            String afterSerialization = this.fileParsed.serialize(newlineStyle).replace("\r", "");
-            String beforeSerialization = Extensions.removeFinalNewlineIfAny(this.contents.replace("\r", ""));
-            if (!afterSerialization.equals(beforeSerialization)) {
-                selfErrors.add(new SnowrideError(this, ErrorKind.SERIALIZATION_ERROR, Severity.WARNING, "File might not serialize in the same way you've written it down."));
-            }
-        }
-    }
-
     public void reparseAndRecalculateResources() {
         this.reparseResources();
         this.recalculateResources();
-        System.out.println("Recalculated.");
     }
 
     @Override

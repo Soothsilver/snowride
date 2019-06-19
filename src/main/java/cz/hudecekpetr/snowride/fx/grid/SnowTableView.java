@@ -67,6 +67,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         super();
         this.mainForm = mainForm;
         this.snowTableKind = snowTableKind;
+        this.getStyleClass().add("snow");
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -211,7 +212,9 @@ public class SnowTableView extends TableView<LogicalLine> {
                 }
                 if (!dontChangeLastPosition) {
                     lastPositionSelected = tablePosition;
-                    YellowHighlight.lastPositionSelectText = tablePositionToCell(tablePosition).getValue().contents;
+                    if (tablePosition.getColumn() >= 1) {
+                        YellowHighlight.lastPositionSelectText = tablePositionToCell(tablePosition).getValue().contents;
+                    }
                 }
             }
             if (atLeastOneFirstColumnCellSelected) {

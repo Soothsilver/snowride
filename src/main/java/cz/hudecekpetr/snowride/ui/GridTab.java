@@ -50,6 +50,7 @@ public class GridTab {
         upperBox = new UpperBox();
         upperBox2 = new UpperBox();
         spreadsheetView = new VBox(5, upperBox, spreadsheetViewTable);
+
         VBox.setVgrow(spreadsheetViewTable, Priority.ALWAYS);
         tableSettings = new SnowTableView(mainForm, SnowTableKind.SETTINGS);
         tableVariables = new SnowTableView(mainForm, SnowTableKind.VARIABLES);

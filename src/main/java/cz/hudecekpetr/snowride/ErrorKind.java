@@ -3,8 +3,7 @@ package cz.hudecekpetr.snowride;
 public enum ErrorKind {
     PARSE_ERROR("Parse error"),
     IMPORT_ERROR("Import error"),
-    UNKNOWN_KEYWORD("Unknown keyword"),
-    SERIALIZATION_ERROR("Incorrect serialization");
+    UNKNOWN_KEYWORD("Unknown keyword");
 
     private String humanReadable;
 

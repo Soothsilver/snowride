@@ -3,6 +3,8 @@ package cz.hudecekpetr.snowride.ui;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.StringURLStreamHandlerFactory;
+import cz.hudecekpetr.snowride.fx.SystemColorService;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
@@ -71,6 +73,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -119,6 +122,8 @@ public class MainForm {
     private Button bStop;
 
     public MainForm(Stage stage) {
+        SystemColorService.initialize();
+        URL.setURLStreamHandlerFactory(new StringURLStreamHandlerFactory());
         INSTANCE = this;
         this.stage = stage;
         filesystem = new Filesystem(this);
@@ -167,6 +172,7 @@ public class MainForm {
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
         Scene scene = new Scene(notificationPane, Settings.getInstance().width, Settings.getInstance().height);
         scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
+        scene.getStylesheets().add("snow://autogen.css");
         addGlobalShortcuts(scene);
         stage.setScene(scene);
         if (Settings.getInstance().x != -1) {

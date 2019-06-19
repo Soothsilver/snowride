@@ -51,7 +51,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.setOnDragDetected(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (getItem() != null) {
+                if (getItem() != null && getItem().partOfLine != null) {
                     startFullDrag();
                     fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
                     event.consume();
@@ -62,7 +62,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             @Override
             public void handle(MouseDragEvent event) {
 
-                if (fullDragStartedAt != null && getItem() != null) {
+                if (fullDragStartedAt != null && getItem() != null && getItem().partOfLine != null) {
                     TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
                     snowTableView.getSelectionModel().clearSelection();
                     snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(), fullDragStartedAt.getTableColumn(),

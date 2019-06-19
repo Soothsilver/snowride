@@ -43,6 +43,7 @@ public class Settings {
     public int numberOfSuccessesBeforeEnd = 100;
     public boolean cbRunGarbageCollection = false;
     public boolean cbHighlightSameCells = true;
+    public boolean cbUseSystemColorWindow = false;
 
     public static Settings getInstance() {
         if (instance == null) {

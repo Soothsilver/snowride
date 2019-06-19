@@ -132,6 +132,8 @@ public class RunTab {
                 new SimpleEditableStyledDocument<>("", INITIAL_STYLE),
                 true);
         tbLog.setEditable(false);
+        tbLog.setStyle("-fx-background-color: -fx-control-inner-background;");
+        tbOutput.setStyle("-fx-background-color: -fx-control-inner-background");
         VirtualizedScrollPane<StyledTextArea<String, String>> scrollPane = new VirtualizedScrollPane<>(tbOutput);
         SplitPane splitterOutput = new SplitPane(scrollPane, new VirtualizedScrollPane<>(tbLog));
         splitterOutput.setOrientation(Orientation.VERTICAL);

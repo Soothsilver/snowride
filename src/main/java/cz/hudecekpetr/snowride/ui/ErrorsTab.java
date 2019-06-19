@@ -11,6 +11,9 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.controlsfx.validation.Severity;
 
@@ -19,7 +22,8 @@ public class ErrorsTab {
     private final TableView<SnowrideError> tableErrors;
 
     public ErrorsTab(MainForm mainForm) {
-        tableErrors = new TableView<>();
+        tableErrors = new ErrorsTablesView();
+        tableErrors.getSelectionModel().setCellSelectionEnabled(false);
         tableErrors.setPlaceholder(new Label("Snowride detects no parse errors in this project."));
         TableColumn<SnowrideError, HighElement> locationColumn = new TableColumn<>("Location");
         locationColumn.setCellValueFactory(param -> param.getValue().where);
@@ -91,7 +95,10 @@ public class ErrorsTab {
             }
         });
         tableErrors.getColumns().add(descriptionColumn);
-        tab = new Tab("Errors", tableErrors);
+        HBox hErrors = new HBox(5, new Label("Double-click an error to switch to that file. Do 'Find usages' on any keyword to force-refresh import errors."));
+        VBox vbErrors = new VBox(5, hErrors, tableErrors);
+        VBox.setVgrow(tableErrors, Priority.ALWAYS);
+        tab = new Tab("Errors", vbErrors);
         tab.setClosable(false);
         TreeItem<HighElement> root = mainForm.getProjectTree().getRoot();
         if (root != null) {

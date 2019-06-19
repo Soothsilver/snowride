@@ -49,6 +49,7 @@ public class DocumentationEditWindow extends AboutDialogBase {
         HBox hButtons = new HBox(5, bClose);
         hButtons.setAlignment(Pos.CENTER_RIGHT);
         documentationArea.setWrapText(true);
+        documentationArea.setStyle("-fx-background-color: -fx-control-inner-background");
         if (line == null) {
             documentationArea.setText("");
         } else {
