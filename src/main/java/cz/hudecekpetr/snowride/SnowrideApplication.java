@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride;
 
 import cz.hudecekpetr.snowride.fx.TooltipHack;
+import cz.hudecekpetr.snowride.generalpurpose.GarbageCollectorCaller;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Application;
@@ -12,6 +13,10 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SnowrideApplication extends Application {
     public static void main(String[] args) {
@@ -24,7 +29,9 @@ public class SnowrideApplication extends Application {
                 });
             }
         });
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         Settings.load();
+        GarbageCollectorCaller.maybeStart();
         launch(args);
     }
 

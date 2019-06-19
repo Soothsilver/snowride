@@ -32,6 +32,8 @@ public class SettingsWindow extends Stage {
     private CheckBox cbAutoExpandSelectedTests;
     private CheckBox cbUseStructureChanged;
     private TextField tbNumber;
+    private CheckBox cbGarbageCollect;
+    private CheckBox cbHighlightSameCells;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -93,7 +95,18 @@ public class SettingsWindow extends Stage {
             return null;
         }));
         HBox num = new HBox(5, lblNumber, tbNumber);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num);
+        cbGarbageCollect = new CheckBox("Automatically garbage collect every 5 minutes. Changes to this will take effect when you next start Snowride. Additional action from your side required!: Add the following VM options to your launcher to force JVM to return freed memory back to the operating system.");
+        cbGarbageCollect.setSelected(Settings.getInstance().cbRunGarbageCollection);
+        cbGarbageCollect.setWrapText(true);
+        TextField tbXXargs = new TextField("-XX:+UseG1GC -XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10");
+        tbXXargs.setEditable(false);
+        VBox borderBox = new VBox(5, cbGarbageCollect, tbXXargs);
+        borderBox.setStyle("-fx-border-color: black; -fx-border-width: 1px; -fx-padding: 3px; ");
+
+        cbHighlightSameCells = new CheckBox("Highlight cells with the same content as the selected cell in yellow.");
+        cbHighlightSameCells.setWrapText(true);
+        cbHighlightSameCells.setSelected(Settings.getInstance().cbHighlightSameCells);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells);
         vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
@@ -107,6 +120,8 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().cbShowNonexistentOptionFirst = cbFirstCompletionOption.isSelected();
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().cbAutoExpandSelectedTests = cbAutoExpandSelectedTests.isSelected();
+        Settings.getInstance().cbRunGarbageCollection = cbGarbageCollect.isSelected();
+        Settings.getInstance().cbHighlightSameCells = cbHighlightSameCells.isSelected();
         Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
         try {
             Settings.getInstance().numberOfSuccessesBeforeEnd = Integer.parseInt(tbNumber.getText());

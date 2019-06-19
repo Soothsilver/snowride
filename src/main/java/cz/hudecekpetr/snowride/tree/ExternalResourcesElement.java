@@ -47,7 +47,7 @@ public class ExternalResourcesElement extends Suite {
 
     @Override
     public Image getAutocompleteIcon() {
-        return Images.no;
+        return Images.internet;
     }
 
     @Override

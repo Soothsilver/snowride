@@ -41,6 +41,8 @@ public class Settings {
     public boolean cbAutoExpandSelectedTests = true;
     public boolean cbUseStructureChanged = false;
     public int numberOfSuccessesBeforeEnd = 100;
+    public boolean cbRunGarbageCollection = false;
+    public boolean cbHighlightSameCells = true;
 
     public static Settings getInstance() {
         if (instance == null) {

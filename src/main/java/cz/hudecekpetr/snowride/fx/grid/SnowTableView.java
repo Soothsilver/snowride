@@ -45,6 +45,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
@@ -121,6 +122,15 @@ public class SnowTableView extends TableView<LogicalLine> {
                 appendRowAfter();
             }
         });
+
+        MenuItem miDelete = new MenuItem("Delete all selected rows");
+        miDelete.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN));
+        miDelete.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                deleteSelectedRows();
+            }
+        });
         if (getSelectionModel().getSelectedCells().size() > 0) {
             TablePosition lastPosition = getSelectionModel().getSelectedCells().get(0);
             if (lastPosition.getColumn() != -1 && lastPosition.getRow() != -1) {
@@ -178,15 +188,20 @@ public class SnowTableView extends TableView<LogicalLine> {
 
         contextMenuItems.add(miInsert);
         contextMenuItems.add(miAppend);
+        contextMenuItems.add(miDelete);
         return contextMenuItems;
     }
 
+    TablePosition<LogicalLine, Cell> lastPositionSelected;
+    private boolean dontChangeLastPosition = false;
     private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
         List<TablePosition> toClear = new ArrayList<>();
         List<TablePosition> toSelect = new ArrayList<>();
-// We want to scroll to the new columm selected if it's not already visible in the viewport -- but not if it is.
-// I don't know how to do that, though.
-//        TablePosition any = null;
+        // We want to scroll to the new column selected if it's not already visible in the viewport -- but not if it is.
+        // I don't know how to do that, though.
+        if (!dontChangeLastPosition) {
+            lastPositionSelected = null;
+        }
         while (change.next()) {
             boolean atLeastOneFirstColumnCellSelected = false;
             for (TablePosition tablePosition : change.getAddedSubList()) {
@@ -194,7 +209,10 @@ public class SnowTableView extends TableView<LogicalLine> {
                     atLeastOneFirstColumnCellSelected = true;
                     toClear.add(tablePosition);
                 }
-//                any = tablePosition;
+                if (!dontChangeLastPosition) {
+                    lastPositionSelected = tablePosition;
+                    YellowHighlight.lastPositionSelectText = tablePositionToCell(tablePosition).getValue().contents;
+                }
             }
             if (atLeastOneFirstColumnCellSelected) {
                 for (TablePosition tablePosition : change.getRemoved()) {
@@ -204,20 +222,22 @@ public class SnowTableView extends TableView<LogicalLine> {
                 }
             }
         }
-//        if (any != null) {
-//            scrollToColumn(any.getTableColumn());
-//        }
         if (toClear.size() > 0 || toSelect.size() > 0) {
             // Has to be done later to avoid creating an inconsistent selection model (which throws exceptions) -
             // it's not legal to clear/select stuff from within this list change listener. I tried.
             Platform.runLater(() -> {
+                dontChangeLastPosition = true;
                 for (TablePosition tablePosition : toClear) {
                     this.getSelectionModel().clearSelection(tablePosition.getRow(), tablePosition.getTableColumn());
                 }
                 for (TablePosition tablePosition : toSelect) {
                     this.getSelectionModel().select(tablePosition.getRow(), tablePosition.getTableColumn());
                 }
+                dontChangeLastPosition = false;
             });
+        }
+        for (LogicalLine item : getItems()) {
+            item.recalcStyles();
         }
     }
 
@@ -228,6 +248,9 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private void onMouseClicked(MouseEvent mouseEvent) {
         MainForm.documentationPopup.hide();
+        if (lastPositionSelected != null && lastPositionSelected.getColumn() == 0) {
+            mainForm.toast("In Snowride, you must not click the 'Row' column. Right-click the next column instead to get the correct context menu.");
+        }
         if (mouseEvent.isControlDown()) {
             Cell cell = null;
             if (snowTableKind.isScenario()) {
@@ -281,6 +304,9 @@ public class SnowTableView extends TableView<LogicalLine> {
         } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
             appendRowAfter();
             keyEvent.consume();
+        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isControlDown()) {
+            deleteSelectedRows();
+            keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
             getScenario().getUndoStack().undoIfAble();
         } else if (keyEvent.getCode() == KeyCode.Y && keyEvent.isControlDown()) {
@@ -332,6 +358,24 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
             keyEvent.consume();
         }
+    }
+
+    private void deleteSelectedRows() {
+        Set<Integer> rows = new HashSet<>();
+        for (TablePosition selectedCell : this.getSelectionModel().getSelectedCells()) {
+            rows.add(selectedCell.getRow());
+        }
+        List<ChangeTextOperation> operations = new ArrayList<>();
+        for (Integer row : rows) {
+            LogicalLine line = getItems().get(row);
+            for (int i =0; i < line.cells.size(); i++) {
+                SimpleObjectProperty<Cell> cellAsStringProperty = line.getCellAsStringProperty(i, mainForm);
+                Cell current = cellAsStringProperty.get();
+                operations.add(new ChangeTextOperation(getItems(), current.contents, "", row, i));
+                cellAsStringProperty.set(new Cell("", current.postTrivia, current.partOfLine));
+            }
+        }
+        getScenario().getUndoStack().iJustDid(new MassOperation(operations));
     }
 
     private void appendRowAfter() {

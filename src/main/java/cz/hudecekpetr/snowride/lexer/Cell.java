@@ -4,9 +4,11 @@ import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.fx.grid.YellowHighlight;
 import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.Suite;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
@@ -60,7 +62,6 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     private String getStyle() {
-        partOfLine.recalculateSemantics();
         String style = "";
         if (semantics.cellIndex == 0) {
             style += "-fx-font-weight: bold; ";
@@ -115,23 +116,27 @@ public class Cell implements IHasQuickDocumentation {
             style += "-fx-text-fill: green; ";
         }
         style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
-        switch (semantics.argumentStatus) {
-            case FORBIDDEN:
-                if (!semantics.isComment && !StringUtils.isBlank(contents)) {
-                    style += "-fx-background-color: #ff7291; ";
-                } else {
-                    style += "-fx-background-color: #c0c0c0; ";
-                }
-                break;
-            case VARARG:
-                style += "-fx-background-color: #F5F5F5; ";
-                break;
-            case MANDATORY:
-                style += "-fx-background-color: white; ";
-                if (StringUtils.isBlank(contents)) {
-                    style += "-fx-background-color: #ffcf32; ";
-                }
-                break;
+        if (!StringUtils.isBlank(contents) && YellowHighlight.lastPositionSelectText.equals(contents) && Settings.getInstance().cbHighlightSameCells) {
+            style += "-fx-background-color: #FFFF77; ";
+        } else {
+            switch (semantics.argumentStatus) {
+                case FORBIDDEN:
+                    if (!semantics.isComment && !StringUtils.isBlank(contents)) {
+                        style += "-fx-background-color: #ff7291; ";
+                    } else {
+                        style += "-fx-background-color: #c0c0c0; ";
+                    }
+                    break;
+                case VARARG:
+                    style += "-fx-background-color: #F5F5F5; ";
+                    break;
+                case MANDATORY:
+                    style += "-fx-background-color: white; ";
+                    if (StringUtils.isBlank(contents)) {
+                        style += "-fx-background-color: #ffcf32; ";
+                    }
+                    break;
+            }
         }
         return style;
     }

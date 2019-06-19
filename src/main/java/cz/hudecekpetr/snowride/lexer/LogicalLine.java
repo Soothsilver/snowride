@@ -124,8 +124,8 @@ public class LogicalLine {
 
 
     public void recalcStyles() {
-        for (int i = 0, cellsSize = cells.size(); i < cellsSize; i++) {
-            Cell cell = cells.get(i);
+        recalculateSemantics();
+        for (Cell cell : cells) {
             cell.updateStyle();
         }
     }
