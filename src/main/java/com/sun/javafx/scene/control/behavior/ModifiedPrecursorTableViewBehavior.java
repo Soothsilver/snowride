@@ -9,6 +9,14 @@ import javafx.scene.control.TablePositionBase;
 import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TableView;
 
+/**
+ * Copied from JDK under GPL2 and modified. We have it in the original package as opposed to cz.hudecekpetr.snowride
+ * because it uses some package-private stuff.
+ *
+ * The point of modifications in here is to allow Shift+arrow keys to select a region of cells as though you were
+ * in Excel. By default, the TableView uses a weird kind of snake-like multiselect which we don't want. We want
+ * a blocky select that people are used to.
+ */
 public class ModifiedPrecursorTableViewBehavior<T> extends PrecursorTableViewBehavior<T> {
     /**************************************************************************
      *                                                                        *
@@ -67,6 +75,7 @@ public class ModifiedPrecursorTableViewBehavior<T> extends PrecursorTableViewBeh
                 if (sm.isSelected(_row, focusedCell.getTableColumn())) {
                     continue;
                 }
+                // Our modification here: select entire block
                 int anchorX = getAnchor().getColumn();
                 int ourX = focusedCell.getColumn();
                 int fordelta = anchorX <= ourX ? 1 : -1;
@@ -144,6 +153,7 @@ public class ModifiedPrecursorTableViewBehavior<T> extends PrecursorTableViewBeh
 
             for (int _col = start; _col <= end; _col++) {
 
+                // Our modification here: select entire block
                 int anchorY = getAnchor().getRow();
                 int ourY = focusedCell.getRow();
                 int fordelta = anchorY <= ourY ? 1 : -1;

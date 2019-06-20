@@ -1,16 +1,9 @@
-.button {
-    -fx-text-fill: black;
-}
 .tree-cell {
     -fx-label-padding: 0;
     -fx-padding: 0;
     -fx-font-size: 8pt;
 }
-.root {
-
-/* testing:      -fx-base: violet;*/
-}
-/* Selected rows */
+/* Custom styling for the "Assisted grid editing (snow) table". This does not take effect for the "Errors" table. */
 .table-view.snow:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
 .table-view.snow:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected {
     -fx-background: #0078D7 !important;
@@ -21,7 +14,6 @@
 .snow .table-cell {
     -fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px;
 }
-
 .snow .table-row-cell {
     -fx-background-color: -fx-control-inner-background;
 }
@@ -37,7 +29,8 @@
 }
 
 .tooltip {
-    -fx-background: rgba(230,230,230);
+    /* I like a black-on-white more than white-or-black. */
+    -fx-background: rgba(230,230,230,1.0);
     -fx-text-fill: black;
     -fx-background-color: rgba(230,230,230,0.95);
     -fx-background-radius: 3px;

@@ -9,7 +9,6 @@ import cz.hudecekpetr.snowride.tree.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -19,7 +18,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -29,7 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class ReloadChangesWindow extends Stage {
+class ReloadChangesWindow extends Stage {
     private static ReloadChangesWindow activeWindow = null;
     private final Label lblInfo;
     private LinkedHashSet<Path> changedPaths = new LinkedHashSet<>();
@@ -53,14 +51,12 @@ public class ReloadChangesWindow extends Stage {
         this.setTitle("Changes from outside Snowride...");
         this.setAlwaysOnTop(true);
         this.getIcons().add(Images.snowflake);
-        this.setOnHidden(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                activeWindow = null;
-            }
-        });
+        this.setOnHidden(event -> activeWindow = null);
     }
 
+    /**
+     * Creates this window if it doesn't exist or returns the existing window if it's already shown.
+     */
     public static ReloadChangesWindow activateWindowIfNotActive() {
         if (activeWindow == null) {
             activeWindow = new ReloadChangesWindow();
@@ -69,24 +65,33 @@ public class ReloadChangesWindow extends Stage {
         return activeWindow;
     }
 
+    /**
+     * On the JavaFX thread, reloads changes from disk.
+     */
     private void reloadAll(ActionEvent actionEvent) {
         closeSelf(actionEvent);
-        Set<HighElement> reloadRequired = new HashSet<>();
+        Set<Suite> reloadRequired = new HashSet<>();
+        // Convert absolute paths to high elements:
         processChildrenRecursively(MainForm.INSTANCE.getProjectTree().getRoot().getValue(), changedPaths, reloadRequired);
-        MainForm mainForm = MainForm.INSTANCE;
         changedPaths.clear();
+
+        MainForm mainForm = MainForm.INSTANCE;
         mainForm.projectLoad.progress.set(0);
         Holder<HighElement> deadButFocusedElement = new Holder<>(null);
         double progressPerFile = 1.0 / reloadRequired.size();
-        for (HighElement rl : reloadRequired) {
+
+        for (Suite rl : reloadRequired) {
+            // Remove the old instance from memory:
             rl.selfAndDescendantHighElements().forEachOrdered(he -> {
                 mainForm.navigationStack.remove(he);
                 if (mainForm.getFocusedElement() == he) {
                     deadButFocusedElement.setValue(he);
                 }
             });
+
+            // Reload the suite
             Suite remainingParent = rl.parent;
-            Suite newElement = null;
+            Suite newElement;
             if (rl instanceof FolderSuite) {
                 newElement = mainForm.gateParser.loadDirectory(((FolderSuite) rl).directoryPath, mainForm.projectLoad, progressPerFile);
             } else if (rl instanceof FileSuite) {
@@ -96,7 +101,11 @@ public class ReloadChangesWindow extends Stage {
                     throw new RuntimeException(e);
                 }
                 mainForm.projectLoad.success(progressPerFile);
+            } else {
+                throw new RuntimeException("The file '" + rl.getShortName() + "' is not a suite. This cannot happen.");
             }
+
+            // Reanalyze.
             newElement.selfAndDescendantHighElements().forEachOrdered(he -> {
                 if (he instanceof Suite) {
                     ((Suite) he).analyzeSemantics();
@@ -105,8 +114,12 @@ public class ReloadChangesWindow extends Stage {
             if (remainingParent == null) {
                 throw new RuntimeException("The suite '" + rl.getQualifiedName() + "' appears to have no parent.");
             }
+
+            // Update the tree. Potentially CPU-expensive but hopefully not too many changes were made.
             remainingParent.replaceChildWithAnotherChild(rl, newElement);
         }
+
+        // Remove the ghost high element from existing by reloading it.
         HighElement dead = deadButFocusedElement.getValue();
         if (dead != null) {
             Optional<HighElement> newVersionOfThisElement = mainForm.findTestByFullyQualifiedName(dead.getQualifiedName());
@@ -120,24 +133,22 @@ public class ReloadChangesWindow extends Stage {
         mainForm.projectLoad.progress.set(1);
     }
 
-    private void processChildrenRecursively(HighElement currentElement, LinkedHashSet<Path> changedFiles, Set<HighElement> outElementsToBeReloaded) {
+    private void processChildrenRecursively(HighElement currentElement, LinkedHashSet<Path> changedFiles, Set<Suite> outElementsToBeReloaded) {
         if (currentElement instanceof FileSuite) {
             Path path = ((FileSuite) currentElement).file.toPath();
             if (changedFiles.contains(path)) {
-                outElementsToBeReloaded.add(currentElement);
+                outElementsToBeReloaded.add((Suite) currentElement);
             }
             // Never recurse into scenarios, it would be pointless.
             return;
         } else if (currentElement instanceof FolderSuite) {
             Path path = ((FolderSuite) currentElement).directoryPath.toPath();
             if (changedFiles.contains(path)) {
-                outElementsToBeReloaded.add(currentElement);
+                outElementsToBeReloaded.add((Suite) currentElement);
                 return; // Don't recurse if we're already reloading a folder
             }
         }
-        currentElement.children.forEach(he -> {
-            processChildrenRecursively(he, changedFiles, outElementsToBeReloaded);
-        });
+        currentElement.children.forEach(he -> processChildrenRecursively(he, changedFiles, outElementsToBeReloaded));
     }
 
     private void closeSelf(ActionEvent actionEvent) {
@@ -149,6 +160,9 @@ public class ReloadChangesWindow extends Stage {
                 StringUtils.join(changedPaths.stream().limit(5).map(Path::getFileName).iterator(), ", ") + "). Reload them from disk?";
     }
 
+    /**
+     * Adds a path to the set of changes file and directories. Call from JavaFX thread only. Updates the text in the window as well.
+     */
     public void addPath(Path absolutePathToChangedFile) {
         changedPaths.add(absolutePathToChangedFile);
         lblInfo.setText(getInfo());

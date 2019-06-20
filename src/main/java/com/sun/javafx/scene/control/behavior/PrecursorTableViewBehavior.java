@@ -38,7 +38,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import com.sun.javafx.scene.control.skin.Utils;
 
-
+/**
+ * Copied from JDK under GPL2 and left unmodified.
+ */
 public class PrecursorTableViewBehavior<T> extends PrecursorTableViewBehaviorBase<TableView<T>, T, TableColumn<T, ?>> {
 
     /**************************************************************************

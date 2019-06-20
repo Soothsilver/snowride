@@ -1,3 +1,13 @@
+/*
+ * Lexer-and-parser combined grammar for Robot Framework.
+ *
+ * A file consists of sections which have a header (*** Test Cases ***) and content. User keyword definitions and test
+ * cases are both under the production "testCase". A line almost anywhere in a section is known as a "step" or
+ * a "logical line".
+ *
+ * It's called a "logical line" because it may contains newlines/carriage returns inside if it makes uses of the
+ * ellipsis (...) Robot Framework syntax.
+ */
 grammar Robot;
 
 @parser::header {

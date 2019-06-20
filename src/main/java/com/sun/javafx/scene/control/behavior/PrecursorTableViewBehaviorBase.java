@@ -56,7 +56,9 @@ import static javafx.scene.input.KeyCode.RIGHT;
 import static javafx.scene.input.KeyCode.SPACE;
 import static javafx.scene.input.KeyCode.TAB;
 import static javafx.scene.input.KeyCode.UP;
-
+/**
+ * Copied from JDK under GPL2 and left unmodified.
+ */
 public abstract class PrecursorTableViewBehaviorBase<C extends Control, T, TC extends TableColumnBase<T,?>> extends BehaviorBase<C> {
 
     /**************************************************************************

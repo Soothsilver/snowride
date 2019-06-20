@@ -9,11 +9,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+/**
+ * Handles "Create new file" and "Create new folder" items in the treeview context menu.
+ */
 public class Filesystem {
     private MainForm mainForm;
 
     public Filesystem(MainForm mainForm) {
-
         this.mainForm = mainForm;
     }
 

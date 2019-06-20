@@ -1,0 +1,1 @@
+These files are example Robot files on which Snowride can be tested.

@@ -27,11 +27,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Copied from JDK under GPL2 and modified. We needed to extract it because we need to put our own TableViewBehavior into the skin in the constructor.
+ * It's too late to do it later by overriding getBehavior().
+ */
 public class PrecursorTableViewSkin<T> extends TableViewSkinBase<T, T, TableView<T>, ModifiedPrecursorTableViewBehavior<T>, TableRow<T>, TableColumn<T, ?>> {
 
     private final TableView<T> tableView;
 
     public PrecursorTableViewSkin(final TableView<T> tableView) {
+        //
+        // This is where the file was changed:
+        //
         super(tableView, new ModifiedPrecursorTableViewBehavior<T>(tableView));
 
         this.tableView = tableView;
