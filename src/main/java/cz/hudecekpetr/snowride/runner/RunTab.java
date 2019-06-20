@@ -520,8 +520,10 @@ public class RunTab {
         if (Settings.getInstance().additionalFolders != null) {
             String[] folders = StringUtils.splitByWholeSeparator(Settings.getInstance().additionalFolders, "\n");
             for (String folder : folders) {
-                lines.add("--pythonpath");
-                lines.add(folder.trim());
+                if (!StringUtils.isBlank(folder)) {
+                    lines.add("--pythonpath");
+                    lines.add(folder.trim());
+                }
             }
         }
         FileUtils.writeLines(argfile, lines);

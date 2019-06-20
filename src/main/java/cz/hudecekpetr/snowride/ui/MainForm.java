@@ -985,10 +985,10 @@ public class MainForm {
         return this.tabs;
     }
 
-    public Scenario findTestByFullyQualifiedName(String longname) {
-        return (Scenario) getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> {
+    public Optional<HighElement> findTestByFullyQualifiedName(String longname) {
+        return getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> {
             return he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase());
-        }).findFirst().get();
+        }).findFirst();
     }
 
     public void toast(String toastMessage) {

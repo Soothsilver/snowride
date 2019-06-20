@@ -175,13 +175,13 @@ public class TcpHost {
                 case "start_test":
                     Map<String, Any> auxiliaries = arguments.get(1).asMap();
                     String longname = auxiliaries.get("longname").as(String.class);
-                    mainForm.findTestByFullyQualifiedName(longname).imageView.setImage(Images.running);
+                    mainForm.findTestByFullyQualifiedName(longname).get().imageView.setImage(Images.running);
                     break;
                 case "end_test":
                     Map<String, Any> auxiliaries2 = arguments.get(1).asMap();
                     String status = auxiliaries2.get("status").as(String.class);
                     String longname2 = auxiliaries2.get("longname").as(String.class);
-                    Scenario endingTest = mainForm.findTestByFullyQualifiedName(longname2);
+                    Scenario endingTest = (Scenario) mainForm.findTestByFullyQualifiedName(longname2).get();
                     if (status.equals("PASS")) {
                         runTab.run.countPassedTests++;
                         endingTest.markTestStatus(TestResult.PASSED);

@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.filesystem;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.generalpurpose.Holder;
 import cz.hudecekpetr.snowride.tree.FileSuite;
 import cz.hudecekpetr.snowride.tree.FolderSuite;
 import cz.hudecekpetr.snowride.tree.HighElement;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class ReloadChangesWindow extends Stage {
@@ -74,12 +76,13 @@ public class ReloadChangesWindow extends Stage {
         MainForm mainForm = MainForm.INSTANCE;
         changedPaths.clear();
         mainForm.projectLoad.progress.set(0);
+        Holder<HighElement> deadButFocusedElement = new Holder<>(null);
         double progressPerFile = 1.0 / reloadRequired.size();
         for (HighElement rl : reloadRequired) {
             rl.selfAndDescendantHighElements().forEachOrdered(he -> {
                 mainForm.navigationStack.remove(he);
                 if (mainForm.getFocusedElement() == he) {
-                    mainForm.selectProgrammatically(mainForm.getProjectTree().getRoot().getValue());
+                    deadButFocusedElement.setValue(he);
                 }
             });
             Suite remainingParent = rl.parent;
@@ -103,6 +106,15 @@ public class ReloadChangesWindow extends Stage {
                 throw new RuntimeException("The suite '" + rl.getQualifiedName() + "' appears to have no parent.");
             }
             remainingParent.replaceChildWithAnotherChild(rl, newElement);
+        }
+        HighElement dead = deadButFocusedElement.getValue();
+        if (dead != null) {
+            Optional<HighElement> newVersionOfThisElement = mainForm.findTestByFullyQualifiedName(dead.getQualifiedName());
+            if (newVersionOfThisElement.isPresent()) {
+                mainForm.selectProgrammatically(newVersionOfThisElement.get());
+            } else {
+                mainForm.selectProgrammatically(mainForm.getRootDirectoryElement());
+            }
         }
         mainForm.runTab.maybeRunNumberChanged();
         mainForm.projectLoad.progress.set(1);

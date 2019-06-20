@@ -110,6 +110,9 @@ public class Settings {
         List<File> files = new ArrayList<>();
         String[] foldersSplit = StringUtils.split(additionalFolders, '\n');
         for (String folder : foldersSplit) {
+            if (StringUtils.isBlank(folder)) {
+                continue;
+            }
             String folderPath = folder.trim();
             File folderAsFile = new File(folderPath);
             files.add(folderAsFile);

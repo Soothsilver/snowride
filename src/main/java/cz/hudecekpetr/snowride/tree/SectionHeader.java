@@ -16,7 +16,9 @@ public class SectionHeader {
 
     public SectionHeader(SectionKind sectionKind, String headerText) {
         this.sectionKind = sectionKind;
-        this.headerText = headerText;
+        // This has bad performance, but it fixes a bug in the caller where we use "getText()" instead of a more clever
+        // analysis but that can put the EOF token in there...
+        this.headerText = headerText.replace("<EOF>","");
     }
 
     public SectionKind determineSectionKind() {
