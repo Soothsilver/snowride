@@ -1,10 +1,9 @@
 package cz.hudecekpetr.snowride.semantics;
 
 import com.google.common.collect.Multimap;
-import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.tree.Cell;
 
 import java.util.List;
-import java.util.Map;
 
 public class CellSemantics {
     public int cellIndex;

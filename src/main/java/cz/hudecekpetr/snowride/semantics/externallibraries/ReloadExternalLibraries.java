@@ -1,11 +1,8 @@
 package cz.hudecekpetr.snowride.semantics.externallibraries;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
-import cz.hudecekpetr.snowride.semantics.codecompletion.LibraryKind;
 import cz.hudecekpetr.snowride.settings.Settings;
 import javafx.application.Platform;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;

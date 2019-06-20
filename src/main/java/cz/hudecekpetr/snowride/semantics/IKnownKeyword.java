@@ -1,8 +1,8 @@
 package cz.hudecekpetr.snowride.semantics;
 
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
-import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
-import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 
 public interface IKnownKeyword extends IAutocompleteOption {
     Scenario getScenarioIfPossible();

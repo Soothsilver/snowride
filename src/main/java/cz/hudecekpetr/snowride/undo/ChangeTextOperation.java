@@ -1,8 +1,7 @@
 package cz.hudecekpetr.snowride.undo;
 
-import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
-import cz.hudecekpetr.snowride.lexer.Cell;
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.Cell;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ObservableList;
 

@@ -1,10 +1,9 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.Scenario;
-import cz.hudecekpetr.snowride.tree.Suite;
-import cz.hudecekpetr.snowride.ui.about.AboutDialogBase;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;

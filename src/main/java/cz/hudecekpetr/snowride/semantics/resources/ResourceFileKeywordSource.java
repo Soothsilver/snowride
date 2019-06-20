@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 
 import java.util.Objects;
 import java.util.stream.Stream;

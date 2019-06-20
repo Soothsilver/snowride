@@ -1,9 +1,9 @@
 package cz.hudecekpetr.snowride.semantics;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalKeyword;
-import cz.hudecekpetr.snowride.tree.Scenario;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalKeyword;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 

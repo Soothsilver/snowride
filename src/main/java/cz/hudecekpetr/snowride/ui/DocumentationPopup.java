@@ -1,20 +1,17 @@
 package cz.hudecekpetr.snowride.ui;
 
-import com.sun.javafx.util.Utils;
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
-import cz.hudecekpetr.snowride.fx.IHasQuickDocumentation;
+import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.fx.ScreenEdgeAvoidance;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
-import javafx.stage.Screen;
 import javafx.stage.Window;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 

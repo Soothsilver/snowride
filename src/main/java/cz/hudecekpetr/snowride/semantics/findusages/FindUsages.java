@@ -1,12 +1,12 @@
 package cz.hudecekpetr.snowride.semantics.findusages;
 
-import cz.hudecekpetr.snowride.lexer.Cell;
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.Cell;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.Scenario;
-import cz.hudecekpetr.snowride.tree.Suite;
-import cz.hudecekpetr.snowride.tree.UltimateRoot;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.UltimateRoot;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;

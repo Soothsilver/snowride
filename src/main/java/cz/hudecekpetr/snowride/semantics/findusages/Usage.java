@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.findusages;
 
-import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 
 public class Usage {
     private final String text;

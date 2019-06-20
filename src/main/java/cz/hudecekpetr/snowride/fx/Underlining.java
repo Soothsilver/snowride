@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.fx;
 
-import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.tree.Cell;
 
 public class Underlining {
     private static Cell activeCell;

@@ -1,8 +1,15 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.NewlineStyle;
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
-import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
+import cz.hudecekpetr.snowride.tree.sections.KeywordsSection;
+import cz.hudecekpetr.snowride.tree.sections.RobotSection;
+import cz.hudecekpetr.snowride.tree.sections.SectionHeader;
+import cz.hudecekpetr.snowride.tree.sections.SectionKind;
+import cz.hudecekpetr.snowride.tree.sections.TestCasesSection;
 
 import java.util.ArrayList;
 import java.util.List;

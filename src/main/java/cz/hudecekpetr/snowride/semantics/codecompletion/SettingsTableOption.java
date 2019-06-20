@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 
 public class SettingsTableOption extends TestCaseSettingOption {
     private String name;

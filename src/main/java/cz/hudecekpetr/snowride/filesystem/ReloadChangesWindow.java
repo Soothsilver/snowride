@@ -2,10 +2,10 @@ package cz.hudecekpetr.snowride.filesystem;
 
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.generalpurpose.Holder;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.event.ActionEvent;

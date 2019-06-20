@@ -3,9 +3,10 @@ package cz.hudecekpetr.snowride.semantics.codecompletion;
 import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
-import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalKeyword;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.tree.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 

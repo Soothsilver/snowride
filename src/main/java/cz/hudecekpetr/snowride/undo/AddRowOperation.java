@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.undo;
 
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import javafx.collections.ObservableList;
 
 import java.util.function.Supplier;

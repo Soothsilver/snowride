@@ -12,7 +12,9 @@ grammar Robot;
 
 @parser::header {
     import cz.hudecekpetr.snowride.tree.*;
-    import cz.hudecekpetr.snowride.lexer.*;
+    import cz.hudecekpetr.snowride.parser.*;
+    import cz.hudecekpetr.snowride.tree.highelements.*;
+    import cz.hudecekpetr.snowride.tree.sections.*;
 }
 
 file returns [RobotFile File]: section* EOF ;

@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.filesystem;
 
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 
 import java.io.File;

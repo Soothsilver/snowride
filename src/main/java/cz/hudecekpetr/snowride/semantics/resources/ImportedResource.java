@@ -1,12 +1,11 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.semantics.ImportException;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 
 import java.nio.file.Path;
@@ -143,7 +142,7 @@ public class ImportedResource {
                 break;
             default:
                 // not yet supported
-                throw new ImportException("You can only import resources or libraries with Snowride. This error cannot happen.");
+                throw new RuntimeException("You can only import resources or libraries with Snowride. This error cannot happen.");
         }
     }
 

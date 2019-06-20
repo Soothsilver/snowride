@@ -1,15 +1,13 @@
 package cz.hudecekpetr.snowride.parser;
 
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
-import cz.hudecekpetr.snowride.listener.AntlrGate;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.ExternalResourcesElement;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.ExternalResourcesElement;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.LongRunningOperation;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -18,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class GateParser {
     private static AntlrGate gate = new AntlrGate();

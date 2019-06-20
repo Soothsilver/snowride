@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.fx.bindings;
 
-import cz.hudecekpetr.snowride.lexer.Cell;
+import cz.hudecekpetr.snowride.tree.Cell;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ObservableValue;
 

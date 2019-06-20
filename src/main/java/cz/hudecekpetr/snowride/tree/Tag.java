@@ -1,6 +1,8 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 
 import java.util.Objects;
 

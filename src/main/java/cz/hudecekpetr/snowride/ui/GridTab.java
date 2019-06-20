@@ -1,22 +1,17 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.fx.grid.SnowTableKind;
-import cz.hudecekpetr.snowride.fx.grid.SnowTableView;
-import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.FolderSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableView;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
-import cz.hudecekpetr.snowride.tree.Scenario;
-import cz.hudecekpetr.snowride.tree.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.upperbox.UpperBox;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Side;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 

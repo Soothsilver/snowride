@@ -1,13 +1,11 @@
 package cz.hudecekpetr.snowride;
 
-import cz.hudecekpetr.snowride.lexer.LogicalLine;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.settings.Settings;
-import cz.hudecekpetr.snowride.tree.Tag;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

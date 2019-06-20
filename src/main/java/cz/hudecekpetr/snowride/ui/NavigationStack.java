@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
-import cz.hudecekpetr.snowride.tree.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 

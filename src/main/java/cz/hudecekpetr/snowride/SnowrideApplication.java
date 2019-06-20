@@ -13,29 +13,20 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class SnowrideApplication extends Application {
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                Platform.runLater(() -> {
-                    e.printStackTrace();
-                    new Alert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
-                });
-            }
-        });
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> Platform.runLater(() -> {
+            e.printStackTrace();
+            // Internet article say that error messages shouldn't be closed with "OK". I'm not sure "Well, that happened." is better, though.
+            new Alert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
+        }));
         Settings.load();
         GarbageCollectorCaller.maybeStart();
         launch(args);
     }
 
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         MainForm mainForm = new MainForm(primaryStage);
         mainForm.show();
         try {

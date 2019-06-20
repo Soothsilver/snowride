@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.semantics.codecompletion.ExternalLibrary;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 
 import java.util.stream.Stream;
 

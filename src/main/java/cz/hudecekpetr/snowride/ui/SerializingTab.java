@@ -1,17 +1,14 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.tree.FileSuite;
-import cz.hudecekpetr.snowride.tree.HighElement;
-import javafx.beans.Observable;
+import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class SerializingTab {
     private Label lblPerfect;
