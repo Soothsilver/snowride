@@ -3,13 +3,14 @@ package cz.hudecekpetr.snowride.errors;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -19,15 +20,17 @@ import org.controlsfx.validation.Severity;
 
 public class ErrorsTab {
     private final TableView<SnowrideError> tableErrors;
+    public Tab tab;
 
     public ErrorsTab(MainForm mainForm) {
-        tableErrors = new ErrorsTablesView();
+        tableErrors = new TableView<>();
         tableErrors.getSelectionModel().setCellSelectionEnabled(false);
         tableErrors.setPlaceholder(new Label("Snowride detects no parse errors in this project."));
+
+        // Column "Location"
         TableColumn<SnowrideError, HighElement> locationColumn = new TableColumn<>("Location");
         locationColumn.setCellValueFactory(param -> param.getValue().where);
         locationColumn.setPrefWidth(150);
-
         locationColumn.setCellFactory(new Callback<TableColumn<SnowrideError, HighElement>, TableCell<SnowrideError, HighElement>>() {
             @Override
             public TableCell<SnowrideError, HighElement> call(TableColumn<SnowrideError, HighElement> param) {
@@ -47,6 +50,8 @@ public class ErrorsTab {
             }
         });
         tableErrors.getColumns().add(locationColumn);
+
+        // Column "Severity"
         TableColumn<SnowrideError, Severity> severityColumn = new TableColumn<>("Severity");
         severityColumn.setCellValueFactory(param -> param.getValue().severity);
         severityColumn.setCellFactory(new Callback<TableColumn<SnowrideError, Severity>, TableCell<SnowrideError, Severity>>() {
@@ -75,25 +80,34 @@ public class ErrorsTab {
         });
         severityColumn.setPrefWidth(100);
         tableErrors.getColumns().add(severityColumn);
+
+        // Column "Type"
         TableColumn<SnowrideError, ErrorKind> typeColumn = new TableColumn<>("Type");
         typeColumn.setCellValueFactory(param -> param.getValue().type);
         typeColumn.setPrefWidth(100);
         tableErrors.getColumns().add(typeColumn);
+
+        // Column "Description"
         TableColumn<SnowrideError, String> descriptionColumn = new TableColumn<>("Description");
         descriptionColumn.setCellValueFactory(param -> param.getValue().description);
         descriptionColumn.setPrefWidth(500);
-        tableErrors.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() >= 2) {
-                    SnowrideError selectedError = tableErrors.getFocusModel().getFocusedItem();
-                    if (selectedError != null) {
-                        mainForm.selectProgrammaticallyAndRememberInHistory(selectedError.where.getValue());
-                    }
+
+        // Double-click to go to that file.
+        tableErrors.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() >= 2) {
+                SnowrideError selectedError = tableErrors.getFocusModel().getFocusedItem();
+                if (selectedError != null) {
+                    mainForm.selectProgrammaticallyAndRememberInHistory(selectedError.where.getValue());
+                    // If the file is already selected, we wouldn't switch to the grid tab automatically, so let's switch to
+                    // the grid tab explicitly here.
+                    mainForm.getTabs().getSelectionModel().select(mainForm.gridTab.getTabGrid());
                 }
             }
         });
         tableErrors.getColumns().add(descriptionColumn);
+
+        // "Find usages" forces a semantic analysis on all lines of all tests and keywords which will trigger all imports.
+        // Otherwise, imports are only processed when you select a file/folder in the treeview.
         HBox hErrors = new HBox(5, new Label("Double-click an error to switch to that file. Do 'Find usages' on any keyword to force-refresh import errors."));
         VBox vbErrors = new VBox(5, hErrors, tableErrors);
         VBox.setVgrow(tableErrors, Priority.ALWAYS);
@@ -103,12 +117,6 @@ public class ErrorsTab {
         if (root != null) {
             tableErrors.setItems(root.getValue().allErrorsRecursive);
         }
-        mainForm.getProjectTree().rootProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
-            @Override
-            public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
-                tableErrors.setItems(newValue.getValue().allErrorsRecursive);
-            }
-        });
+        mainForm.getProjectTree().rootProperty().addListener((observable, oldValue, newValue) -> tableErrors.setItems(newValue.getValue().allErrorsRecursive));
     }
-    public Tab tab;
 }

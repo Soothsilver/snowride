@@ -1,9 +1,11 @@
 package cz.hudecekpetr.snowride.errors;
 
+/**
+ * Used only by the Errors tab.
+ */
 public enum ErrorKind {
     PARSE_ERROR("Parse error"),
-    IMPORT_ERROR("Import error"),
-    UNKNOWN_KEYWORD("Unknown keyword");
+    IMPORT_ERROR("Import error");
 
     private String humanReadable;
 

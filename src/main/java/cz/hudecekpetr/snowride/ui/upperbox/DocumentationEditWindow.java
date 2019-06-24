@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.ui.upperbox;
 
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
-import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
@@ -10,9 +9,8 @@ import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.ui.about.AboutDialogBase;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -32,18 +30,10 @@ public class DocumentationEditWindow extends AboutDialogBase {
         LogicalLine line = element.getDocumentationLine();
         Button bClose = new Button("OK");
         TextArea documentationArea = new TextArea();
-        bClose.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
+        bClose.setOnAction(event -> clickOK(line, element, documentationArea));
+        this.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
                 clickOK(line, element, documentationArea);
-            }
-        });
-        this.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
-                    clickOK(line, element, documentationArea);
-                }
             }
         });
         HBox hButtons = new HBox(5, bClose);
@@ -68,7 +58,7 @@ public class DocumentationEditWindow extends AboutDialogBase {
         LogicalLine editedLine = line;
         int docStartsAt = element instanceof Scenario ? 2 : 1;
         if (editedLine == null) {
-            ObservableList<LogicalLine> allLogicalLines = null;
+            ObservableList<LogicalLine> allLogicalLines;
             if (element instanceof Scenario) {
                 allLogicalLines = ((Scenario) element).getLines();
             } else {
@@ -92,7 +82,7 @@ public class DocumentationEditWindow extends AboutDialogBase {
         // Add new one
         for (int i = 0; i < lines.length; i++) {
             String elSeparatorFinally = ellipsisSeparator;
-            if (i == lines.length -1) {
+            if (i == lines.length - 1) {
                 elSeparatorFinally = "";
             }
             editedLine.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE).set(new Cell(lines[i].trim(), elSeparatorFinally, editedLine));

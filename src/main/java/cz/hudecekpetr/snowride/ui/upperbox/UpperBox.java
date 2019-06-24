@@ -13,8 +13,6 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Side;
 import javafx.scene.control.Button;
@@ -40,27 +38,24 @@ public class UpperBox extends VBox {
         lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt;");
 
         bFindUsages = new Button("Find usages");
-        bFindUsages.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (forElement instanceof Scenario) {
-                    MenuItem placeholder = new MenuItem("(this keyword is not used anywhere)");
-                    placeholder.setDisable(true);
-                    List<MenuItem> items = FindUsages.findUsages(null, ((Scenario) forElement), MainForm.INSTANCE.getRootElement());
-                    if (findUsagesContextMenu != null) {
-                        findUsagesContextMenu.hide();
-                    }
-                    if (items.size() == 0) {
-                        findUsagesContextMenu = new ContextMenu(placeholder);
-                    } else {
-                        findUsagesContextMenu = new ContextMenu(items.toArray(new MenuItem[0]));
-                    }
-                    findUsagesContextMenu.show(bFindUsages, Side.BOTTOM, 0, 0);
+        bFindUsages.setOnAction(event -> {
+            if (forElement instanceof Scenario) {
+                MenuItem placeholder = new MenuItem("(this keyword is not used anywhere)");
+                placeholder.setDisable(true);
+                List<MenuItem> items = FindUsages.findUsages(null, ((Scenario) forElement), MainForm.INSTANCE.getRootElement());
+                if (findUsagesContextMenu != null) {
+                    findUsagesContextMenu.hide();
                 }
+                if (items.size() == 0) {
+                    findUsagesContextMenu = new ContextMenu(placeholder);
+                } else {
+                    findUsagesContextMenu = new ContextMenu(items.toArray(new MenuItem[0]));
+                }
+                findUsagesContextMenu.show(bFindUsages, Side.BOTTOM, 0, 0);
             }
         });
         documentationTextArea = new DocumentationTextArea();
-        UpperBoxBinding theBinding = new UpperBoxBinding(this, documentationTextArea.totalHeightEstimateProperty());
+        UpperBoxBinding theBinding = new UpperBoxBinding(documentationTextArea.totalHeightEstimateProperty());
         documentationTextArea.minHeightProperty().bind(theBinding);
         documentationTextArea.prefHeightProperty().bind(theBinding);
         documentationTextArea.maxHeightProperty().bind(theBinding);
@@ -68,48 +63,42 @@ public class UpperBox extends VBox {
         vPane.minHeightProperty().bind(theBinding);
         vPane.prefHeightProperty().bind(theBinding);
         vPane.maxHeightProperty().bind(theBinding);
-        //vPane.prefHeightProperty().bind(theBinding);
+
         HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
         hboxNameAndFindUsages.setPadding(new Insets(5, 0, 0, 5));
         Hyperlink bEditDocumentation = new Hyperlink("(edit documentation...)");
-        bEditDocumentation.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                DocumentationEditWindow editWindow = new DocumentationEditWindow(forElement);
-                editWindow.showAndWait();
-            }
+        bEditDocumentation.setOnAction(event -> {
+            DocumentationEditWindow editWindow = new DocumentationEditWindow(forElement);
+            editWindow.showAndWait();
         });
         Hyperlink bEditTags = new Hyperlink("(edit tags)");
-        bEditTags.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (forElement == null) {
-                    return;
+        bEditTags.setOnAction(event -> {
+            if (forElement == null) {
+                return;
+            }
+            if (forElement instanceof Scenario) {
+                LogicalLine line = ((Scenario) forElement).findLineWithTags();
+                SnowTableView table = MainForm.INSTANCE.gridTab.getSpreadsheetViewTable();
+                if (line == null) {
+                    line = table.createNewLine();
+                    table.getItems().add(0, line);
+                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("[Tags]", "    ", line));
+                    line.getCellAsStringProperty(2, MainForm.INSTANCE).set(new Cell("", "    ", line));
                 }
-                if (forElement instanceof Scenario) {
-                    LogicalLine line = ((Scenario) forElement).findLineWithTags();
-                    SnowTableView table = MainForm.INSTANCE.gridTab.getSpreadsheetViewTable();
-                    if (line == null) {
-                        line = table.createNewLine();
-                        table.getItems().add(0, line);
-                        line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("[Tags]", "    ", line));
-                        line.getCellAsStringProperty(2, MainForm.INSTANCE).set(new Cell("", "    ", line));
-                    }
-                    table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
-                    table.requestFocus();
-                } else {
-                    LogicalLine line = ((Suite) forElement).findLineWithTags();
-                    SnowTableView table = MainForm.INSTANCE.gridTab.getTableSettings();
-                    if (line == null) {
-                        line = table.createNewLine();
-                        table.getItems().add(0, line);
-                        line.getCellAsStringProperty(0, MainForm.INSTANCE).set(new Cell("Force Tags", "    ", line));
-                        line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("", "    ", line));
-                    }
-                    table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
-                    table.requestFocus();
+                table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
+                table.requestFocus();
+            } else {
+                LogicalLine line = ((Suite) forElement).findLineWithTags();
+                SnowTableView table = MainForm.INSTANCE.gridTab.getTableSettings();
+                if (line == null) {
+                    line = table.createNewLine();
+                    table.getItems().add(0, line);
+                    line.getCellAsStringProperty(0, MainForm.INSTANCE).set(new Cell("Force Tags", "    ", line));
+                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("", "    ", line));
+                }
+                table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
+                table.requestFocus();
 
-                }
             }
         });
         HBox hEdit = new HBox(5d, bEditDocumentation, bEditTags);
@@ -131,19 +120,16 @@ public class UpperBox extends VBox {
 
     private class UpperBoxBinding extends DoubleBinding {
 
-        private UpperBox box;
         private final ObservableValue<Double> estimatedHeight;
         private double lastKnownHeight = 0;
 
-        UpperBoxBinding(UpperBox box, ObservableValue<Double> estimatedHeight) {
-            this.box = box;
+        UpperBoxBinding(ObservableValue<Double> estimatedHeight) {
             this.estimatedHeight = estimatedHeight;
             super.bind(estimatedHeight);
         }
 
         @Override
         protected double computeValue() {
-            System.out.println(box.toString() + "'s height wants to become " + estimatedHeight.getValue());
             Double originValue = estimatedHeight.getValue();
             if (originValue != null && originValue != 0) {
                 lastKnownHeight = originValue;

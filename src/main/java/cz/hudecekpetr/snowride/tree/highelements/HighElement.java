@@ -34,13 +34,16 @@ public abstract class HighElement implements IAutocompleteOption {
     public final ObservableMultiset<HighElement> childrenRecursively = new ObservableMultiset<>();
     public SimpleStringProperty shortNameProperty = new SimpleStringProperty();
     public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
+    /**
+     * Observable list of all {@link SnowrideError}s from this element and all children. It updates automatically from
+     * children's {@link #allErrorsRecursive} and its own {@link #selfErrors}.
+     */
     public ObservableList<SnowrideError> allErrorsRecursive;
     public String contents;
     public TreeItem<HighElement> treeNode;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
     public Suite parent;
-    public boolean dead;
     public String semanticsDocumentation;
     public LogicalLine semanticsDocumentationLine;
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();

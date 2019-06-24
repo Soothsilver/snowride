@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.systemcolor;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

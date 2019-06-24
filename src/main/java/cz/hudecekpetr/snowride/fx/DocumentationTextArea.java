@@ -11,11 +11,25 @@ import org.fxmisc.richtext.model.TextOps;
 
 import java.util.function.BiConsumer;
 
+/**
+ * Displays Robot Framework-style documentation in a semi-pretty way in the documentation popup. Even if it's called
+ * a text area, it's not editable.
+ */
 public class DocumentationTextArea extends StyledTextArea<String, String> {
+
     public static final String DOC_STYLE = "-fx-font-size: 10pt; ";
     public static final String BOLD_STYLE = DOC_STYLE + "-fx-font-weight: bold; ";
     public static final String ITALICS_STYLE = DOC_STYLE + "-fx-font-style: italic; ";
     public static final String CODE_STYLE = DOC_STYLE + "-fx-font-family: monospace; ";
+
+    /**
+     * Using [[ITALICS]] instead of underscore because primitive handling of underscore would lead to many documentations
+     * looking weird. For example, if an underscore is used in the middle of a word (such as in a variable or keyword name),
+     * it shouldn't be counted as the beginning of italics. Italics maybe also shouldn't overflow end of line or at least
+     * end of section (Args/Tags/Documentation proper).
+     *
+     * We still have the capability for italics so that we can add italics text programatically from within Snowride.
+     */
     public static final String ITALICS_CHARACTER = "[[ITALICS]]";
 
     public DocumentationTextArea() {
@@ -40,6 +54,10 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
         }
         int startFromIndex = 0;
         while (startFromIndex < fullDocumentation.length()) {
+            // Go from start to end. When you encounter a special character (*, [[ITALICS]], or ``), make everything up to the second
+            // instance of that character of that style, then proceeds. This is a slow and primitive implementation that
+            // doesn't support multistyles (bold italics), tables, horizontal rulers, underscores and a bunch of other things,
+            // I'm sure.
             int earliestAsterisk = fullDocumentation.indexOf('*', startFromIndex);
             int earliestUnderscore = fullDocumentation.indexOf(ITALICS_CHARACTER, startFromIndex);
             int earliestCode = fullDocumentation.indexOf("``", startFromIndex);
@@ -86,6 +104,10 @@ public class DocumentationTextArea extends StyledTextArea<String, String> {
         }
     }
 
+    /**
+     * Returns the minimum of the the three values, but only counts values that aren't -1. If all three values
+     * are -1, then returns -1.
+     */
     private int minNonMinusOne(int earliestAsterisk, int earliestUnderscore, int earliestCode) {
         int bestSoFar = Integer.MAX_VALUE;
         if (earliestAsterisk < bestSoFar && earliestAsterisk != -1) {

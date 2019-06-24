@@ -1,4 +1,4 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.systemcolor;
 
 import cz.hudecekpetr.snowride.settings.Settings;
 

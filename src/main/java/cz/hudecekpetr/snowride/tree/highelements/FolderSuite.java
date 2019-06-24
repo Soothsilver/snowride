@@ -83,7 +83,6 @@ public class FolderSuite extends Suite implements ISuite {
     public void deleteSelf(MainForm mainForm) {
         FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
         if (this.directoryPath.delete()) {
-            this.dead = true;
             this.parent.dissociateSelfFromChild(this);
         } else {
             ButtonType deleteType = new ButtonType("Delete folder and all files inside");
@@ -93,7 +92,6 @@ public class FolderSuite extends Suite implements ISuite {
                 try {
                     FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
                     FileUtils.deleteDirectory(this.directoryPath);
-                    this.selfAndDescendantHighElements().forEach(he -> he.dead = true);
                     this.children.clear();
                     this.treeNode.getChildren().clear();
                     this.parent.dissociateSelfFromChild(this);

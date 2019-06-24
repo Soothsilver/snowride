@@ -5,7 +5,7 @@ import cz.hudecekpetr.snowride.antlr.RobotBaseListener;
 import cz.hudecekpetr.snowride.antlr.RobotParser;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
-import cz.hudecekpetr.snowride.tree.*;
+import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
@@ -14,7 +14,11 @@ import cz.hudecekpetr.snowride.tree.sections.SectionHeader;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.tree.sections.TestCasesSection;
 import cz.hudecekpetr.snowride.tree.sections.TextOnlyRobotSection;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -37,7 +41,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitFile(RobotParser.FileContext ctx) {
         ctx.File = new RobotFile();
-        for(RobotParser.SectionContext section : ctx.section()) {
+        for (RobotParser.SectionContext section : ctx.section()) {
             if (section.Section == null) {
                 throw new IllegalStateException("A section cannot be null.");
             }
@@ -63,7 +67,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitUnknownSection(RobotParser.UnknownSectionContext ctx) {
         LogicalLine ll = new LogicalLine();
-        ll.cells.add(new Cell("nondef","", ll));
+        ll.cells.add(new Cell("nondef", "", ll));
         ctx.Section = new TextOnlyRobotSection(new SectionHeader(ll), "");
     }
 
@@ -97,9 +101,9 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         List<TerminalNode> spaces = ctx.CELLSPACE();
         List<TerminalNode> cells = ctx.ANY_CELL();
         LogicalLine line = new LogicalLine();
-        for (int i =0; i < cells.size(); i++) {
-            if (spaces.size() > i+1) {
-                line.cells.add(new Cell(cells.get(i).getText(), spaces.get(i+1).getText(), line));
+        for (int i = 0; i < cells.size(); i++) {
+            if (spaces.size() > i + 1) {
+                line.cells.add(new Cell(cells.get(i).getText(), spaces.get(i + 1).getText(), line));
             } else {
                 line.cells.add(new Cell(cells.get(i).getText(), "", line));
             }
@@ -118,8 +122,8 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         Cell nameCell = ctx.testCaseName().Cell;
         ///Lines settings = ctx.testCaseSettings().Lines;
         Lines steps = ctx.testCaseSteps().Lines;
-        List<LogicalLine> newList = new ArrayList<LogicalLine>(steps.getLines());
-       // newList.addAll(steps.getLines());
+        List<LogicalLine> newList = new ArrayList<>(steps.getLines());
+        // newList.addAll(steps.getLines());
         ctx.TestCase = new Scenario(nameCell, true, newList);
     }
 
@@ -127,19 +131,10 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitStep(RobotParser.StepContext ctx) {
         ctx.LogicalLine = ctx.restOfRow().Line.prepend(ctx.CELLSPACE().getText(), ctx.ANY_CELL().getText());
     }
-/*
-    @Override
-    public void exitTestCaseSetting(RobotParser.TestCaseSettingContext ctx) {
-        ctx.LogicalLine = ctx.restOfRow().Line.prepend(ctx.CELLSPACE().getText(), ctx.TEST_CASE_SETTING_CELL().getText());
-    }
-    @Override
-    public void exitTestCaseSettings(RobotParser.TestCaseSettingsContext ctx) {
-        ctx.Lines = new Lines(ctx.testCaseSetting().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
-    }*/
 
     @Override
     public void exitTestCaseSteps(RobotParser.TestCaseStepsContext ctx) {
-        ctx.Lines = new Lines(ctx.stepOrEmptyLine().stream().map(x->x.LogicalLine).collect(Collectors.toList()));
+        ctx.Lines = new Lines(ctx.stepOrEmptyLine().stream().map(x -> x.LogicalLine).collect(Collectors.toList()));
     }
 
     @Override
@@ -157,7 +152,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         SectionHeader header = ctx.keywordsHeader().SectionHeader;
         header.addTrivia(ctx.emptyLines());
         List<Scenario> tcc = ctx.testCase().stream().map(ctxx -> ctxx.TestCase).collect(Collectors.toList());
-        tcc.forEach(sc->sc.setTestCase(false));
+        tcc.forEach(sc -> sc.setTestCase(false));
         ctx.Section = new KeywordsSection(header, tcc);
     }
 

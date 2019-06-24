@@ -6,6 +6,11 @@ import javafx.util.Duration;
 
 import java.lang.reflect.Field;
 
+/**
+ * Hack to reduce the tooltip delay of JavaFX tooltips.
+ *
+ * https://stackoverflow.com/a/27739605/1580088
+ */
 public class TooltipHack {
     public static void hackDelayTimers(javafx.scene.control.Tooltip tooltip) {
         try {

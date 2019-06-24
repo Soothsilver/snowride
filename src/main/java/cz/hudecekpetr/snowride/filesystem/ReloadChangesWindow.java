@@ -8,7 +8,6 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
-import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -37,9 +36,9 @@ class ReloadChangesWindow extends Stage {
         lblInfo = new Label(getInfo());
         lblInfo.setWrapText(true);
         Button bReload = new Button("Reload from disk", new ImageView(Images.refresh));
-        bReload.setOnAction(this::reloadAll);
+        bReload.setOnAction(event1 -> reloadAll());
         Button bKeep = new Button("Keep what's in Snowride", new ImageView(Images.no));
-        bKeep.setOnAction(this::closeSelf);
+        bKeep.setOnAction(actionEvent -> closeSelf());
         VBox vbAll = new VBox(15, lblInfo, bReload, bKeep);
         vbAll.setPadding(new Insets(5));
         vbAll.setAlignment(Pos.CENTER);
@@ -68,14 +67,15 @@ class ReloadChangesWindow extends Stage {
     /**
      * On the JavaFX thread, reloads changes from disk.
      */
-    private void reloadAll(ActionEvent actionEvent) {
-        closeSelf(actionEvent);
+    private void reloadAll() {
+        MainForm mainForm = MainForm.INSTANCE;
+        closeSelf();
         Set<Suite> reloadRequired = new HashSet<>();
+
         // Convert absolute paths to high elements:
-        processChildrenRecursively(MainForm.INSTANCE.getProjectTree().getRoot().getValue(), changedPaths, reloadRequired);
+        discoverElementsToBeReloadedRecursive(mainForm.getRootElement(), changedPaths, reloadRequired);
         changedPaths.clear();
 
-        MainForm mainForm = MainForm.INSTANCE;
         mainForm.projectLoad.progress.set(0);
         Holder<HighElement> deadButFocusedElement = new Holder<>(null);
         double progressPerFile = 1.0 / reloadRequired.size();
@@ -119,7 +119,7 @@ class ReloadChangesWindow extends Stage {
             remainingParent.replaceChildWithAnotherChild(rl, newElement);
         }
 
-        // Remove the ghost high element from existing by reloading it.
+        // Remove the ghost high element from being loaded in the text edit and grid tab by reloading it.
         HighElement dead = deadButFocusedElement.getValue();
         if (dead != null) {
             Optional<HighElement> newVersionOfThisElement = mainForm.findTestByFullyQualifiedName(dead.getQualifiedName());
@@ -133,7 +133,7 @@ class ReloadChangesWindow extends Stage {
         mainForm.projectLoad.progress.set(1);
     }
 
-    private void processChildrenRecursively(HighElement currentElement, LinkedHashSet<Path> changedFiles, Set<Suite> outElementsToBeReloaded) {
+    private void discoverElementsToBeReloadedRecursive(HighElement currentElement, LinkedHashSet<Path> changedFiles, Set<Suite> outElementsToBeReloaded) {
         if (currentElement instanceof FileSuite) {
             Path path = ((FileSuite) currentElement).file.toPath();
             if (changedFiles.contains(path)) {
@@ -148,10 +148,10 @@ class ReloadChangesWindow extends Stage {
                 return; // Don't recurse if we're already reloading a folder
             }
         }
-        currentElement.children.forEach(he -> processChildrenRecursively(he, changedFiles, outElementsToBeReloaded));
+        currentElement.children.forEach(he -> discoverElementsToBeReloadedRecursive(he, changedFiles, outElementsToBeReloaded));
     }
 
-    private void closeSelf(ActionEvent actionEvent) {
+    private void closeSelf() {
         this.close();
     }
 

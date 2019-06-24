@@ -1,7 +1,6 @@
-package cz.hudecekpetr.snowride.fx;
+package cz.hudecekpetr.snowride.fx.systemcolor;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -12,12 +11,12 @@ public class StringURLConnection extends URLConnection {
     }
 
     @Override
-    public void connect() throws IOException {
+    public void connect() {
 
     }
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() {
         return new ByteArrayInputStream(SystemColorService.css.getBytes());
     }
 }

@@ -1,5 +1,8 @@
 package cz.hudecekpetr.snowride.generalpurpose;
 
+/**
+ * Used to pass variables into closures.
+ */
 public class Holder<T> {
     private T value;
 

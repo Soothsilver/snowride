@@ -38,9 +38,7 @@ testCasesSection returns [TestCasesSection Section]: testCasesHeader emptyLines?
 testCase returns [Scenario TestCase]: testCaseName testCaseSteps;
 testCasesHeader returns [SectionHeader SectionHeader]: TEST_CASES_CELL restOfRow;
 testCaseName returns [Cell Cell]: ANY_CELL restOfRow;
-//testCaseSettings returns [Lines Lines]: testCaseSetting*;
 testCaseSteps returns [Lines Lines]: stepOrEmptyLine*;
-//testCaseSetting returns [LogicalLine LogicalLine]: CELLSPACE TEST_CASE_SETTING_CELL restOfRow;
 step returns [LogicalLine LogicalLine]: CELLSPACE ANY_CELL restOfRow;
 stepOrEmptyLine returns [LogicalLine LogicalLine]: step | emptyLine;
 // General
