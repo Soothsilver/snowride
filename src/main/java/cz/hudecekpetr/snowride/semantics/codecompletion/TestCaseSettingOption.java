@@ -177,4 +177,9 @@ public class TestCaseSettingOption implements IAutocompleteOption, IKnownKeyword
     public boolean isLegalInContext(int cellIndex, SnowTableKind snowTableKind) {
         return cellIndex <= 1 && snowTableKind == SnowTableKind.SCENARIO;
     }
+
+    @Override
+    public boolean isTestCaseOption() {
+        return true;
+    }
 }

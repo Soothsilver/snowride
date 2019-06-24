@@ -12,6 +12,7 @@ import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
 import cz.hudecekpetr.snowride.tree.sections.KeywordsSection;
 import cz.hudecekpetr.snowride.tree.sections.SectionHeader;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
+import cz.hudecekpetr.snowride.tree.sections.TestCaseName;
 import cz.hudecekpetr.snowride.tree.sections.TestCasesSection;
 import cz.hudecekpetr.snowride.tree.sections.TextOnlyRobotSection;
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -93,7 +94,11 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     @Override
     public void exitTestCaseName(RobotParser.TestCaseNameContext ctx) {
-        ctx.Cell = new Cell(ctx.ANY_CELL().getText(), "", null); // TODO template and stuff
+        LogicalLine possibleLine = ctx.restOfRow().Line;
+        if (possibleLine.isFullyVirtual()) {
+            possibleLine = null;
+        }
+        ctx.TestCaseName = new TestCaseName(new Cell(ctx.ANY_CELL().getText(), "", null), possibleLine);
     }
 
     @Override
@@ -119,11 +124,14 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
 
     @Override
     public void exitTestCase(RobotParser.TestCaseContext ctx) {
-        Cell nameCell = ctx.testCaseName().Cell;
-        ///Lines settings = ctx.testCaseSettings().Lines;
+        Cell nameCell = ctx.testCaseName().TestCaseName.getCell();
+
         Lines steps = ctx.testCaseSteps().Lines;
+        LogicalLine restOfRow = ctx.testCaseName().TestCaseName.getRestOfRow();
         List<LogicalLine> newList = new ArrayList<>(steps.getLines());
-        // newList.addAll(steps.getLines());
+        if (restOfRow != null) {
+            newList.add(0, restOfRow.prepend(""));
+        }
         ctx.TestCase = new Scenario(nameCell, true, newList);
     }
 

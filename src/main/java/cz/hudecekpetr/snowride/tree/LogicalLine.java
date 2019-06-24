@@ -157,14 +157,12 @@ public class LogicalLine {
         boolean everythingIsAComment = false;
         SnowTableKind kind = isInScenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS;
         IKnownKeyword currentKeyword = null;
+        boolean isTemplate = isInScenario && ((Scenario) getBelongsToHighElement()).semanticsIsTemplateTestCase;
         for (int i = 0; i < cells.size(); i++) {
             Cell cell = cells.get(i);
             CellSemantics cellSemantics = new CellSemantics(i);
             cell.setSemantics(cellSemantics);
             indexOfThisAsArgument++;
-            if (isInScenario && ((Scenario) getBelongsToHighElement()).semanticsIsTemplateTestCase) {
-                thereHasBeenNoGuaranteedKeywordCellYet = false;
-            }
             if (everythingIsAComment) {
                 cellSemantics.isComment = true;
                 continue;
@@ -198,12 +196,7 @@ public class LogicalLine {
             boolean isCertainlyNotAKeyword = isInScenario && (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\"));
             boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
             if (canKeywordBeHere) {
-                if (isCertainlyNotAKeyword) {
-                    // Don't prevent further cells from being a keyword.
-                } else {
-                    cellSemantics.isKeyword = true;
-                    thereHasBeenNoGuaranteedKeywordCellYet = false;
-                }
+
                 // This is the keyword.
                 cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
                 cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
@@ -215,6 +208,20 @@ public class LogicalLine {
                 }
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
+                if (isTemplate) {
+                    if (currentKeyword != null && currentKeyword.isTestCaseOption()) {
+                        isTemplate = false; // ok, now highlight as normal
+                    } else {
+                        // prevent highlight
+                        isCertainlyNotAKeyword = true;
+                    }
+                }
+                if (isCertainlyNotAKeyword) {
+                    // Don't prevent further cells from being a keyword.
+                } else {
+                    cellSemantics.isKeyword = true;
+                    thereHasBeenNoGuaranteedKeywordCellYet = false;
+                }
             }
 
 

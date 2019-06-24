@@ -37,7 +37,7 @@ keywordsHeader returns [SectionHeader SectionHeader]: KEYWORDS_CELL restOfRow;
 testCasesSection returns [TestCasesSection Section]: testCasesHeader emptyLines? testCase*;
 testCase returns [Scenario TestCase]: testCaseName testCaseSteps;
 testCasesHeader returns [SectionHeader SectionHeader]: TEST_CASES_CELL restOfRow;
-testCaseName returns [Cell Cell]: ANY_CELL restOfRow;
+testCaseName returns [TestCaseName TestCaseName]: ANY_CELL restOfRow;
 testCaseSteps returns [Lines Lines]: stepOrEmptyLine*;
 step returns [LogicalLine LogicalLine]: CELLSPACE ANY_CELL restOfRow;
 stepOrEmptyLine returns [LogicalLine LogicalLine]: step | emptyLine;
