@@ -5,7 +5,7 @@ import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 
 import java.util.List;
 
-public class KeywordsSection extends RobotSection {
+public class KeywordsSection extends RobotSection implements IScenarioSection {
 
     private final List<Scenario> keywords;
 
@@ -48,5 +48,10 @@ public class KeywordsSection extends RobotSection {
         for (Scenario kw : keywords) {
             kw.reformat();
         }
+    }
+
+    @Override
+    public List<Scenario> getScenarios() {
+        return keywords;
     }
 }

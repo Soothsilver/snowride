@@ -111,8 +111,9 @@ public class FileSuite extends Suite implements ISuite {
         return "File suite or resource file";
     }
 
+
     @Override
-    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm, HighElement justAfter) {
         this.applyText();
         if (this.fileParsed.errors.size() > 0) {
             throw new RuntimeException("You can't create a child suite, test or keyword because there are parse errors in the file.");
@@ -124,8 +125,12 @@ public class FileSuite extends Suite implements ISuite {
         } else {
             this.fileParsed.findOrCreateKeywordsSection().addScenario(scenario);
         }
-        this.children.add(scenario);
-        this.treeNode.getChildren().add(scenario.treeNode);
+        int indexOfOld = this.children.indexOf(justAfter) + 1;
+        if (indexOfOld == 0) {
+            indexOfOld = this.children.size();
+        }
+        this.children.add(indexOfOld, scenario);
+        this.treeNode.getChildren().add(indexOfOld, scenario.treeNode);
         mainForm.selectProgrammaticallyAndRememberInHistory(scenario);
         return scenario;
     }

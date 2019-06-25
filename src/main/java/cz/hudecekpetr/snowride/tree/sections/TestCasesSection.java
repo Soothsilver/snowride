@@ -5,7 +5,7 @@ import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 
 import java.util.List;
 
-public class TestCasesSection extends RobotSection {
+public class TestCasesSection extends RobotSection implements IScenarioSection {
     private final List<Scenario> testCases;
 
     public TestCasesSection(SectionHeader header, List<Scenario> testCases) {
@@ -45,5 +45,10 @@ public class TestCasesSection extends RobotSection {
         for (Scenario kw : testCases) {
             kw.reformat();
         }
+    }
+
+    @Override
+    public List<Scenario> getScenarios() {
+        return testCases;
     }
 }

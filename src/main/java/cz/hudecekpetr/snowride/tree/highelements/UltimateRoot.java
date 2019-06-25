@@ -93,7 +93,7 @@ public class UltimateRoot extends Suite {
     }
 
     @Override
-    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm, HighElement justAfter) {
         throw new RuntimeException("You can't add children to the ultimate root.");
     }
 }

@@ -267,12 +267,41 @@ public class MainForm {
         projectTree = new TreeView<>();
         projectTree.setFixedCellSize(16);
         projectTree.setShowRoot(false);
+        projectTree.setOnKeyPressed(event -> {
+            // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts
+            // to hard-move children.
+            if (event.getCode() == KeyCode.UP && event.isControlDown()) {
+                event.consume();
+            }
+            if (event.getCode() == KeyCode.DOWN && event.isControlDown()) {
+                event.consume();
+            }
+        });
         projectTree.setOnKeyReleased(event -> {
-            if (event.getCode() == KeyCode.SPACE) {
-                TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
-                if (focusedItem != null) {
+            TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
+            if (focusedItem != null) {
+                if (event.getCode() == KeyCode.SPACE) {
                     HighElement element = focusedItem.getValue();
                     withUpdateSuppression(() -> invertCheckboxes(element));
+                }
+                if (event.getCode() == KeyCode.F2) {
+                    renameIfAble(focusedItem.getValue());
+                    event.consume();
+                }
+
+            }
+
+            TreeItem<HighElement> selectedItem = projectTree.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.getValue() instanceof Scenario) {
+                    if (event.getCode() == KeyCode.UP && event.isControlDown()) {
+                        moveScenario((Scenario) selectedItem.getValue(), -1);
+                        event.consume();
+                    }
+                    if (event.getCode() == KeyCode.DOWN && event.isControlDown()) {
+                        moveScenario((Scenario) selectedItem.getValue(), 1);
+                        event.consume();
+                    }
                 }
             }
         });
@@ -392,12 +421,8 @@ public class MainForm {
             maybeAddSeparator(menu);
             // Everything except for root directories and the two special elements can be deleted or renamed
             MenuItem rename = new MenuItem("Rename");
-            rename.setOnAction(event -> {
-                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
-                if (newName != null) {
-                    element.renameSelfTo(newName, MainForm.this);
-                }
-            });
+            rename.setAccelerator(new KeyCodeCombination(KeyCode.F2));
+            rename.setOnAction(event -> renameIfAble(element));
             menu.add(rename);
             MenuItem delete = new MenuItem("Delete");
             delete.setOnAction(event -> {
@@ -411,21 +436,37 @@ public class MainForm {
             });
             menu.add(delete);
             if (element instanceof Scenario) {
+                Scenario asScenario = (Scenario) element;
                 MenuItem copy = new MenuItem("Copy");
-                String isWhat = ((Scenario) element).isTestCase() ? "test case" : "user keyword";
+                String isWhat = asScenario.isTestCase() ? "test case" : "user keyword";
                 copy.setOnAction(event -> {
                     String name = TextFieldForm.askForText("Copy a " + isWhat, "Name of the copy:", "Create new " + isWhat + " as a copy", element.getShortName() + " - copy");
                     if (name != null) {
-                        Scenario newCopy = element.parent.createNewChild(name, ((Scenario) element).isTestCase(), MainForm.this);
-                        DeepCopy.copyOldIntoNew((Scenario) element, newCopy);
+                        Scenario newCopy = element.parent.createNewChild(name, asScenario.isTestCase(), MainForm.this, element);
+                        DeepCopy.copyOldIntoNew(asScenario, newCopy);
                         changeOccurredTo(element.parent, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 });
                 menu.add(copy);
+
+                MenuItem moveUp = new MenuItem("Move up");
+                moveUp.setAccelerator(new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN));
+                moveUp.setOnAction(event -> {
+                    moveScenario(asScenario, -1);
+                });
+                menu.add(moveUp);
+
+                MenuItem moveDown = new MenuItem("Move down");
+                moveDown.setAccelerator(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN));
+                moveDown.setOnAction(event -> {
+                    moveScenario(asScenario, 1);
+                });
+                menu.add(moveDown);
+
             }
         }
         if (element instanceof Scenario) {
-            Scenario asScenario = (Scenario) element;
+            Scenario asScenario = (Scenario)element;
             maybeAddSeparator(menu);
             if (asScenario.isTestCase()) {
                 MenuItem runThis = new MenuItem("Run just this test", loadIcon(Images.play));
@@ -455,6 +496,26 @@ public class MainForm {
             menu.add(menuItemNothing);
         }
         return menu;
+    }
+
+    private void moveScenario(Scenario asScenario, int indexDifference) {
+        System.out.println("Before: "+ projectTree.getRow(asScenario.treeNode));
+        asScenario.parent.displaceChildScenario(asScenario, indexDifference);
+        // We can reselect the target immediately because we have a guarantee that it's expanded:
+        int index = projectTree.getRow(asScenario.treeNode);
+        System.out.println("After: "+ projectTree.getRow(asScenario.treeNode));
+        projectTree.getFocusModel().focus(index);
+        projectTree.getSelectionModel().select(index);
+    }
+
+    private void renameIfAble(HighElement element) {
+        if (element != getRootElement() && element.parent != getRootElement()
+            && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
+            String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
+            if (newName != null) {
+                element.renameSelfTo(newName, MainForm.this);
+            }
+        }
     }
 
     private void setExpandedFlagRecursively(TreeItem<HighElement> treeNode, boolean shouldBeExpanded) {

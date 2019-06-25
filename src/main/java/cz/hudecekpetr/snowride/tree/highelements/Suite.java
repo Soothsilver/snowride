@@ -17,6 +17,7 @@ import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.ResourceFileKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.TestCaseSettingOptionLibrarySource;
+import cz.hudecekpetr.snowride.tree.sections.IScenarioSection;
 import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.RobotFile;
@@ -53,14 +54,14 @@ public abstract class Suite extends HighElement implements ISuite {
     private NewlineStyle newlineStyle = NewlineStyle.LF;
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
-        this.children.addListener(this::childrenChanged);
+        this.children.addListener((ListChangeListener.Change<? extends HighElement> change) -> childrenChanged());
         if (contents != null && contents.indexOf('\r') != -1) {
             // If you load it with \r, it's Windows-style line endings.
             newlineStyle = NewlineStyle.CRLF;
         }
     }
 
-    private void childrenChanged(ListChangeListener.Change change) {
+    private void childrenChanged() {
         this.imageView.setImage(getAutocompleteIcon());
     }
 
@@ -267,6 +268,9 @@ public abstract class Suite extends HighElement implements ISuite {
         }
     }
 
+    /**
+     * Returns the "Force tags" line in this suite's Settings table. If there is no such line, returns null.
+     */
     public LogicalLine findLineWithTags() {
         for (LogicalLine pair : fileParsed.findOrCreateSettingsSection().pairs) {
             if (pair.getCellAsStringProperty(0, MainForm.INSTANCE).getValue().contents.equalsIgnoreCase("Force tags")) {
@@ -274,5 +278,44 @@ public abstract class Suite extends HighElement implements ISuite {
             }
         }
         return null;
+    }
+
+    public void displaceChildScenario(Scenario child, int indexDifference) {
+        boolean isTestCase = child.isTestCase();
+        IScenarioSection section = isTestCase ? this.fileParsed.findOrCreateTestCasesSection() : this.fileParsed.findOrCreateKeywordsSection();
+        List<Scenario> scenarios = section.getScenarios();
+        int sectionIndex = scenarios.indexOf(child);
+        int childrenIndex = children.indexOf(child);
+        int treeIndex = treeNode.getChildren().indexOf(child.treeNode);
+        if (sectionIndex == -1) {
+            throw new IllegalArgumentException("The scenario '" + child + "' is not part of suite '" + this + "'.");
+        }
+        if (indexDifference == -1 && sectionIndex == 0) {
+            // We're the top stuff.
+            return;
+        }
+        if (indexDifference == 1 && sectionIndex == scenarios.size() - 1) {
+            // We're the bottom stuff.
+            return;
+        }
+        int insertionIndexDiff = (indexDifference == 1 ? 2 : -1);
+        int deletionIndexDiff = (indexDifference == 1 ? 0 : 1);
+        displaceInList(scenarios, sectionIndex + insertionIndexDiff, sectionIndex + deletionIndexDiff, child);
+        displaceInList(children, childrenIndex + insertionIndexDiff, childrenIndex + deletionIndexDiff, child);
+        displaceInList(treeNode.getChildren(), treeIndex + insertionIndexDiff, treeIndex + deletionIndexDiff, child.treeNode);
+        markAsStructurallyChanged(MainForm.INSTANCE);
+    }
+
+    private <T> void displaceInList(List<T> list, int insertionIndex, int deletionIndex, T item) {
+        if (insertionIndex < 0) {
+            // do nothing
+            return;
+        }
+        if (insertionIndex > list.size()) {
+            // do nothing
+            return;
+        }
+        list.add(insertionIndex, item);
+        list.remove(deletionIndex);
     }
 }

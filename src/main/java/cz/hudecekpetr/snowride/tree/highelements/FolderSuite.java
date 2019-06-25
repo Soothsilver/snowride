@@ -165,7 +165,7 @@ public class FolderSuite extends Suite implements ISuite {
     }
 
     @Override
-    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm) {
+    public Scenario createNewChild(String name, boolean asTestCase, MainForm mainForm, HighElement justAfter) {
         this.applyText();
         if (asTestCase) {
             throw new RuntimeException("Folders can't contain test cases.");
@@ -177,8 +177,12 @@ public class FolderSuite extends Suite implements ISuite {
         Scenario newKeyword = new Scenario(new Cell(name, "", null), false, new ArrayList<>());
         newKeyword.parent = this;
         this.fileParsed.findOrCreateKeywordsSection().addScenario(newKeyword);
-        this.children.add(newKeyword);
-        this.treeNode.getChildren().add(newKeyword.treeNode);
+        int indexOfOld = this.children.indexOf(justAfter) + 1;
+        if (indexOfOld == 0) {
+            indexOfOld = this.children.size();
+        }
+        this.children.add(indexOfOld, newKeyword);
+        this.treeNode.getChildren().add(indexOfOld, newKeyword.treeNode);
         this.unsavedChanges = LastChangeKind.STRUCTURE_CHANGED;
         mainForm.selectProgrammaticallyAndRememberInHistory(newKeyword);
         return newKeyword;
