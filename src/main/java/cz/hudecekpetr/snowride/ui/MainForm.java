@@ -4,14 +4,14 @@ import cz.hudecekpetr.snowride.errors.ErrorsTab;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.systemcolor.StringURLStreamHandlerFactory;
 import cz.hudecekpetr.snowride.fx.systemcolor.SystemColorService;
-import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.runner.RunTab;
 import cz.hudecekpetr.snowride.runner.TestResult;
-import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
+import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.DeepCopy;
 import cz.hudecekpetr.snowride.tree.highelements.ExternalResourcesElement;
@@ -29,7 +29,6 @@ import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -56,7 +55,6 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -68,7 +66,6 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import org.controlsfx.control.NotificationPane;
 
 import java.awt.*;
@@ -97,15 +94,17 @@ public class MainForm {
     private final Tab tabTextEdit;
     private final TextEditTab textEditTab;
     private final NotificationPane notificationPane;
+    private final ToolBar toolBar;
     public BooleanProperty canSave = new SimpleBooleanProperty(false);
     public RunTab runTab;
     public GateParser gateParser = new GateParser();
     public NavigationStack navigationStack = new NavigationStack();
     public LongRunningOperation projectLoad = new LongRunningOperation();
+    public GridTab gridTab;
     boolean switchingTextEditContents = false;
-    boolean humanInControl = true;
-    BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
-    BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
+    private boolean humanInControl = true;
+    private BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
+    private BooleanProperty canNavigateForwards = new SimpleBooleanProperty(false);
     private Stage stage;
     private TreeView<HighElement> projectTree;
     private SearchSuites searchSuitesAutoCompletion;
@@ -116,11 +115,9 @@ public class MainForm {
     private Menu projectMenu;
     private TextField tbSearchTests;
     private ContextMenu treeContextMenu;
-    public GridTab gridTab;
     private ExecutorService projectLoader = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;
-    private final ToolBar toolBar;
     private Button bStop;
 
     public MainForm(Stage stage) {
@@ -132,16 +129,13 @@ public class MainForm {
         canNavigateBack.bindBidirectional(navigationStack.canNavigateBack);
         canNavigateForwards.bindBidirectional(navigationStack.canNavigateForwards);
         stage.setTitle("Snowride");
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                boolean abort = maybeOfferSaveDiscardOrCancel();
-                if (abort) {
-                    event.consume();
-                    return;
-                }
-                System.exit(0);
+        stage.setOnCloseRequest(event -> {
+            boolean abort = maybeOfferSaveDiscardOrCancel();
+            if (abort) {
+                event.consume();
+                return;
             }
+            System.exit(0);
         });
         runTab = new RunTab(this);
         Tab tabRun = runTab.createTab();
@@ -153,7 +147,7 @@ public class MainForm {
         gridTab = new GridTab(this);
         Tab tabGrid = gridTab.createTab();
         serializingTab = new SerializingTab(this);
-        Tab tabSerializing = serializingTab.createTab();
+        serializingTab.createTab();
         VBox searchableTree = createLeftPane();
         errorsTab = new ErrorsTab(this);
         Tab tabErrors = errorsTab.tab;
@@ -224,27 +218,24 @@ public class MainForm {
     }
 
     private void addGlobalShortcuts(Scene scene) {
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.CONTROL) {
-                    Underlining.ctrlDown = true;
-                    Underlining.update();
-                }
-                if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
-                    runTab.clickRun(null);
-                    event.consume();
-                } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
-                    goBack(null);
-                    event.consume();
-                } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
-                    goForwards(null);
-                    event.consume();
-                } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
-                    tbSearchTests.requestFocus();
-                    searchSuitesAutoCompletion.trigger();
-                    event.consume();
-                }
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.CONTROL) {
+                Underlining.ctrlDown = true;
+                Underlining.update();
+            }
+            if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
+                runTab.clickRun(null);
+                event.consume();
+            } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
+                goBack(null);
+                event.consume();
+            } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
+                goForwards(null);
+                event.consume();
+            } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
+                tbSearchTests.requestFocus();
+                searchSuitesAutoCompletion.trigger();
+                event.consume();
             }
         });
         scene.addEventFilter(KeyEvent.KEY_RELEASED, new EventHandler<KeyEvent>() {
@@ -281,43 +272,32 @@ public class MainForm {
         tbSearchTests.setPromptText("Search for tests, keywords or suites (Ctrl+N)...");
         searchSuitesAutoCompletion = new SearchSuites(this);
         searchSuitesAutoCompletion.bind(tbSearchTests);
-        projectTree = new TreeView<HighElement>();
+        projectTree = new TreeView<>();
         projectTree.setFixedCellSize(16);
         projectTree.setShowRoot(false);
-        projectTree.setOnKeyReleased(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.SPACE) {
-                    TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
-                    if (focusedItem != null) {
-                        HighElement element = focusedItem.getValue();
-                        withUpdateSuppression(() -> {
-                            invertCheckboxes(element);
-                        });
-                    }
+        projectTree.setOnKeyReleased(event -> {
+            if (event.getCode() == KeyCode.SPACE) {
+                TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
+                if (focusedItem != null) {
+                    HighElement element = focusedItem.getValue();
+                    withUpdateSuppression(() -> invertCheckboxes(element));
                 }
             }
         });
-        projectTree.getFocusModel().focusedItemProperty().addListener(new ChangeListener<TreeItem<HighElement>>() {
-            @Override
-            public void changed(ObservableValue<? extends TreeItem<HighElement>> observable, TreeItem<HighElement> oldValue, TreeItem<HighElement> newValue) {
-                onFocusTreeNode(oldValue);
-                focusTreeNode(newValue);
-            }
+        projectTree.getFocusModel().focusedItemProperty().addListener((observable, oldValue, newValue) -> {
+            onFocusTreeNode(oldValue);
+            focusTreeNode(newValue);
         });
         treeContextMenu = new ContextMenu();
         treeContextMenu.getItems().add(new MenuItem("A"));
 
 
-        projectTree.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent event) {
+        projectTree.setOnContextMenuRequested(event -> {
 
-                treeContextMenu.getItems().clear();
-                TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
-                if (focused != null) {
-                    treeContextMenu.getItems().addAll(createContextMenuFor(focused));
-                }
+            treeContextMenu.getItems().clear();
+            TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
+            if (focused != null) {
+                treeContextMenu.getItems().addAll(createContextMenuFor(focused));
             }
         });
 
@@ -352,27 +332,21 @@ public class MainForm {
         HighElement element = forWhat.getValue();
         if (element instanceof FolderSuite) {
             MenuItem new_folder_suite = new MenuItem("New folder");
-            new_folder_suite.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String name = TextFieldForm.askForText("Create new folder suite", "Enter folder name:", "Create new folder", "");
-                    if (name != null) {
-                        filesystem.createNewFolderInTree((FolderSuite) element, name);
-                    }
+            new_folder_suite.setOnAction(event -> {
+                String name = TextFieldForm.askForText("Create new folder suite", "Enter folder name:", "Create new folder", "");
+                if (name != null) {
+                    filesystem.createNewFolderInTree((FolderSuite) element, name);
                 }
             });
             menu.add(new_folder_suite);
             MenuItem new_file_suite = new MenuItem("New file");
-            new_file_suite.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String name = TextFieldForm.askForText("Create new file", "Enter file name (without .robot extension):", "Create new file", "");
-                    if (name != null) {
-                        try {
-                            filesystem.createNewRobotFile((FolderSuite) element, name);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+            new_file_suite.setOnAction(event -> {
+                String name = TextFieldForm.askForText("Create new file", "Enter file name (without .robot extension):", "Create new file", "");
+                if (name != null) {
+                    try {
+                        filesystem.createNewRobotFile((FolderSuite) element, name);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 }
             });
@@ -381,40 +355,31 @@ public class MainForm {
         maybeAddSeparator(menu);
         if (element instanceof FileSuite) {
             MenuItem new_test_case = new MenuItem("New test case");
-            new_test_case.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
-                    if (name != null) {
-                        ((FileSuite) element).createNewChild(name, true, MainForm.this);
-                        changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
-                    }
+            new_test_case.setOnAction(event -> {
+                String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
+                if (name != null) {
+                    ((FileSuite) element).createNewChild(name, true, MainForm.this);
+                    changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                 }
             });
             menu.add(new_test_case);
             MenuItem open_in_external_editor = new MenuItem("Open in external editor");
-            open_in_external_editor.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    try {
-                        Desktop.getDesktop().edit(((FileSuite) element).file);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+            open_in_external_editor.setOnAction(event -> {
+                try {
+                    Desktop.getDesktop().edit(((FileSuite) element).file);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             });
             menu.add(open_in_external_editor);
         }
         if (element instanceof ISuite) {
             MenuItem new_user_keyword = new MenuItem("New user keyword");
-            new_user_keyword.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
-                    if (name != null) {
-                        ((ISuite) element).createNewChild(name, false, MainForm.this);
-                        changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
-                    }
+            new_user_keyword.setOnAction(event -> {
+                String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
+                if (name != null) {
+                    ((ISuite) element).createNewChild(name, false, MainForm.this);
+                    changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
                 }
             });
             menu.add(new_user_keyword);
@@ -422,48 +387,21 @@ public class MainForm {
         maybeAddSeparator(menu);
         if (element instanceof FolderSuite || element instanceof FileSuite) {
             MenuItem select_all_tests = new MenuItem("Select all tests");
-            select_all_tests.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    setCheckboxes(element, true);
-                }
-            });
+            select_all_tests.setOnAction(event -> setCheckboxes(element, true));
             menu.add(select_all_tests);
             if (element.selfAndDescendantHighElements().anyMatch(he -> he instanceof Scenario && ((Scenario) he).lastTestResult == TestResult.FAILED)) {
                 MenuItem select_failed_tests = new MenuItem("Select failed tests only");
-                select_failed_tests.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        withUpdateSuppression(() -> {
-                            selectFailedTests(element);
-                        });
-                    }
-                });
+                select_failed_tests.setOnAction(event -> withUpdateSuppression(() -> selectFailedTests(element)));
                 menu.add(select_failed_tests);
             }
             MenuItem deselect_all_tests = new MenuItem("Deselect all tests");
-            deselect_all_tests.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    setCheckboxes(element, false);
-                }
-            });
+            deselect_all_tests.setOnAction(event -> setCheckboxes(element, false));
             menu.add(deselect_all_tests);
             MenuItem expandAll = new MenuItem("Expand all");
-            expandAll.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    setExpandedFlagRecursively(element.treeNode, true);
-                }
-            });
+            expandAll.setOnAction(event -> setExpandedFlagRecursively(element.treeNode, true));
             menu.add(expandAll);
             MenuItem collapseAll = new MenuItem("Collapse all");
-            collapseAll.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    setExpandedFlagRecursively(element.treeNode, false);
-                }
-            });
+            collapseAll.setOnAction(event -> setExpandedFlagRecursively(element.treeNode, false));
             menu.add(collapseAll);
         }
         if (element != getRootElement() && element.parent != getRootElement()
@@ -471,42 +409,33 @@ public class MainForm {
             maybeAddSeparator(menu);
             // Everything except for root directories and the two special elements can be deleted or renamed
             MenuItem rename = new MenuItem("Rename");
-            rename.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
-                    if (newName != null) {
-                        element.renameSelfTo(newName, MainForm.this);
-                    }
+            rename.setOnAction(event -> {
+                String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
+                if (newName != null) {
+                    element.renameSelfTo(newName, MainForm.this);
                 }
             });
             menu.add(rename);
             MenuItem delete = new MenuItem("Delete");
-            delete.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    ButtonType deleteAnswer = new ButtonType("Delete");
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
-                            deleteAnswer,
-                            ButtonType.NO);
-                    if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
-                        delete(element);
-                    }
+            delete.setOnAction(event -> {
+                ButtonType deleteAnswer = new ButtonType("Delete");
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
+                        deleteAnswer,
+                        ButtonType.NO);
+                if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
+                    delete(element);
                 }
             });
             menu.add(delete);
             if (element instanceof Scenario) {
                 MenuItem copy = new MenuItem("Copy");
-                String isWhat =((Scenario) element).isTestCase() ? "test case": "user keyword";
-                copy.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        String name = TextFieldForm.askForText("Copy a " + isWhat, "Name of the copy:", "Create new " + isWhat + " as a copy", element.getShortName() + " - copy");
-                        if (name != null) {
-                            Scenario newCopy = ((ISuite) element.parent).createNewChild(name, ((Scenario) element).isTestCase(), MainForm.this);
-                            DeepCopy.copyOldIntoNew((Scenario)element, newCopy);
-                            changeOccurredTo(element.parent, LastChangeKind.STRUCTURE_CHANGED);
-                        }
+                String isWhat = ((Scenario) element).isTestCase() ? "test case" : "user keyword";
+                copy.setOnAction(event -> {
+                    String name = TextFieldForm.askForText("Copy a " + isWhat, "Name of the copy:", "Create new " + isWhat + " as a copy", element.getShortName() + " - copy");
+                    if (name != null) {
+                        Scenario newCopy = element.parent.createNewChild(name, ((Scenario) element).isTestCase(), MainForm.this);
+                        DeepCopy.copyOldIntoNew((Scenario) element, newCopy);
+                        changeOccurredTo(element.parent, LastChangeKind.STRUCTURE_CHANGED);
                     }
                 });
                 menu.add(copy);
@@ -518,29 +447,23 @@ public class MainForm {
             if (asScenario.isTestCase()) {
                 MenuItem runThis = new MenuItem("Run just this test", loadIcon(Images.play));
                 runThis.disableProperty().bind(runTab.canRun.not());
-                runThis.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        deselectAll(event);
-                        asScenario.checkbox.setSelected(true);
-                        runTab.clickRun(event);
-                    }
+                runThis.setOnAction(event -> {
+                    deselectAll(event);
+                    asScenario.checkbox.setSelected(true);
+                    runTab.clickRun(event);
                 });
                 menu.add(runThis);
             } else {
                 MenuItem runThis = new MenuItem("Run all tests that use this keyword", loadIcon(Images.doublePlay));
                 runThis.disableProperty().bind(runTab.canRun.not());
-                runThis.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        deselectAll(event);
-                        withUpdateSuppression(() -> {
-                            FindUsages.findUsagesAsTestCases(null, asScenario, getRootElement()).forEach(sc -> {
-                                sc.checkbox.setSelected(true);
-                            });
-                            runTab.clickRun(event);
+                runThis.setOnAction(event -> {
+                    deselectAll(event);
+                    withUpdateSuppression(() -> {
+                        FindUsages.findUsagesAsTestCases(null, asScenario, getRootElement()).forEach(sc -> {
+                            sc.checkbox.setSelected(true);
                         });
-                    }
+                        runTab.clickRun(event);
+                    });
                 });
                 menu.add(runThis);
             }
@@ -596,9 +519,7 @@ public class MainForm {
     }
 
     private void setCheckboxes(HighElement element, boolean shouldBeChecked) {
-        withUpdateSuppression(() -> {
-            setCheckboxesRecursive(element, shouldBeChecked);
-        });
+        withUpdateSuppression(() -> setCheckboxesRecursive(element, shouldBeChecked));
     }
 
     private void setCheckboxesRecursive(HighElement element, boolean shouldBeChecked) {
@@ -640,8 +561,7 @@ public class MainForm {
         bRun.setOnAction(runTab::clickRun);
         bStop.disableProperty().bind(runTab.canStop.not());
         bStop.setOnAction(runTab::clickStop);
-        ToolBar toolBar = new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
-        return toolBar;
+        return new ToolBar(bNavigateBack, bNavigateForwards, bSaveAll, bRun, bStop);
     }
 
     public void updateAdditionalToolbarButtonsVisibility() {
@@ -685,11 +605,11 @@ public class MainForm {
         }
     }
 
-    public void reloadElementIntoTabs(HighElement element) {
+    private void reloadElementIntoTabs(HighElement element) {
         reloadElementIntoTabs(element, true);
     }
 
-    public void reloadElementIntoTabs(HighElement element, boolean andSwitchToGrid) {
+    private void reloadElementIntoTabs(HighElement element, boolean andSwitchToGrid) {
         switchingTextEditContents = true;
         textEditTab.loadElement(element);
         gridTab.loadElement(element);
@@ -775,43 +695,24 @@ public class MainForm {
             }
         });
         MenuItem shortcuts = new MenuItem("Keyboard shortcuts");
-        shortcuts.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                AboutKeyboardShortcuts aboutSnowride = new AboutKeyboardShortcuts();
-                aboutSnowride.show();
-            }
+        shortcuts.setOnAction(event -> {
+            AboutKeyboardShortcuts aboutSnowride = new AboutKeyboardShortcuts();
+            aboutSnowride.show();
         });
         MenuItem robotFrameworkUserGuide = new MenuItem("Navigate to Robot Framework User Guide", loadIcon(Images.internet));
-        robotFrameworkUserGuide.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                navigateToWebsite("http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html");
-            }
-        });
+        robotFrameworkUserGuide.setOnAction(event -> navigateToWebsite("http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html"));
         MenuItem robotFrameworkLibrariesDocumentation = new MenuItem("Navigate to Robot Framework libraries documentation", loadIcon(Images.internet));
-        robotFrameworkLibrariesDocumentation.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                navigateToWebsite("http://robotframework.org/robotframework/#user-guide");
-            }
-        });
+        robotFrameworkLibrariesDocumentation.setOnAction(event -> navigateToWebsite("http://robotframework.org/robotframework/#user-guide"));
         MenuItem releaseNotes = new MenuItem("View Snowride changelog/release notes");
-        releaseNotes.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                AboutChangelog aboutChangelog = new AboutChangelog();
-                aboutChangelog.show();
-            }
+        releaseNotes.setOnAction(event -> {
+            AboutChangelog aboutChangelog = new AboutChangelog();
+            aboutChangelog.show();
         });
         MenuItem bSettings2 = new MenuItem("Settings", loadIcon(Images.keywordIcon)); // we have to create another menu item, because a menu item can have only one parent
         // And we need this in Tools, because that's what people are used to.
-        bSettings2.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
-                settingsWindow.show();
-            }
+        bSettings2.setOnAction(event -> {
+            SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
+            settingsWindow.show();
         });
         Menu toolsMenu = new Menu("Tools", null, bSettings2);
         Menu helpMenu = new Menu("Help", null, about, shortcuts, robotFrameworkUserGuide, robotFrameworkLibrariesDocumentation, releaseNotes);
@@ -871,10 +772,10 @@ public class MainForm {
 
     public void loadProjectFromFolder(File path) {
 
-            boolean abort = maybeOfferSaveDiscardOrCancel();
-            if (abort){
-                return;
-            }
+        boolean abort = maybeOfferSaveDiscardOrCancel();
+        if (abort) {
+            return;
+        }
         projectLoad.progress.set(0);
         navigationStack.clear();
         reloadElementIntoTabs(null);
@@ -884,7 +785,6 @@ public class MainForm {
                 File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 0.8);
 
-                List<HighElement> twoChildren = new ArrayList<>();
                 List<File> additionalFiles = Settings.getInstance().getAdditionalFoldersAsFiles();
                 ExternalResourcesElement externalResources = gateParser.createExternalResourcesElement(additionalFiles, projectLoad, 0.2);
                 UltimateRoot ultimateRoot = new UltimateRoot(folderSuite, externalResources);
@@ -922,6 +822,7 @@ public class MainForm {
 
     /**
      * Opens a Save/Don't save/Cancel dialog.
+     *
      * @return Returns true if the action that prompted this dialog should be aborted.
      */
     private boolean maybeOfferSaveDiscardOrCancel() {
@@ -988,9 +889,7 @@ public class MainForm {
     }
 
     public Optional<HighElement> findTestByFullyQualifiedName(String longname) {
-        return getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> {
-            return he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase());
-        }).findFirst();
+        return getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase())).findFirst();
     }
 
     public void toast(String toastMessage) {

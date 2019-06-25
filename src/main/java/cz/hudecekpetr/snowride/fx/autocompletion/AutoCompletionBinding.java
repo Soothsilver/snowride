@@ -33,7 +33,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.concurrent.Task;
 import javafx.event.*;
-import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
@@ -98,7 +97,7 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
             try{
                 setIgnoreInputChanges(true);
                 completeUserInput(sce.getSuggestion());
-                fireAutoCompletion(sce.getSuggestion());
+                fireAutoCompletion();
                 hidePopup();
             }finally{
                 // Ensure that ignore is always set back to false
@@ -112,15 +111,6 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
      * Public API                                                              *
      *                                                                         *
      **************************************************************************/
-
-    /**
-     * Specifies whether the PopupWindow should be hidden when an unhandled
-     * escape key is pressed while the popup has focus.
-     *
-     */
-    public void setHideOnEscape(boolean value) {
-        autoCompletionPopup.setHideOnEscape(value);
-    }
 
     /**
      * Set the current text the user has entered
@@ -284,8 +274,8 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
         autoCompletionPopup.hide();
     }
 
-    protected void fireAutoCompletion(T completion){
-        Event.fireEvent(this, new AutoCompletionBinding.AutoCompletionEvent<>(completion));
+    protected void fireAutoCompletion(){
+        Event.fireEvent(this, new AutoCompletionBinding.AutoCompletionEvent<>());
     }
 
 
@@ -441,14 +431,11 @@ public abstract class AutoCompletionBinding<T extends IAutocompleteOption> imple
         @SuppressWarnings("rawtypes")
         public static final EventType<AutoCompletionBinding.AutoCompletionEvent> AUTO_COMPLETED = new EventType<>("SNOW_AUTO_COMPLETED"); //$NON-NLS-1$
 
-        private final TE completion;
-
         /**
          * Creates a new event that can subsequently be fired.
          */
-        public AutoCompletionEvent(TE completion) {
+        public AutoCompletionEvent() {
             super(AUTO_COMPLETED);
-            this.completion = completion;
         }
     }
 

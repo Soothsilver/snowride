@@ -1,11 +1,17 @@
 package cz.hudecekpetr.snowride;
 
+/**
+ * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
+ */
 public enum NewlineStyle {
+    /**
+     * Unix-style separators.
+     */
     LF,
+    /**
+     * Windows-style separators.
+     */
     CRLF;
-
-    NewlineStyle() {
-    }
 
     public String convertToStyle(String str) {
         // Commit Unix-style:

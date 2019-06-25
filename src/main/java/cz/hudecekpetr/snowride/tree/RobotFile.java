@@ -34,7 +34,7 @@ public class RobotFile {
         if (errors.size() > 0) {
             throw new RuntimeException("There were parse errors. Editing or saving is not possible.");
         }
-        String str = sb.toString(); // RIDE leaves the final newline in //Extensions.removeFinalNewlineIfAny(sb.toString());
+        String str = sb.toString(); // RIDE leaves the final newline in, so let's not remove it.
         return newlineStyle.convertToStyle(str);
     }
 

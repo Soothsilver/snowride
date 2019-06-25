@@ -18,7 +18,7 @@ public class SnowrideApplication extends Application {
     public static void main(String[] args) {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> Platform.runLater(() -> {
             e.printStackTrace();
-            // Internet article say that error messages shouldn't be closed with "OK". I'm not sure "Well, that happened." is better, though.
+            // Internet articles say that error messages shouldn't be closed with "OK". I'm not sure "Well, that happened." is better, though.
             new Alert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
         }));
         Settings.load();

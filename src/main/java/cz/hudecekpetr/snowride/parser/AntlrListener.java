@@ -30,9 +30,20 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * ANTLR4 listener that creates a {@link RobotFile} instance from a Robot Framework code file. The main method which
+ * is {@link #exitFile(RobotParser.FileContext)}. See ANTLR4 documentation for details.
+ */
 public class AntlrListener extends RobotBaseListener implements ANTLRErrorListener {
 
+    /**
+     * The file or folder suite to which the parsed code file is assigned. Lines of these code file are assigned
+     * to this suite by default. If they're part of a test case or keyword, they're assigned to that scenario instead.
+     */
     private final Suite owningSuite;
+    /**
+     * Parse errors and some semantic errors are collected into this array.
+     */
     public List<Exception> errors = new ArrayList<>();
 
     public AntlrListener(Suite owningSuite) {
@@ -78,7 +89,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
         if (ctx.emptyLines() != null) {
             header.followupEmptyLines = ctx.emptyLines().Trivia;
         }
-        List<Scenario> tcc = ctx.testCase().stream().map(ctxx -> ctxx.TestCase).collect(Collectors.toList());
+        List<Scenario> tcc = ctx.testCase().stream().map(context -> context.TestCase).collect(Collectors.toList());
         ctx.Section = new TestCasesSection(header, tcc);
     }
 
@@ -159,7 +170,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     public void exitKeywordsSection(RobotParser.KeywordsSectionContext ctx) {
         SectionHeader header = ctx.keywordsHeader().SectionHeader;
         header.addTrivia(ctx.emptyLines());
-        List<Scenario> tcc = ctx.testCase().stream().map(ctxx -> ctxx.TestCase).collect(Collectors.toList());
+        List<Scenario> tcc = ctx.testCase().stream().map(context -> context.TestCase).collect(Collectors.toList());
         tcc.forEach(sc -> sc.setTestCase(false));
         ctx.Section = new KeywordsSection(header, tcc);
     }
@@ -167,12 +178,7 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitSettingsSection(RobotParser.SettingsSectionContext ctx) {
         SectionHeader header = ctx.settingsHeader().SectionHeader;
-        List<LogicalLine> pairs = new ArrayList<>();
-        List<RobotParser.OptionalKeyValuePairContext> keyValuePairContexts = ctx.optionalKeyValuePair();
-        for (RobotParser.OptionalKeyValuePairContext context : keyValuePairContexts) {
-            pairs.add(context.Line);
-        }
-        ctx.Section = new KeyValuePairSection(header, pairs);
+        ctx.Section = createSection(header, ctx.optionalKeyValuePair());
     }
 
     @Override
@@ -203,12 +209,15 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
     @Override
     public void exitVariablesSection(RobotParser.VariablesSectionContext ctx) {
         SectionHeader header = ctx.variablesHeader().SectionHeader;
+        ctx.Section = createSection(header, ctx.optionalKeyValuePair());
+    }
+
+    private KeyValuePairSection createSection(SectionHeader header, List<RobotParser.OptionalKeyValuePairContext> keyValuePairContexts) {
         List<LogicalLine> pairs = new ArrayList<>();
-        List<RobotParser.OptionalKeyValuePairContext> keyValuePairContexts = ctx.optionalKeyValuePair();
         for (RobotParser.OptionalKeyValuePairContext context : keyValuePairContexts) {
             pairs.add(context.Line);
         }
-        ctx.Section = new KeyValuePairSection(header, pairs);
+        return new KeyValuePairSection(header, pairs);
     }
 
     @Override

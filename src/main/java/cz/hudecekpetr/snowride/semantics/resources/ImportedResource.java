@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
+import com.google.common.collect.Iterables;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 import cz.hudecekpetr.snowride.settings.Settings;
@@ -78,16 +79,19 @@ public class ImportedResource {
                         suite = suite.parent;
                         isFirstSection = false;
                         if (suite == null) {
-                            // we're getting out of the tree
+                            // We're getting out of the tree.
+                            // Eventually this should be supported.
                             importsSuite = null;
                             successfullyImported = false;
                             return;
-                            // Eventually should be supported....
-                            //throw new ImportException("Snowride cannot import resource files from outside the root folder.");
                         }
                         continue;
                     } else {
-                        for (HighElement child : suite.children) {
+                        Iterable<HighElement> children = suite.children;
+                        if (isFirstSection) {
+                            children = Iterables.concat(children, MainForm.INSTANCE.getExternalResourcesElement().children);
+                        }
+                        for (HighElement child : children) {
                             MatchStatus matchStatus = getMatchStatus(child.getShortName(), sectionString);
                             if (matchStatus == MatchStatus.MATCHES_AND_IS_DIRECTORY) {
                                 suite = child;
@@ -98,27 +102,10 @@ public class ImportedResource {
                                 break outerFor;
                             }
                         }
-
-                        if (isFirstSection) {
-                            for (HighElement importedResourceFolder : MainForm.INSTANCE.getExternalResourcesElement().children) {
-                                for (HighElement child : importedResourceFolder.children) {
-                                    MatchStatus matchStatus = getMatchStatus(child.getShortName(), sectionString);
-                                    if (matchStatus == MatchStatus.MATCHES_AND_IS_DIRECTORY) {
-                                        suite = child;
-                                        isFirstSection = false;
-                                        continue outerFor;
-                                    } else if (matchStatus == MatchStatus.MATCHES_AND_IS_FILE) {
-                                        suite = child;
-                                        break outerFor;
-                                    }
-                                }
-                            }
-                        }
                     }
                     importsSuite = null;
                     successfullyImported = false;
                     return;
-                    // throw new ImportException("Path '" + path + "' doesn't lead to a resource file because '" + section.toString() + "' is not a suite.");
                 }
                 if (suite instanceof Suite) {
                     Suite asSuite = (Suite) suite;
@@ -136,8 +123,6 @@ public class ImportedResource {
 
                     importsSuite = null;
                     successfullyImported = false;
-// TODO report these errors somehow
-                    //                    throw new ImportException("Path '" + path + "' somehow leads to something that is not a suite.");
                 }
                 break;
             default:
@@ -159,7 +144,7 @@ public class ImportedResource {
         return MatchStatus.NO_MATCH;
     }
 
-    enum MatchStatus {
+    private enum MatchStatus {
         MATCHES_AND_IS_FILE,
         MATCHES_AND_IS_DIRECTORY,
         NO_MATCH
