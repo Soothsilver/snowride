@@ -1,5 +1,8 @@
 package cz.hudecekpetr.snowride.runner;
 
+/**
+ * A colored part of text.
+ */
 public class AnsiSegment {
     public String text;
     public AnsiColor color;

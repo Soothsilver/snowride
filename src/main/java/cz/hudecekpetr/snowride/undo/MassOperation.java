@@ -2,6 +2,9 @@ package cz.hudecekpetr.snowride.undo;
 
 import java.util.List;
 
+/**
+ * The user changes many cells at the same time, using Ctrl+X, Ctrl+C, Ctrl+V or Ctrl+D, for example.
+ */
 public class MassOperation extends UndoableOperation {
     private final List<ChangeTextOperation> operations;
 

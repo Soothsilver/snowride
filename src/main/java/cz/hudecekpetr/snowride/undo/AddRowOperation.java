@@ -5,6 +5,9 @@ import javafx.collections.ObservableList;
 
 import java.util.function.Supplier;
 
+/**
+ * The user added a new row using Ctrl+I or Ctrl+A.
+ */
 public class AddRowOperation extends UndoableOperation {
     private final int rowIndex;
     private final Supplier<LogicalLine> lineCreator;

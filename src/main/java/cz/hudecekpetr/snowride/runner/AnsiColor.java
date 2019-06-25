@@ -11,12 +11,18 @@ public enum AnsiColor {
     WHITE;
 
     public String toStyle() {
-        switch (this){
-            case RED: return color("red");
-            case GREEN: return color("blue");
-            case BLACK: return color("black");
-            case YELLOW: return color("orangered");
-            default: return color("magenta");
+        switch (this) {
+            case RED:
+                return color("red");
+            case GREEN:
+                // Blue is prettier than green:
+                return color("blue");
+            case BLACK:
+                return color("black");
+            case YELLOW:
+                return color("orangered");
+            default:
+                return color("magenta");
         }
     }
 

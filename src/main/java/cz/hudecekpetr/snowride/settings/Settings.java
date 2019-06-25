@@ -13,34 +13,47 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Settings are loaded at the beginning. They're user-global. To access the settings, use {@link Settings#getInstance()}.
+ * If you change the settings, use {@link Settings#save()}. Settings are serialized as XML using XStream. I'm not super
+ * sure about backwards compatibility so I recommend keeping existing fields in, even if they're no longer used. This
+ * is because you don't want to throw away the settings of users as they upgrade to a new version of Snowride.
+ */
 public class Settings {
     private static Settings instance;
 
+    // Open project:
     public String lastOpenedProject = null;
-    public List<String> lastOpenedProjects = new ArrayList<String>();
+    public List<String> lastOpenedProjects = new ArrayList<>();
+
+    // Runner:
     public String runScript = "";
     public String runArguments = "";
     public String tbWithoutTags = "";
     public String tbWithTags = "";
     public boolean cbWithoutTags = false;
     public boolean cbWithTags = false;
+    public int numberOfSuccessesBeforeEnd = 100;
+
+    // Visual state of the window:
     public double x = -1;
     public double y = -1;
     public double width = 800;
     public double height = 700;
     public boolean maximized = false;
 
-
+    // Import:
     @SuppressWarnings("unused") // Kept for backwards compatibility with previous versions of the Settings file.
     public String additionalXmlFiles = "";
     public String additionalFolders = "";
     public boolean cbAlsoImportTxtFiles = true;
+
+    // Customization:
     public boolean toolbarReloadAll = true;
     public boolean toolbarDeselectEverything = true;
     public boolean cbShowNonexistentOptionFirst = false;
     public boolean cbAutoExpandSelectedTests = true;
     public boolean cbUseStructureChanged = false;
-    public int numberOfSuccessesBeforeEnd = 100;
     public boolean cbRunGarbageCollection = false;
     public boolean cbHighlightSameCells = true;
     public boolean cbUseSystemColorWindow = false;
@@ -86,6 +99,12 @@ public class Settings {
         }
     }
 
+    /**
+     * When I didn't have this, sometimes Snowride serialized -32000 as the "X" value, probably because that's what
+     * it was given by JavaFX. That meant that the window was technically open but so far left that the user couldn't
+     * see it. To prevent this, we'll disallow X,Y less than 0 during load. The downside is that if your primary monitor
+     * is not the leftmost monitor, you will be unable to save the position of Snowride on your left monitor(s).
+     */
     private void correctWindowExcesses() {
         if (this.x < 0) {
             this.x = 0;

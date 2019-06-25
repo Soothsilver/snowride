@@ -5,6 +5,9 @@ import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ObservableList;
 
+/**
+ * The user changed the contents of one cell.
+ */
 public class ChangeTextOperation extends UndoableOperation {
     private final String oldData;
     private final String newData;

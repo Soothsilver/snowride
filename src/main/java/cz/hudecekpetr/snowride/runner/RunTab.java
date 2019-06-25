@@ -393,7 +393,7 @@ public class RunTab {
         }
     }
 
-    public void appendAnsiText(String text) {
+    private void appendAnsiText(String text) {
         ansiOutputStream.addFromOutside(text);
         ansiOutputStream.flushInto(this::flushIntoTbOutputPlusDefault);
     }

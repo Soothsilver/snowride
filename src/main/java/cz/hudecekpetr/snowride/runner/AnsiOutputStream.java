@@ -4,11 +4,19 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.function.BiConsumer;
 
+/**
+ * Gathers a stream of characters from outside (using {@link #addFromOutside(String)} and splits it into {@link AnsiSegment}s
+ * which are fed to the outside text area via {@link #flushInto(BiConsumer)}. Each segment represents text written
+ * in a different color.
+ */
 public class AnsiOutputStream {
-    AnsiColor currentColor = AnsiColor.BLACK;
-    Queue<AnsiSegment> segments = new ArrayDeque<>();
+    private AnsiColor currentColor = AnsiColor.BLACK;
+    private Queue<AnsiSegment> segments = new ArrayDeque<>();
     private String rememberedTextFragment = "";
 
+    /**
+     * Adds characters from the outside to this stream. These characters may include ANSI color codes.
+     */
     public void addFromOutside(String text) {
         String theText = rememberedTextFragment;
         rememberedTextFragment = "";
@@ -27,7 +35,6 @@ public class AnsiOutputStream {
                 if (text.length() < 5) {
                     // Yeah, it should probably come later and we'll solve it then
                     rememberedTextFragment = text;
-                    return;
                 } else {
                     // Well, it will probably never come, let's just ignore the special character:
                     currentColor = AnsiColor.BLACK;
@@ -76,6 +83,11 @@ public class AnsiOutputStream {
         currentColor = ansiThing;
     }
 
+    /**
+     * For each segment prepared by this stream, call the consumer on it. This removes the segment from the stream.
+     * The first argument is the text of the segment. The second is the JavaFX CSS style that should be applied
+     * to that segment.
+     */
     public void flushInto(BiConsumer<String, String> textAndStyle) {
         AnsiSegment segment = segments.poll();
         while (segment != null) {
