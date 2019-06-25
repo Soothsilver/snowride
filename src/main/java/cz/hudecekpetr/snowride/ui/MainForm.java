@@ -152,7 +152,7 @@ public class MainForm {
                 tabErrors);
         tabs.getSelectionModel().select(tabGrid);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
-        tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
+        tabs.getSelectionModel().selectedItemProperty().addListener((observable2, oldValue2, newValue2) -> textEditTab.selTabChanged(newValue2));
         tabs.getSelectionModel().selectedItemProperty().addListener((observable1, oldValue1, newValue1) -> selectedTabChanged(oldValue1, newValue1));
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
@@ -217,6 +217,9 @@ public class MainForm {
             if (event.getCode() == KeyCode.CONTROL) {
                 Underlining.ctrlDown = true;
                 Underlining.update();
+            }
+            if (event.getCode() == KeyCode.F && event.isControlDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
+                textEditTab.getTbSearchBox().requestFocus();
             }
             if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
