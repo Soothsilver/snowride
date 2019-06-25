@@ -172,6 +172,11 @@ public class TestCaseSettingOption implements IAutocompleteOption, IKnownKeyword
         return indexOfKeywordArgument;
     }
 
+    @Override
+    public String getSourceName() {
+        return "";
+    }
+
 
     @Override
     public boolean isLegalInContext(int cellIndex, SnowTableKind snowTableKind) {

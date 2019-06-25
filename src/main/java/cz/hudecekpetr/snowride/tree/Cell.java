@@ -1,15 +1,20 @@
 package cz.hudecekpetr.snowride.tree;
 
-import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
+import com.google.common.collect.Streams;
+import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
-import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
-import cz.hudecekpetr.snowride.ui.grid.YellowHighlight;
 import cz.hudecekpetr.snowride.semantics.CellSemantics;
+import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.QualifiedKeyword;
+import cz.hudecekpetr.snowride.semantics.codecompletion.LibraryAutocompleteOption;
+import cz.hudecekpetr.snowride.semantics.codecompletion.QualifiedCompletionOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.ui.grid.YellowHighlight;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
@@ -92,7 +97,7 @@ public class Cell implements IHasQuickDocumentation {
         if (semantics.cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
-        } else if (semantics.cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR")) {
+        } else if (semantics.cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR") || contents.equals("END")) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
         } else if (semantics.cellIndex == 1 && contents.equals("\\")) {
@@ -142,11 +147,23 @@ public class Cell implements IHasQuickDocumentation {
     }
 
 
-    public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind) {
+    public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {
         partOfLine.recalculateSemantics();
         Stream<IAutocompleteOption> options = Stream.empty();
         if (semantics.isKeyword) {
-            options = Stream.concat(options, semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
+            options = Streams.concat(options,
+                    semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
+            if (whatWrittenSoFar.getSource() == null) {
+                options = Streams.concat(options,
+                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                                .map(kw -> new LibraryAutocompleteOption(kw.getSourceName())).distinct());
+            } else {
+                options = Streams.concat(options,
+                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                                .filter(kw -> Extensions.toInvariant(kw.getSourceName()).equals(Extensions.toInvariant(whatWrittenSoFar.getSource())))
+                                .map(QualifiedCompletionOption::new));
+            }
+
         }
         return options;
     }

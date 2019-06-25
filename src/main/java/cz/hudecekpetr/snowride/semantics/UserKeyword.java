@@ -17,7 +17,7 @@ public class UserKeyword implements IKnownKeyword {
     private Suite owningSuite;
     private Scenario scenario;
 
-    public UserKeyword(String name, String documentation, int mandatoryArguments, int optionalArguments,  Suite owningSuite, Scenario scenario) {
+    private UserKeyword(String name, String documentation, int mandatoryArguments, int optionalArguments, Suite owningSuite, Scenario scenario) {
         this.name = name;
         this.documentation = documentation;
         numberOfMandatoryArguments = mandatoryArguments;
@@ -90,5 +90,10 @@ public class UserKeyword implements IKnownKeyword {
     @Override
     public int getArgumentIndexOfKeywordArgument() {
         return -1;
+    }
+
+    @Override
+    public String getSourceName() {
+        return owningSuite.getShortName();
     }
 }

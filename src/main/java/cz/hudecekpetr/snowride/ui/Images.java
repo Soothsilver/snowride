@@ -23,6 +23,7 @@ public class Images {
     public static Image open = staticImage("open16.png");
     public static Image stop = staticImage("stop16.png");
     public static Image help = staticImage("help16.png");
+    public static Image library = staticImage("library16.png");
     public static Image doublePlay = staticImage("doubleplay16.png");
     public static Image play = staticImage("play16.png");
     public static Image save = staticImage("save16.png");

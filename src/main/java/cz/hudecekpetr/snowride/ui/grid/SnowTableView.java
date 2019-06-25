@@ -566,7 +566,6 @@ public class SnowTableView extends TableView<LogicalLine> {
         int tableFullIfNumberOfColumnsIs = (snowTableKind.isScenario() ? lastFullColumn + 1 : lastFullColumn + 2);
         int missingColumns = 1 + tableFullIfNumberOfColumnsIs - getColumns().size();
         for (int missingId = 1; missingId <= missingColumns; missingId++) {
-            System.out.println("Adding column for cell " + (lastFullColumn + missingId));
             // add a column
             if (snowTableKind.isScenario()) {
                 getColumns().add(createColumn(getColumns().size()));

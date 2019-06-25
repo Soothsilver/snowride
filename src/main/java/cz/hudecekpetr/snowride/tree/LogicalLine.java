@@ -1,23 +1,36 @@
 package cz.hudecekpetr.snowride.tree;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.errors.ErrorKind;
+import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
-import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.QualifiedKeyword;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.lang3.StringUtils;
+import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Represents a line in Robot Framework code if it's part of a settings table, variables table or a scenario. One logical
+ * line can be on multiple consecutive physical lines if they're joined by the ellipsis (...).  A logical line consists
+ * of cells.
+ */
 public class LogicalLine {
     public String preTrivia = "";
+    /**
+     * Cells of this line. The first cell (cell 0) starts at column 0. If there's white space at column 0, then
+     * cell 0 is empty and the line actually begins with the cell zero's post-trivia.
+     */
     public List<Cell> cells = new ArrayList<>();
     public PositionInListProperty lineNumber;
     public SnowTableKind belongsWhere;
@@ -126,16 +139,16 @@ public class LogicalLine {
     }
 
     public void shiftTrueCellsRight(MainForm mainForm) {
-        int cellcount = cells.size();
-        for (int i = cellcount - 1; i >= 1; i--) {
+        int cellCount = cells.size();
+        for (int i = cellCount - 1; i >= 1; i--) {
             getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
         }
     }
 
     public void shiftTrueCellsLeft(MainForm mainForm) {
-        int cellcount = cells.size();
-        for (int i = 2; i <= cellcount; i++) {
-            if (i == cellcount) {
+        int cellCount = cells.size();
+        for (int i = 2; i <= cellCount; i++) {
+            if (i == cellCount) {
                 getCellAsStringProperty(i - 1, mainForm).set(new Cell("", "    ", this));
             } else {
                 getCellAsStringProperty(i - 1, mainForm).set(cells.get(i).copy());
@@ -151,6 +164,7 @@ public class LogicalLine {
         int indexOfThisAsArgument = 0; // value before first keyword is not relevant
         boolean everythingIsAComment = false;
         SnowTableKind kind = isInScenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS;
+        boolean ignoreEverythingFromNowOn = false;
         IKnownKeyword currentKeyword = null;
         boolean isTemplate = isInScenario && ((Scenario) getBelongsToHighElement()).semanticsIsTemplateTestCase;
         for (int i = 0; i < cells.size(); i++) {
@@ -174,7 +188,10 @@ public class LogicalLine {
             }
 
             cellSemantics.argumentStatus = Cell.ArgumentStatus.UNKNOWN;
-            if (currentKeyword != null) {
+            if (cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
+                ignoreEverythingFromNowOn = true;
+            }
+            if (currentKeyword != null && !ignoreEverythingFromNowOn) {
                 int maxMandatory = currentKeyword.getNumberOfMandatoryArguments();
                 int maxOptional = currentKeyword.getNumberOfOptionalArguments() + maxMandatory;
                 if (indexOfThisAsArgument >= 0) {
@@ -201,6 +218,9 @@ public class LogicalLine {
                         cellSemantics.thisHereKeyword = homonym;
                     }
                 }
+                if (cellSemantics.thisHereKeyword == null) {
+                    determineThisHereKeywordWithAdvancedProcedures(cell, cellSemantics, kind);
+                }
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
                 if (isTemplate) {
@@ -224,6 +244,22 @@ public class LogicalLine {
 
     }
 
+    private void determineThisHereKeywordWithAdvancedProcedures(Cell cell, CellSemantics cellSemantics, SnowTableKind kind) {
+        QualifiedKeyword qualifiedKeyword = QualifiedKeyword.fromDottedString(cell.contents);
+        if (qualifiedKeyword.getSource() != null) {
+            Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(qualifiedKeyword.getKeyword()));
+            for (IKnownKeyword homonym : homonyms) {
+                if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                    String sourceName = homonym.getSourceName();
+                    if (!StringUtils.isEmpty(sourceName) && Extensions.toInvariant(sourceName).equals(Extensions.toInvariant(qualifiedKeyword.getSource()))) {
+                        cellSemantics.thisHereKeyword = homonym;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     public HighElement getBelongsToHighElement() {
         return belongsToHighElement;
     }
@@ -240,7 +276,6 @@ public class LogicalLine {
                     wrappers.remove(i);
                 }
                 cells.remove(i);
-                continue;
             } else {
                 break;
             }
@@ -257,6 +292,20 @@ public class LogicalLine {
                         cell.postTrivia = "    ";
                     }
                 }
+            }
+        }
+    }
+
+    public void addLineErrorsToOwner() {
+        for (Cell cell : cells) {
+            if (cell.getSemantics().isKeyword && cell.getSemantics().thisHereKeyword == null && !StringUtils.isBlank(cell.contents)) {
+                belongsToHighElement.selfErrors.add(new SnowrideError(belongsToHighElement, ErrorKind.BAD_KEYWORD, Severity.WARNING, "'" + cell.contents + "' is not a known keyword."));
+            }
+            if (cell.getSemantics().argumentStatus == Cell.ArgumentStatus.FORBIDDEN && !cell.getSemantics().isComment && !StringUtils.isBlank(cell.contents)) {
+                belongsToHighElement.selfErrors.add(new SnowrideError(belongsToHighElement, ErrorKind.TOO_MANY_ARGUMENTS, Severity.WARNING, "Too many arguments on line " + this.lineNumber.intValue() + "."));
+            }
+            if (cell.getSemantics().argumentStatus == Cell.ArgumentStatus.MANDATORY && StringUtils.isBlank(cell.contents)) {
+                belongsToHighElement.selfErrors.add(new SnowrideError(belongsToHighElement, ErrorKind.MISSING_ARGUMENT, Severity.WARNING, "Not enough arguments on line " + this.lineNumber.intValue() + "."));
             }
         }
     }

@@ -136,4 +136,9 @@ public class ExternalKeyword implements IKnownKeyword {
     public int getArgumentIndexOfKeywordArgument() {
         return indexOfNextKeyword;
     }
+
+    @Override
+    public String getSourceName() {
+        return library.getName();
+    }
 }

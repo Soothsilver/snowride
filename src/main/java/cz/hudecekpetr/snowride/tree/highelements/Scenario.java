@@ -6,9 +6,9 @@ import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
-import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.tree.TagKind;
+import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
@@ -17,30 +17,19 @@ import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 public class Scenario extends HighElement {
 
-    private Cell nameCell;
-    private boolean isTestCase;
+    private final ObservableList<LogicalLine> lines;
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
     public HashSet<Tag> actualTags = new HashSet<>();
     public boolean semanticsIsTemplateTestCase;
-
-    public List<String> getSemanticsArguments() {
-        return semanticsArguments;
-    }
-
+    private Cell nameCell;
+    private boolean isTestCase;
     private List<String> semanticsArguments = new ArrayList<>();
-
-    public ObservableList<LogicalLine> getLines() {
-        return lines;
-    }
-
-    private final ObservableList<LogicalLine> lines;
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
@@ -54,13 +43,21 @@ public class Scenario extends HighElement {
         }
     }
 
+    public List<String> getSemanticsArguments() {
+        return semanticsArguments;
+    }
+
+    public ObservableList<LogicalLine> getLines() {
+        return lines;
+    }
+
     @Override
     protected boolean isResourceOnly() {
         return !isTestCase;
     }
 
     @Override
-    public void saveAll() throws IOException {
+    public void saveAll() {
         // Saved as part of the file suite.
     }
 
@@ -108,19 +105,24 @@ public class Scenario extends HighElement {
     @Override
     protected String getTagsDocumentation() {
         if (actualTags.size() > 0) {
-            return "*Tags: *" + StringUtils.join(actualTags.stream().map(tg -> tg.prettyPrint()).iterator(), ", ");
+            return "*Tags: *" + StringUtils.join(actualTags.stream().map(Tag::prettyPrint).iterator(), ", ");
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void analyzeCodeInSelf() {
+        this.selfErrors.removeIf(error -> error.type.getValue().isLineError());
+        this.lines.forEach(LogicalLine::recalculateSemantics);
+        this.lines.forEach(LogicalLine::addLineErrorsToOwner);
     }
 
     public void serializeInto(StringBuilder sb) {
         sb.append(nameCell.contents);
         sb.append(nameCell.postTrivia);
         sb.append("\n");
-        lines.forEach(ll -> {
-            ll.serializeInto(sb);
-        });
+        lines.forEach(ll -> ll.serializeInto(sb));
     }
 
     public boolean isTestCase() {
@@ -187,28 +189,29 @@ public class Scenario extends HighElement {
                     }
                     semanticsDocumentationLine = line;
                     semanticsDocumentation = String.join("\n", docCells);
-                }
-                else if (line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")) {
+                } else if (line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")) {
                     for (int i = 2; i < line.cells.size(); i++) {
                         if (!StringUtils.isBlank(line.cells.get(i).contents)) {
                             argCells.add(line.cells.get(i).contents);
                         }
                     }
 
-                }
-                else if (line.cells.get(1).contents.equalsIgnoreCase("[Template]")) {
+                } else if (line.cells.get(1).contents.equalsIgnoreCase("[Template]")) {
                     semanticsIsTemplateTestCase = true;
                 }
             }
         }
         this.semanticsArguments = argCells;
         if (argCells.size() > 0) {
-            this.semanticsDocumentation =  "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");
+            this.semanticsDocumentation = "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");
         }
     }
 
     @Override
     public void updateTagsForSelfAndChildren() {
+        if (parent.childTestsAreTemplates) {
+            semanticsIsTemplateTestCase = true;
+        }
         actualTags = new HashSet<>(parent.forceTagsCumulative);
         boolean foundTags = false;
         for (LogicalLine line : getLines()) {

@@ -5,11 +5,13 @@ import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionBinding;
 import cz.hudecekpetr.snowride.fx.autocompletion.AutoCompletionTextFieldBinding;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.autocompletion.SimpleAutocompleteOption;
+import cz.hudecekpetr.snowride.semantics.QualifiedKeyword;
 import cz.hudecekpetr.snowride.ui.grid.IceCell;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
+import javafx.application.Platform;
 import javafx.scene.control.TextField;
 
 import java.util.Collection;
@@ -28,7 +30,13 @@ public class CodeCompletionBinding {
             @Override
             protected void completeUserInput(IAutocompleteOption completion) {
                 super.completeUserInput(completion);
-                iceCell.commit();
+                if (completion.thenRetriggerCompletion()) {
+                    Platform.runLater(() -> {
+                        this.setUserInput(completion.getAutocompleteText());
+                    });
+                } else {
+                    iceCell.commit();
+                }
             }
         };
         this.iceCell = iceCell;
@@ -40,8 +48,9 @@ public class CodeCompletionBinding {
     private Collection<? extends IAutocompleteOption> getSuggestions(AutoCompletionBinding.ISuggestionRequest request) {
         String text = Extensions.toInvariant(request.getUserText());
         Cell cell = iceCell.getItem();
+        QualifiedKeyword whatWrittenSoFar = QualifiedKeyword.fromDottedString(text);
 
-        Stream<? extends IAutocompleteOption> allOptions = cell.getCompletionOptions(snowTableKind).filter(option ->
+        Stream<? extends IAutocompleteOption> allOptions = cell.getCompletionOptions(snowTableKind, whatWrittenSoFar).filter(option ->
                 Extensions.toInvariant(option.getAutocompleteText()).contains(text)
         );
         List<IAutocompleteOption> collectedOptions = allOptions.collect(Collectors.toList());

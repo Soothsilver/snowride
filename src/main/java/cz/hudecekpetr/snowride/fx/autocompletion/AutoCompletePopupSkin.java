@@ -40,7 +40,6 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
     }
 
     private void ln(ObservableValue<? extends Number> observableValue, Number number, Number number1) {
-        System.out.println("Prefheight changed from " + number + " to " + number1);
         control.heightBecame(number1);
     }
 

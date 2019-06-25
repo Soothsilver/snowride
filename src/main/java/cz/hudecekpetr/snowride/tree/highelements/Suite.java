@@ -48,6 +48,7 @@ public abstract class Suite extends HighElement implements ISuite {
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
     private Multimap<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName =
             MultimapBuilder.hashKeys().arrayListValues().build();
+    public boolean childTestsAreTemplates = false;
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
@@ -170,8 +171,10 @@ public abstract class Suite extends HighElement implements ISuite {
     public void updateTagsForSelfAndChildren() {
         if (this.parent != null) {
             this.forceTagsCumulative = new HashSet<>(parent.forceTagsCumulative);
+            this.childTestsAreTemplates = parent.childTestsAreTemplates;
         } else {
             this.forceTagsCumulative.clear();
+            this.childTestsAreTemplates = false;
         }
         this.defaultTags.clear();
         if (this.fileParsed != null) {
@@ -190,6 +193,9 @@ public abstract class Suite extends HighElement implements ISuite {
                             defaultTags.add(new Tag(val, TagKind.DEFAULT, this));
                         }
                     }
+                }
+                if (setting.key.toLowerCase().equals("test template")) {
+                    childTestsAreTemplates = true;
                 }
             }
         }
@@ -265,6 +271,14 @@ public abstract class Suite extends HighElement implements ISuite {
             return null;
         } else {
             return t;
+        }
+    }
+
+    @Override
+    public void analyzeCodeInSelf() {
+        reparseAndRecalculateResources();
+        if (fileParsed != null) {
+            fileParsed.findOrCreateSettingsSection().pairs.forEach(LogicalLine::recalculateSemantics);
         }
     }
 

@@ -21,7 +21,8 @@ public class ExternalLibrary {
     public static ConcurrentHashMap<String, ExternalLibrary> knownExternalLibraries = new ConcurrentHashMap<>();
 
     static {
-        declarePackedLibrary("BuiltIn");
+        ForLoops.addForKeywordsTo(builtIn);
+        otherPackedInLibraries.put("BuiltIn", builtIn);
         declarePackedLibrary("Collections");
         declarePackedLibrary("DateTime");
         declarePackedLibrary("Dialogs");

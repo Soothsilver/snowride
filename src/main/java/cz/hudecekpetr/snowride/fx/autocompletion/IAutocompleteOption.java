@@ -23,4 +23,10 @@ public interface IAutocompleteOption extends IHasQuickDocumentation {
      * to select it).
      */
     default boolean hasQuickDocumentation() { return true; }
+
+    /**
+     * If true and the user commits this completion option, the code completion window will immediately reappear to
+     * allow the user to continue using code completion.
+     */
+    default boolean thenRetriggerCompletion() { return false;}
 }

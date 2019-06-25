@@ -1,8 +1,19 @@
 package cz.hudecekpetr.snowride.errors;
 
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.findusages.Usage;
+import cz.hudecekpetr.snowride.tree.Cell;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.tree.highelements.UltimateRoot;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableCell;
@@ -15,14 +26,21 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.validation.Severity;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ErrorsTab {
     private final TableView<SnowrideError> tableErrors;
+    private final MainForm mainForm;
     public Tab tab;
 
     public ErrorsTab(MainForm mainForm) {
+        this.mainForm = mainForm;
         tableErrors = new TableView<>();
         tableErrors.getSelectionModel().setCellSelectionEnabled(false);
         tableErrors.setPlaceholder(new Label("Snowride detects no parse errors in this project."));
@@ -108,8 +126,12 @@ public class ErrorsTab {
 
         // "Find usages" forces a semantic analysis on all lines of all tests and keywords which will trigger all imports.
         // Otherwise, imports are only processed when you select a file/folder in the treeview.
-        HBox hErrors = new HBox(5, new Label("Double-click an error to switch to that file. Do 'Find usages' on any keyword to force-refresh import errors."));
-        VBox vbErrors = new VBox(5, hErrors, tableErrors);
+        Button bAnalyzeCode = new Button("Analyze code");
+        bAnalyzeCode.setOnAction(event -> analyzeCode());
+        HBox hErrors = new HBox(5, bAnalyzeCode, new Label("Double-click an error to switch to that file."));
+        hErrors.setPadding(new Insets(2));
+        hErrors.setAlignment(Pos.CENTER_LEFT);
+        VBox vbErrors = new VBox(2, hErrors, tableErrors);
         VBox.setVgrow(tableErrors, Priority.ALWAYS);
         tab = new Tab("Errors", vbErrors);
         tab.setClosable(false);
@@ -118,5 +140,12 @@ public class ErrorsTab {
             tableErrors.setItems(root.getValue().allErrorsRecursive);
         }
         mainForm.getProjectTree().rootProperty().addListener((observable, oldValue, newValue) -> tableErrors.setItems(newValue.getValue().allErrorsRecursive));
+    }
+
+    private void analyzeCode() {
+        List<HighElement> allTestsAndKeywords = mainForm.getRootElement().selfAndDescendantHighElements().collect(Collectors.toList());
+        for (HighElement he : allTestsAndKeywords) {
+            he.analyzeCodeInSelf();
+        }
     }
 }

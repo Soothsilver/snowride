@@ -176,4 +176,9 @@ public abstract class HighElement implements IAutocompleteOption {
     public LogicalLine getDocumentationLine() {
         return semanticsDocumentationLine;
     }
+
+    /**
+     * Recalculates all semantics, including cell semantics, and refreshes what errors appear in the Errors tab.
+     */
+    public abstract void analyzeCodeInSelf();
 }

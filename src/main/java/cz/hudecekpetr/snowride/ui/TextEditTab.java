@@ -125,7 +125,7 @@ public class TextEditTab {
             // Sometime this can happen, apparently...
             return;
         }
-        int firstIndex = tbTextEdit.getText().indexOf(newValue);
+        int firstIndex = StringUtils.indexOfIgnoreCase(tbTextEdit.getText(), newValue);
         if (firstIndex == -1) {
             // I have no idea how this works.
             // But see https://stackoverflow.com/a/27708846/1580088
@@ -146,9 +146,9 @@ public class TextEditTab {
             return;
         }
         String searchFor = tbSearchBox.getText();
-        int firstIndex = tbTextEdit.getText().indexOf(searchFor, tbTextEdit.getAnchor() + 1);
+        int firstIndex = StringUtils.indexOfIgnoreCase(tbTextEdit.getText(), searchFor, tbTextEdit.getAnchor() + 1);
         if (firstIndex == -1) {
-            int fromStartIndex = tbTextEdit.getText().indexOf(searchFor);
+            int fromStartIndex = StringUtils.indexOfIgnoreCase(tbTextEdit.getText(), searchFor);
             if (fromStartIndex != -1) {
                 tbTextEdit.selectRange(fromStartIndex, fromStartIndex + searchFor.length());
             }

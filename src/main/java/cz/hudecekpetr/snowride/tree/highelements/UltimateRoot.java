@@ -79,6 +79,11 @@ public class UltimateRoot extends Suite {
         return "";
     }
 
+    @Override
+    public void analyzeCodeInSelf() {
+        // nothing to be done
+    }
+
     public FolderSuite getRootDirectory() {
         return ((FolderSuite) children.get(0));
     }

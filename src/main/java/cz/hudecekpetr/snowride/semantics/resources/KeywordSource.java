@@ -6,4 +6,5 @@ import java.util.stream.Stream;
 
 public abstract class KeywordSource {
     public abstract Stream<? extends IKnownKeyword> getAllKeywords();
+
 }
