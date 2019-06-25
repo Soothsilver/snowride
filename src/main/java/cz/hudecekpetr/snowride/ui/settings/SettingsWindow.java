@@ -4,7 +4,6 @@ import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -45,12 +44,7 @@ public class SettingsWindow extends Stage {
         Button buttonOK = new Button("Apply and close");
         buttonOK.setOnAction(this::applyAndClose);
         Button buttonCancel = new Button("Cancel");
-        buttonCancel.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                SettingsWindow.this.close();
-            }
-        });
+        buttonCancel.setOnAction(event -> SettingsWindow.this.close());
         HBox buttonRow = new HBox(5, buttonSuperOK, buttonOK, buttonCancel);
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
         VBox all = new VBox(5, tabs, buttonRow);
@@ -63,7 +57,7 @@ public class SettingsWindow extends Stage {
 
     private void applyCloseAndRefresh(ActionEvent actionEvent) {
         applyAndClose(actionEvent);
-        mainForm.reloadAll(actionEvent);
+        mainForm.reloadAll();
     }
 
     private Tab createTabImporting() {

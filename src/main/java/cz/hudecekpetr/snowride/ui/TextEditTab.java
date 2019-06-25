@@ -5,10 +5,7 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -33,12 +30,7 @@ public class TextEditTab {
         tbTextEdit = new TextArea();
         Label noEditForTestCases = new Label("You cannot edit test cases this way. Use the grid editor instead.");
         Button bOrSwitch = new Button("...or edit the entire suite as text");
-        bOrSwitch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                mainForm.selectProgrammatically(mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue().parent);
-            }
-        });
+        bOrSwitch.setOnAction(event -> mainForm.selectProgrammatically(mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue().parent));
         VBox vboxWarning = new VBox(noEditForTestCases, bOrSwitch);
         HBox outer2 = new HBox(vboxWarning);
         outer2.setAlignment(Pos.CENTER);
@@ -50,43 +42,29 @@ public class TextEditTab {
     public Tab createTab() {
         tbTextEdit.setPromptText("This will display text...");
         tbTextEdit.setFont(MainForm.TEXT_EDIT_FONT);
-        tbTextEdit.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                if (!mainForm.switchingTextEditContents) {
-                    HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-                    whatChanged.areTextChangesUnapplied = true;
-                    whatChanged.contents = newValue;
-                    mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
-                }
+        tbTextEdit.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!mainForm.switchingTextEditContents) {
+                HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
+                whatChanged.areTextChangesUnapplied = true;
+                whatChanged.contents = newValue;
+                mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
             }
         });
         Button bApply = new Button("Apply changes");
         Label lblInfo = new Label("Changes are applied automatically if you switch to another tab, test case, or suite; or if you save.");
-        bApply.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-                whatChanged.applyText();
-                if (whatChanged.asSuite().fileParsed != null && whatChanged.asSuite().fileParsed.errors.size() > 0) {
-                    throw new RuntimeException("There are parse errors. See the other tabs for details.");
-                }
+        bApply.setOnAction(event -> {
+            HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
+            whatChanged.applyText();
+            if (whatChanged.asSuite().fileParsed != null && whatChanged.asSuite().fileParsed.errors.size() > 0) {
+                throw new RuntimeException("There are parse errors. See the other tabs for details.");
             }
         });
         Button bReformat = new Button("Reformat (Ctrl+L)");
-        bReformat.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                reformat();
-            }
-        });
+        bReformat.setOnAction(event -> reformat());
         Tooltip.install(bReformat, new Tooltip("Reformats the file so that it looks as close as RIDE would reformat it. Does nothing if the file cannot be parsed."));
-        mainForm.getStage().addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.L && event.isControlDown()) {
-                   reformat();
-                }
+        mainForm.getStage().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.L && event.isControlDown()) {
+               reformat();
             }
         });
         HBox hBox = new HBox(2, bReformat, bApply, lblInfo);
@@ -104,7 +82,7 @@ public class TextEditTab {
         Suite reformattingWhat = lastLoaded.asSuite();
         reformattingWhat.applyText();
         if (reformattingWhat.fileParsed != null) {
-            if (reformattingWhat.fileParsed != null && reformattingWhat.fileParsed.errors.size() > 0) {
+            if (reformattingWhat.fileParsed.errors.size() > 0) {
                 throw new RuntimeException("There are parse errors. Reformatting cannot happen.");
             }
             reformattingWhat.fileParsed.reformat();
@@ -116,7 +94,7 @@ public class TextEditTab {
     }
 
     public void loadElement(HighElement value) {
-        if (value != null && value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED && value instanceof Suite) {
+        if (value instanceof Suite && value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
             Suite asSuite = (Suite) value;
             asSuite.optimizeStructure();
             asSuite.contents = asSuite.serialize();

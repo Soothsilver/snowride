@@ -7,16 +7,9 @@ import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseDragEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
@@ -31,50 +24,31 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         this.column = column;
         this.cellIndex = cellIndex;
         this.snowTableView = snowTableView;
-        this.setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Underlining.updateCellTo(getItem());
-            }
-        });
-        this.setOnMouseExited(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (Underlining.getActiveCell() == getItem()) {
-                    Underlining.updateCellTo(null);
-                }
+        this.setOnMouseEntered(event -> Underlining.updateCellTo(getItem()));
+        this.setOnMouseExited(event -> {
+            if (Underlining.getActiveCell() == getItem()) {
+                Underlining.updateCellTo(null);
             }
         });
         this.setPadding(new Insets(0));
-        this.setOnDragDetected(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (getItem() != null && getItem().partOfLine != null) {
-                    startFullDrag();
-                    fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
-                    event.consume();
-                }
+        this.setOnDragDetected(event -> {
+            if (getItem() != null && getItem().partOfLine != null) {
+                startFullDrag();
+                fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                event.consume();
             }
         });
-        this.setOnMouseDragEntered(new EventHandler<MouseDragEvent>() {
-            @Override
-            public void handle(MouseDragEvent event) {
+        this.setOnMouseDragEntered(event -> {
 
-                if (fullDragStartedAt != null && getItem() != null && getItem().partOfLine != null) {
-                    TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
-                    snowTableView.getSelectionModel().clearSelection();
-                    snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(), fullDragStartedAt.getTableColumn(),
-                            fullDragEndedAt.getRow(), fullDragEndedAt.getTableColumn());
-                    event.consume();
-                }
+            if (fullDragStartedAt != null && getItem() != null && getItem().partOfLine != null) {
+                TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                snowTableView.getSelectionModel().clearSelection();
+                snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(), fullDragStartedAt.getTableColumn(),
+                        fullDragEndedAt.getRow(), fullDragEndedAt.getTableColumn());
+                event.consume();
             }
         });
-        this.setOnMouseDragReleased(new EventHandler<MouseDragEvent>() {
-            @Override
-            public void handle(MouseDragEvent event) {
-                fullDragStartedAt = null;
-            }
-        });
+        this.setOnMouseDragReleased(event -> fullDragStartedAt = null);
         if (cellIndex < 0) {
             // Only the "Row" column has cells with 'cellIndex" less than 0 (it's -1).
             this.setEditable(false);
@@ -155,36 +129,27 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             textField = new TextField();
             textField.setStyle("-fx-text-box-border: transparent; -fx-background-insets: 0; -fx-focus-color: transparent; -fx-border-width: 0;");
             textField.setPadding(new Insets(0));
-            textField.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
+            textField.setOnAction(event -> {
+                commit();
+                event.consume();
+            });
+            codeCompletionBinding = new CodeCompletionBinding(textField, this, snowTableView.snowTableKind);
+            textField.setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                    trueCancelEdit();
+                    event.consume();
+                }
+                if (event.getCode() == KeyCode.TAB) {
                     commit();
+                    snowTableView.selectCell(0, 1);
                     event.consume();
                 }
             });
-            codeCompletionBinding = new CodeCompletionBinding(textField, this, snowTableView.snowTableKind);
-            textField.setOnKeyPressed(new EventHandler<KeyEvent>() {
-                @Override
-                public void handle(KeyEvent event) {
-                    if (event.getCode() == KeyCode.ESCAPE) {
-                        trueCancelEdit();
-                        event.consume();
-                    }
-                    if (event.getCode() == KeyCode.TAB) {
-                        commit();
-                        snowTableView.selectCell(0, 1);
-                        event.consume();
-                    }
-                }
-            });
-            textField.widthProperty().addListener(new ChangeListener<Number>() {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    int oldCaret = textField.getCaretPosition();
-                    int oldAnchor = textField.getAnchor();
-                    textField.selectRange(0, 0);
-                    textField.selectRange(oldAnchor, oldCaret);
-                }
+            textField.widthProperty().addListener((observable, oldValue, newValue) -> {
+                int oldCaret = textField.getCaretPosition();
+                int oldAnchor = textField.getAnchor();
+                textField.selectRange(0, 0);
+                textField.selectRange(oldAnchor, oldCaret);
             });
         }
         return textField;

@@ -2,12 +2,9 @@ package cz.hudecekpetr.snowride.ui;
 
 import javafx.scene.control.*;
 
-import com.sun.javafx.scene.control.skin.resources.ControlResources;
 import javafx.application.Platform;
-import javafx.beans.NamedArg;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;

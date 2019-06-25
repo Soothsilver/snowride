@@ -1,8 +1,6 @@
 package cz.hudecekpetr.snowride.ui.about;
 
 import cz.hudecekpetr.snowride.ui.Images;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 public class AboutKeyboardShortcuts extends AboutDialogBase {
     public AboutKeyboardShortcuts() {
-        Label lblShortcuts = null;
+        Label lblShortcuts;
         try {
             lblShortcuts = new Label(IOUtils.resourceToString("/KeyboardShortcuts.txt", StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -26,12 +24,7 @@ public class AboutKeyboardShortcuts extends AboutDialogBase {
         }
         VBox vbMain = new VBox(5, lblShortcuts);
         javafx.scene.control.Button bClose = new Button("Close");
-        bClose.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                close();
-            }
-        });
+        bClose.setOnAction(event -> close());
         HBox hButtons = new HBox(5, bClose);
         hButtons.setAlignment(Pos.CENTER_RIGHT);
         VBox vbAll = new VBox(vbMain, hButtons);

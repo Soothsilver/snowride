@@ -8,7 +8,6 @@ import javafx.scene.control.TextField;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 public class SearchSuites {
@@ -31,12 +30,7 @@ public class SearchSuites {
         if (!root.getInvariantName().isEmpty() && root.getInvariantName().contains(requestText)) {
             validElements.add(root);
         }
-        validElements.sort(new Comparator<HighElement>() {
-            @Override
-            public int compare(HighElement o1, HighElement o2) {
-                return o1.getInvariantName().compareTo(o2.getInvariantName());
-            }
-        });
+        validElements.sort((o1, o2) -> o1.getInvariantName().compareTo(o2.getInvariantName()));
         return validElements;
     }
 

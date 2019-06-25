@@ -18,7 +18,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -82,7 +81,6 @@ public class RunTab {
     private TextField tbArguments;
     private Path temporaryDirectory;
     private Executor executor = Executors.newFixedThreadPool(4);
-    private VBox vboxWithTags;
     private CheckBox cbWithoutTags;
     private TextField tbWithoutTags;
     private TextField tbWithTags;
@@ -152,29 +150,16 @@ public class RunTab {
         bStop.disableProperty().bind(canStop.not());
         Button bLog = new Button("Log", new ImageView(Images.log));
         bLog.disableProperty().bind(Bindings.isNull(run.logFile));
-        bLog.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                openFile(RunTab.this.run.logFile.getValue());
-            }
-        });
+        bLog.setOnAction(event -> openFile(RunTab.this.run.logFile.getValue()));
         Button bReport = new Button("Report", new ImageView(Images.report));
-        bReport.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                openFile(RunTab.this.run.reportFile.getValue());
-            }
-        });
+        bReport.setOnAction(event -> openFile(RunTab.this.run.reportFile.getValue()));
         bReport.disableProperty().bind(Bindings.isNull(run.reportFile));
         Button bRunAdvanced = new Button("Advanced run...", new ImageView(Images.play));
         bRunAdvanced.disableProperty().bind(canRun.not());
         ContextMenu advancedRunContextMenu = buildAdvancedRunContextMenu();
-        bRunAdvanced.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                advancedRunContextMenu.hide();
-                advancedRunContextMenu.show(bRunAdvanced, Side.RIGHT, 0, 0);
-            }
+        bRunAdvanced.setOnAction(event -> {
+            advancedRunContextMenu.hide();
+            advancedRunContextMenu.show(bRunAdvanced, Side.RIGHT, 0, 0);
         });
         lblMultirun = new Label("Running until failure (0 successes so far)");
         lblMultirun.managedProperty().bind(lblMultirun.visibleProperty());
@@ -205,7 +190,7 @@ public class RunTab {
         tbWithTags = new TextField(Settings.getInstance().tbWithTags);
         tbWithTags.setFont(MainForm.TEXT_EDIT_FONT);
         tbWithTags.textProperty().addListener(this::tagsTextChanged);
-        vboxWithTags = new VBox(2, cbWithTags, tbWithTags);
+        VBox vboxWithTags = new VBox(2, cbWithTags, tbWithTags);
         cbWithoutTags = new CheckBox("Don't run tests with tags:");
         cbWithoutTags.setSelected(Settings.getInstance().cbWithoutTags);
         cbWithoutTags.selectedProperty().addListener(this::tagsCheckboxChanged);
@@ -236,35 +221,17 @@ public class RunTab {
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
         CustomMenuItem runThenDeselect = new CustomMenuItem(new Label("...and then deselect passing tests"));
         untilFailureOrStop.disableProperty().bind(canRun.not());
-        untilFailureOrStop.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                multirunner.runUntilFailure(Multirunner.BLADES_OF_GRASS_ON_SWEET_APPLE_ACRES);
-            }
-        });
+        untilFailureOrStop.setOnAction(event -> multirunner.runUntilFailure(Multirunner.BLADES_OF_GRASS_ON_SWEET_APPLE_ACRES));
         untilFailureOrXSuccess.disableProperty().bind(canRun.not());
-        untilFailureOrXSuccess.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                multirunner.runUntilFailure(numberOfSuccessesToStop.getValue());
-            }
-        });
+        untilFailureOrXSuccess.setOnAction(event -> multirunner.runUntilFailure(numberOfSuccessesToStop.getValue()));
         runOnlyFailedTests.disableProperty().bind(canRun.not());
-        runOnlyFailedTests.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                mainForm.selectFailedTests(mainForm.getProjectTree().getRoot().getValue());
-                clickRun(event);
-            }
+        runOnlyFailedTests.setOnAction(event -> {
+            mainForm.selectFailedTests(mainForm.getProjectTree().getRoot().getValue());
+            clickRun(event);
         });
         runThenDeselect.disableProperty().bind(canRun.not());
         Tooltip.install(runThenDeselect.getContent(), new Tooltip("Snowride will clear the selection of tests that pass so that only failed tests remain selected to be run next time."));
-        runThenDeselect.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                clickRun(event, true);
-            }
-        });
+        runThenDeselect.setOnAction(event -> clickRun(event, true));
         return new ContextMenu(untilFailureOrStop, untilFailureOrXSuccess, runOnlyFailedTests, runThenDeselect);
     }
 
@@ -336,7 +303,7 @@ public class RunTab {
                         run_without_saving,
                         cancel).showAndWait().orElse(cancel);
                 if (decision == save_all) {
-                    mainForm.saveAll(null);
+                    mainForm.saveAll();
                 } else if (decision == run_without_saving) {
                     // Proceed as normal.
                 } else {

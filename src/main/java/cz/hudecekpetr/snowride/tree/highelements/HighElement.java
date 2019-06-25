@@ -11,8 +11,6 @@ import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.UndoStack;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -57,37 +55,24 @@ public abstract class HighElement implements IAutocompleteOption {
         checkbox = new CheckBox();
         checkbox.setVisible(false);
         checkbox.managedProperty().bind(checkbox.visibleProperty());
-        checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                MainForm.INSTANCE.runTab.maybeRunNumberChanged();
-            }
-        });
+        checkbox.selectedProperty().addListener((observable, oldValue, newValue) -> MainForm.INSTANCE.runTab.maybeRunNumberChanged());
         graphic.getChildren().add(imageView);
         graphic.getChildren().add(checkbox);
         treeNode = new TreeItem<>(this, graphic);
-        this.shortNameProperty.addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                invariantName = Extensions.toInvariant(newValue);
-            }
-        });
+        this.shortNameProperty.addListener((observable, oldValue, newValue) -> invariantName = Extensions.toInvariant(newValue));
         this.shortNameProperty.set(shortName);
         this.contents = contents;
         this.children = FXCollections.observableArrayList();
         childrenRecursively.appendList(this.children);
-        this.children.addListener(new ListChangeListener<HighElement>() {
-            @Override
-            public void onChanged(Change<? extends HighElement> c) {
-                while (c.next()) {
-                    for (HighElement added : c.getAddedSubList()) {
-                        allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
-                        childrenRecursively.appendList(added.childrenRecursively);
-                    }
-                    for (HighElement removed : c.getRemoved()) {
-                        allErrorsRecursiveSource.removeList(removed.allErrorsRecursive);
-                        childrenRecursively.removeList(removed.childrenRecursively);
-                    }
+        this.children.addListener((ListChangeListener<HighElement>) c -> {
+            while (c.next()) {
+                for (HighElement added : c.getAddedSubList()) {
+                    allErrorsRecursiveSource.appendList(added.allErrorsRecursive);
+                    childrenRecursively.appendList(added.childrenRecursively);
+                }
+                for (HighElement removed : c.getRemoved()) {
+                    allErrorsRecursiveSource.removeList(removed.allErrorsRecursive);
+                    childrenRecursively.removeList(removed.childrenRecursively);
                 }
             }
         });

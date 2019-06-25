@@ -53,7 +53,7 @@ public abstract class Suite extends HighElement implements ISuite {
     private NewlineStyle newlineStyle = NewlineStyle.LF;
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
-        this.children.addListener((ListChangeListener)this::childrenChanged);
+        this.children.addListener(this::childrenChanged);
         if (contents != null && contents.indexOf('\r') != -1) {
             // If you load it with \r, it's Windows-style line endings.
             newlineStyle = NewlineStyle.CRLF;

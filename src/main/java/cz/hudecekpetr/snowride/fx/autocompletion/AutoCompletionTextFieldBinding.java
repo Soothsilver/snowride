@@ -111,7 +111,7 @@ public class AutoCompletionTextFieldBinding<T extends IAutocompleteOption> exten
      */
     @Override
     public TextField getCompletionTarget() {
-        return (TextField) super.getCompletionTarget();
+        return super.getCompletionTarget();
     }
 
     /**

@@ -102,7 +102,7 @@ public class Scenario extends HighElement {
 
     @Override
     public Suite asSuite() {
-        return (Suite) this.parent;
+        return this.parent;
     }
 
     @Override

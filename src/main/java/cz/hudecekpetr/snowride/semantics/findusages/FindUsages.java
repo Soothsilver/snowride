@@ -9,8 +9,6 @@ import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.tree.highelements.UltimateRoot;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
 import org.apache.commons.lang3.StringUtils;
@@ -71,12 +69,7 @@ public class FindUsages {
         for (Usage usage : usages) {
             ImageView icon = new ImageView(usage.getElement().getAutocompleteIcon());
             MenuItem item = new MenuItem(usage.getText(), icon);
-            item.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    MainForm.INSTANCE.selectProgrammaticallyAndRememberInHistory(usage.getElement());
-                }
-            });
+            item.setOnAction(event -> MainForm.INSTANCE.selectProgrammaticallyAndRememberInHistory(usage.getElement()));
             if (menuItems.size() >= 100) {
                 MenuItem disabledItem = new MenuItem("...there are more usages");
                 disabledItem.setDisable(true);

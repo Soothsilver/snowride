@@ -1,7 +1,6 @@
 package com.sun.javafx.scene.control.skin;
 
 import com.sun.javafx.scene.control.behavior.ModifiedPrecursorTableViewBehavior;
-import com.sun.javafx.scene.control.behavior.TableViewBehavior;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
@@ -234,7 +233,7 @@ public class PrecursorTableViewSkin<T> extends TableViewSkinBase<T, T, TableView
 
     @Override
     protected void edit(int index, TableColumn<T, ?> column) {
-        tableView.edit(index, (TableColumn<T, ?>) column);
+        tableView.edit(index, column);
     }
 
     /*

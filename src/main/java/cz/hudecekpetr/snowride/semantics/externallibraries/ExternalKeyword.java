@@ -22,9 +22,9 @@ public class ExternalKeyword implements IKnownKeyword {
     private final String canonicalName;
     private final ExternalLibrary library;
     private String documentation;
-    private int numberOfMandatoryArguments = 0;
-    private int numberOfOptionalArguments = 0;
-    private int indexOfNextKeyword = -1;
+    private int numberOfMandatoryArguments;
+    private int numberOfOptionalArguments;
+    private int indexOfNextKeyword;
 
     public ExternalKeyword(String canonicalName, String documentation, List<Parameter> parameters, ExternalLibrary library) {
 

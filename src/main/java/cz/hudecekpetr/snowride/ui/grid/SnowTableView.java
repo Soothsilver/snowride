@@ -21,18 +21,13 @@ import cz.hudecekpetr.snowride.undo.MassOperation;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Skin;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableFocusModel;
 import javafx.scene.control.TablePosition;
@@ -46,7 +41,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -71,30 +65,24 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.setStyle("-fx-selection-bar: lightyellow;");
-        this.skinProperty().addListener(new ChangeListener<Skin<?>>() {
-            @Override
-            public void changed(ObservableValue<? extends Skin<?>> observable, Skin<?> oldValue, Skin<?> newValue) {
-                final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
-                header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
-            }
+        this.skinProperty().addListener((observable, oldValue, newValue) -> {
+            final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
+            header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
         });
         TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
         rowColumn.setStyle("-fx-alignment: center;");
-        this.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) this::cellSelectionChanged);
+        this.getSelectionModel().getSelectedCells().addListener(this::cellSelectionChanged);
         this.getColumns().add(rowColumn);
         ContextMenu cmenu = new ContextMenu(new MenuItem("Something"));
-        this.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent event) {
-                cmenu.getItems().clear();
-                if (getSelectionModel().getSelectedItem() != null) {
-                    List<MenuItem> contextMenuItems = recreateContextMenu(event);
-                    cmenu.getItems().setAll(contextMenuItems);
-                } else {
-                    event.consume();
-                }
+        this.setOnContextMenuRequested(event -> {
+            cmenu.getItems().clear();
+            if (getSelectionModel().getSelectedItem() != null) {
+                List<MenuItem> contextMenuItems = recreateContextMenu(event);
+                cmenu.getItems().setAll(contextMenuItems);
+            } else {
+                event.consume();
             }
         });
         this.setContextMenu(cmenu);
@@ -108,29 +96,14 @@ public class SnowTableView extends TableView<LogicalLine> {
 
         MenuItem miInsert = new MenuItem("Insert row before this");
         miInsert.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN));
-        miInsert.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                insertRowBefore();
-            }
-        });
+        miInsert.setOnAction(event -> insertRowBefore());
         MenuItem miAppend = new MenuItem("Append row after this");
         miAppend.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN));
-        miAppend.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                appendRowAfter();
-            }
-        });
+        miAppend.setOnAction(event -> appendRowAfter());
 
         MenuItem miDelete = new MenuItem("Delete all selected rows");
         miDelete.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN));
-        miDelete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                deleteSelectedRows();
-            }
-        });
+        miDelete.setOnAction(event -> deleteSelectedRows());
         if (getSelectionModel().getSelectedCells().size() > 0) {
             TablePosition lastPosition = getSelectionModel().getSelectedCells().get(0);
             if (lastPosition.getColumn() != -1 && lastPosition.getRow() != -1) {
@@ -139,26 +112,20 @@ public class SnowTableView extends TableView<LogicalLine> {
                 IKnownKeyword keywordInThisCell = thisCell.getKeywordInThisCell();
                 if (keywordInThisCell != null) {
                     MenuItem miFindUsages = new MenuItem("Find usages");
-                    miFindUsages.setOnAction(new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent event) {
-                            MenuItem[] items = FindUsages.findUsages(keywordInThisCell, keywordInThisCell.getScenarioIfPossible(), mainForm.getRootElement()).toArray(new MenuItem[0]);
-                            ContextMenu menuUsages = new ContextMenu(items);
-                            menuUsages.show(mainForm.getStage(), contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
-                        }
+                    miFindUsages.setOnAction(event -> {
+                        MenuItem[] items = FindUsages.findUsages(keywordInThisCell, keywordInThisCell.getScenarioIfPossible(), mainForm.getRootElement()).toArray(new MenuItem[0]);
+                        ContextMenu menuUsages = new ContextMenu(items);
+                        menuUsages.show(mainForm.getStage(), contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
                     });
                     contextMenuItems.add(miFindUsages);
                     contextMenuItems.add(new SeparatorMenuItem());
                 } else if (thisCell.getSemantics().isKeyword) {
                     MenuItem miCreateThis = new MenuItem("Create this keyword in the same file");
-                    miCreateThis.setOnAction(new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent event) {
-                            Suite suite = scenario.parent;
-                            Scenario newKeyword = suite.createNewChild(thisCell.contents, false, mainForm);
-                            // TODO add arguments and return value rows
-                            mainForm.changeOccurredTo(suite, LastChangeKind.STRUCTURE_CHANGED);
-                        }
+                    miCreateThis.setOnAction(event -> {
+                        Suite suite = scenario.parent;
+                        Scenario newKeyword = suite.createNewChild(thisCell.contents, false, mainForm);
+                        // TODO add arguments and return value rows
+                        mainForm.changeOccurredTo(suite, LastChangeKind.STRUCTURE_CHANGED);
                     });
                     contextMenuItems.add(miCreateThis);
                     contextMenuItems.add(new SeparatorMenuItem());
@@ -168,20 +135,10 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (snowTableKind == SnowTableKind.SCENARIO) {
             MenuItem miComment = new MenuItem("Comment out");
             miComment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN));
-            miComment.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    commentOutOrUncomment(false);
-                }
-            });
+            miComment.setOnAction(event -> commentOutOrUncomment(false));
             MenuItem miUncomment = new MenuItem("Uncomment");
             miUncomment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
-            miUncomment.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    commentOutOrUncomment(true);
-                }
-            });
+            miUncomment.setOnAction(event -> commentOutOrUncomment(true));
             contextMenuItems.add(miComment);
             contextMenuItems.add(miUncomment);
         }
@@ -254,7 +211,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             mainForm.toast("In Snowride, you must not click the 'Row' column. Right-click the next column instead to get the correct context menu.");
         }
         if (mouseEvent.isControlDown()) {
-            Cell cell = null;
+            Cell cell;
             if (snowTableKind.isScenario()) {
                 cell = getFocusedCell();
             } else {
@@ -522,28 +479,20 @@ public class SnowTableView extends TableView<LogicalLine> {
         TableColumn<LogicalLine, Cell> column = new TableColumn<>();
         column.setSortable(false);
         column.setMinWidth(40);
-        column.setCellFactory(new Callback<TableColumn<LogicalLine, Cell>, TableCell<LogicalLine, Cell>>() {
-            @Override
-            public TableCell<LogicalLine, Cell> call(TableColumn<LogicalLine, Cell> param) {
-                return new IceCell(param, cellIndex, SnowTableView.this);
-            }
-        });
+        column.setCellFactory(param -> new IceCell(param, cellIndex, SnowTableView.this));
         if (cellIndex == 0 || cellIndex == 1) {
             column.setPrefWidth(240);
         } else {
             column.setPrefWidth(160);
         }
-        column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LogicalLine, Cell>, ObservableValue<Cell>>() {
-            @Override
-            public ObservableValue<Cell> call(TableColumn.CellDataFeatures<LogicalLine, Cell> param) {
-                if (cellIndex == -1) {
-                    return new IntToCellBinding(param.getValue().lineNumber.add(1));
-                }
-                if (param.getValue() != null) {
-                    return param.getValue().getCellAsStringProperty(cellIndex, mainForm);
-                } else {
-                    return new ReadOnlyObjectWrapper<>(new Cell("(non-existing line)", "", null));
-                }
+        column.setCellValueFactory(param -> {
+            if (cellIndex == -1) {
+                return new IntToCellBinding(param.getValue().lineNumber.add(1));
+            }
+            if (param.getValue() != null) {
+                return param.getValue().getCellAsStringProperty(cellIndex, mainForm);
+            } else {
+                return new ReadOnlyObjectWrapper<>(new Cell("(non-existing line)", "", null));
             }
         });
         return column;

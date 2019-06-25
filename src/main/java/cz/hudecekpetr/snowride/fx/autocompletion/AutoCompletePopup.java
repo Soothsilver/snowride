@@ -13,8 +13,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -24,7 +22,6 @@ import javafx.event.EventType;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
@@ -39,6 +36,7 @@ public class AutoCompletePopup<T extends IAutocompleteOption> extends PopupContr
     private StringConverter<T> converter;
     private IntegerProperty visibleRowCount = new SimpleIntegerProperty(this, "visibleRowCount", 10);
     private ObjectProperty<EventHandler<AutoCompletePopup.SuggestionEvent<T>>> onSuggestion = new ObjectPropertyBase<EventHandler<AutoCompletePopup.SuggestionEvent<T>>>() {
+        @SuppressWarnings("RedundantCast") // not redundant, there would be a compile error
         protected void invalidated() {
             AutoCompletePopup.this.eventHandlerManager.setEventHandler(AutoCompletePopup.SuggestionEvent.SUGGESTION, (EventHandler) this.get());
         }
@@ -106,7 +104,7 @@ public class AutoCompletePopup<T extends IAutocompleteOption> extends PopupContr
     }
 
     public final EventHandler<AutoCompletePopup.SuggestionEvent<T>> getOnSuggestion() {
-        return (EventHandler) this.onSuggestionProperty().get();
+        return this.onSuggestionProperty().get();
     }
 
     public final void setOnSuggestion(EventHandler<AutoCompletePopup.SuggestionEvent<T>> value) {

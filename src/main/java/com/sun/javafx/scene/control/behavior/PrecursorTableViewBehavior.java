@@ -59,9 +59,6 @@ public class PrecursorTableViewBehavior<T> extends PrecursorTableViewBehaviorBas
                 }
             };
 
-    private final WeakChangeListener<TableViewSelectionModel<T>> weakSelectionModelListener =
-            new WeakChangeListener<TableViewSelectionModel<T>>(selectionModelListener);
-
     private TwoLevelFocusBehavior tlFocus;
 
 
@@ -76,6 +73,7 @@ public class PrecursorTableViewBehavior<T> extends PrecursorTableViewBehaviorBas
         super(control);
 
         // Fix for RT-16565
+        WeakChangeListener<TableViewSelectionModel<T>> weakSelectionModelListener = new WeakChangeListener<TableViewSelectionModel<T>>(selectionModelListener);
         control.selectionModelProperty().addListener(weakSelectionModelListener);
         TableViewSelectionModel<T> sm = control.getSelectionModel();
         if (sm != null) {

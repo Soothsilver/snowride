@@ -1,15 +1,10 @@
 package cz.hudecekpetr.snowride.fx;
 
 import javafx.scene.layout.Background;
-import javafx.scene.layout.Border;
 import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TextExt;
-import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.TextOps;
-
-import java.util.function.BiConsumer;
 
 /**
  * Displays Robot Framework-style documentation in a semi-pretty way in the documentation popup. Even if it's called

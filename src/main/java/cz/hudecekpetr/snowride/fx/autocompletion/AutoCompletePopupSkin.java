@@ -3,16 +3,13 @@ package cz.hudecekpetr.snowride.fx.autocompletion;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Skin<AutoCompletePopup<T>> {
@@ -30,23 +27,15 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
         this.suggestionList.prefWidthProperty().bind(control.prefWidthProperty());
         this.suggestionList.maxWidthProperty().bind(control.maxWidthProperty());
         this.suggestionList.minWidthProperty().bind(control.minWidthProperty());
-        this.suggestionList.prefHeightProperty().addListener((ChangeListener<Number>)this::ln);
-        this.control.setOnShown(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                System.out.println("shown: " + suggestionList.prefHeightProperty().getValue());
-                control.heightBecame(suggestionList.prefHeightProperty().getValue());
-                if (suggestionList.getFocusModel().getFocusedItem() != null) {
-                    showOrHideDocumentation(suggestionList.getFocusModel().getFocusedItem());
-                }
+        this.suggestionList.prefHeightProperty().addListener(this::ln);
+        this.control.setOnShown(event -> {
+            System.out.println("shown: " + suggestionList.prefHeightProperty().getValue());
+            control.heightBecame(suggestionList.prefHeightProperty().getValue());
+            if (suggestionList.getFocusModel().getFocusedItem() != null) {
+                showOrHideDocumentation(suggestionList.getFocusModel().getFocusedItem());
             }
         });
-        this.suggestionList.getFocusModel().focusedItemProperty().addListener(new ChangeListener<T>() {
-            @Override
-            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue) {
-                showOrHideDocumentation(newValue);
-            }
-        });
+        this.suggestionList.getFocusModel().focusedItemProperty().addListener((observable, oldValue, newValue) -> showOrHideDocumentation(newValue));
         this.registerEventListener();
     }
 
@@ -61,6 +50,7 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
             suppressUpTo++;
             int[] suppressing = new int[] { suppressUpTo };
             Platform.runLater(() -> {
+                //noinspection ConstantConditions - this is a bug in the inspection: this is not always true
                 if (suppressUpTo == suppressing[0]) {
                     MainForm.documentationPopup.hide();
                 }

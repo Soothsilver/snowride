@@ -29,9 +29,6 @@ import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -83,13 +80,11 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
-    public static final Font BIGGEST_FONT = new Font("System Regular", 18);
     public static final Font BIGGER_FONT = new Font("System Regular", 14);
     public static final Font TEXT_EDIT_FONT = new Font("Courier New", 12);
     public static MainForm INSTANCE;
     public static DocumentationPopup documentationPopup = new DocumentationPopup();
     private final SerializingTab serializingTab;
-    private final ErrorsTab errorsTab;
     private final TabPane tabs;
     private final Tab tabTextEdit;
     private final TextEditTab textEditTab;
@@ -149,7 +144,7 @@ public class MainForm {
         serializingTab = new SerializingTab(this);
         serializingTab.createTab();
         VBox searchableTree = createLeftPane();
-        errorsTab = new ErrorsTab(this);
+        ErrorsTab errorsTab = new ErrorsTab(this);
         Tab tabErrors = errorsTab.tab;
         tabs = new TabPane(tabTextEdit, tabGrid, tabRun,
                 // Serializing is now mostly stable, so we don't need the debugging tab:
@@ -158,7 +153,7 @@ public class MainForm {
         tabs.getSelectionModel().select(tabGrid);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
         tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
-        tabs.getSelectionModel().selectedItemProperty().addListener(this::selectedTabChanged);
+        tabs.getSelectionModel().selectedItemProperty().addListener((observable1, oldValue1, newValue1) -> selectedTabChanged(oldValue1, newValue1));
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
         SplitPane.setResizableWithParent(searchableTree, false);
@@ -186,7 +181,7 @@ public class MainForm {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake3.png")));
     }
 
-    private void selectedTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+    private void selectedTabChanged(Tab oldValue, Tab newValue) {
         if (getFocusedElement() != null) {
             if (oldValue == tabTextEdit) {
                 getFocusedElement().applyText();
@@ -227,10 +222,10 @@ public class MainForm {
                 runTab.clickRun(null);
                 event.consume();
             } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
-                goBack(null);
+                goBack();
                 event.consume();
             } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
-                goForwards(null);
+                goForwards();
                 event.consume();
             } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
                 tbSearchTests.requestFocus();
@@ -238,13 +233,10 @@ public class MainForm {
                 event.consume();
             }
         });
-        scene.addEventFilter(KeyEvent.KEY_RELEASED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.CONTROL) {
-                    Underlining.ctrlDown = false;
-                    Underlining.update();
-                }
+        scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
+            if (event.getCode() == KeyCode.CONTROL) {
+                Underlining.ctrlDown = false;
+                Underlining.update();
             }
         });
     }
@@ -297,20 +289,11 @@ public class MainForm {
             treeContextMenu.getItems().clear();
             TreeItem<HighElement> focused = projectTree.getFocusModel().getFocusedItem();
             if (focused != null) {
-                treeContextMenu.getItems().addAll(createContextMenuFor(focused));
+                treeContextMenu.getItems().addAll(buildContextMenuFor(focused));
             }
         });
 
         projectTree.setContextMenu(treeContextMenu);
-        /*
-        projectTree.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
-                    treeContextMenu.hide();
-                }
-            }
-        });*/
         ProgressBar progressBar = new ProgressBar();
         progressBar.visibleProperty().bind(projectLoad.progress.lessThan(1));
         progressBar.progressProperty().bind(projectLoad.progress);
@@ -327,7 +310,7 @@ public class MainForm {
         }
     }
 
-    private List<MenuItem> createContextMenuFor(TreeItem<HighElement> forWhat) {
+    private List<MenuItem> buildContextMenuFor(TreeItem<HighElement> forWhat) {
         List<MenuItem> menu = new ArrayList<>();
         HighElement element = forWhat.getValue();
         if (element instanceof FolderSuite) {
@@ -448,7 +431,7 @@ public class MainForm {
                 MenuItem runThis = new MenuItem("Run just this test", loadIcon(Images.play));
                 runThis.disableProperty().bind(runTab.canRun.not());
                 runThis.setOnAction(event -> {
-                    deselectAll(event);
+                    deselectAll();
                     asScenario.checkbox.setSelected(true);
                     runTab.clickRun(event);
                 });
@@ -457,11 +440,9 @@ public class MainForm {
                 MenuItem runThis = new MenuItem("Run all tests that use this keyword", loadIcon(Images.doublePlay));
                 runThis.disableProperty().bind(runTab.canRun.not());
                 runThis.setOnAction(event -> {
-                    deselectAll(event);
+                    deselectAll();
                     withUpdateSuppression(() -> {
-                        FindUsages.findUsagesAsTestCases(null, asScenario, getRootElement()).forEach(sc -> {
-                            sc.checkbox.setSelected(true);
-                        });
+                        FindUsages.findUsagesAsTestCases(null, asScenario, getRootElement()).forEach(sc -> sc.checkbox.setSelected(true));
                         runTab.clickRun(event);
                     });
                 });
@@ -552,11 +533,11 @@ public class MainForm {
         bRun.textProperty().bind(runTab.runCaption);
         bStop = new Button("Stop", loadIcon(Images.stop));
         bNavigateBack.disableProperty().bind(canNavigateBack.not());
-        bNavigateBack.setOnAction(this::goBack);
+        bNavigateBack.setOnAction(event1 -> goBack());
         bNavigateForwards.disableProperty().bind(canNavigateForwards.not());
-        bNavigateForwards.setOnAction(this::goForwards);
+        bNavigateForwards.setOnAction(event -> goForwards());
         bSaveAll.disableProperty().bind(canSave.not());
-        bSaveAll.setOnAction(this::saveAll);
+        bSaveAll.setOnAction(event -> saveAll());
         bRun.disableProperty().bind(runTab.canRun.not());
         bRun.setOnAction(runTab::clickRun);
         bStop.disableProperty().bind(runTab.canStop.not());
@@ -572,22 +553,22 @@ public class MainForm {
         if (Settings.getInstance().toolbarReloadAll) {
             Button bReloadAll = new Button("Reload all", loadIcon(Images.refresh));
             bReloadAll.setTooltip(new Tooltip("Reloads the current Robot project as though you restarted Snowride."));
-            bReloadAll.setOnAction(this::reloadAll);
+            bReloadAll.setOnAction(actionEvent -> reloadAll());
             toolBar.getItems().add(bReloadAll);
         }
         if (Settings.getInstance().toolbarDeselectEverything) {
             Button bDeselectAll = new Button("Deselect all");
             bDeselectAll.setTooltip(new Tooltip("Deselects all tests so that everything would be run the next time you run tests."));
-            bDeselectAll.setOnAction(this::deselectAll);
+            bDeselectAll.setOnAction(actionEvent -> deselectAll());
             toolBar.getItems().add(bDeselectAll);
         }
     }
 
-    private void deselectAll(ActionEvent actionEvent) {
+    private void deselectAll() {
         setCheckboxes(getRootElement(), false);
     }
 
-    public void reloadAll(ActionEvent actionEvent) {
+    public void reloadAll() {
         loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
     }
 
@@ -620,7 +601,7 @@ public class MainForm {
         }
     }
 
-    public void saveAll(ActionEvent event) {
+    public void saveAll() {
         try {
             projectTree.getRoot().getValue().saveAll();
         } catch (IOException e) {
@@ -636,24 +617,21 @@ public class MainForm {
 
         MenuItem bLoadArbitrary = new MenuItem("Load directory...", loadIcon(Images.open));
         bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
-        bLoadArbitrary.setOnAction(this::openDirectory);
+        bLoadArbitrary.setOnAction(actionEvent1 -> openDirectory());
         openFolderDialog = new DirectoryChooser();
 
         MenuItem bSaveAll = new MenuItem("Save all", loadIcon(Images.save));
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
-        bSaveAll.setOnAction(this::saveAll);
+        bSaveAll.setOnAction(event3 -> saveAll());
         bSaveAll.disableProperty().bind(canSave.not());
 
         MenuItem bSettings = new MenuItem("Settings", loadIcon(Images.keywordIcon));
-        bSettings.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
-                settingsWindow.show();
-            }
+        bSettings.setOnAction(event -> {
+            SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
+            settingsWindow.show();
         });
         MenuItem bReloadAll = new MenuItem("Reload everything", loadIcon(Images.refresh));
-        bReloadAll.setOnAction(this::reloadAll);
+        bReloadAll.setOnAction(actionEvent -> reloadAll());
         MenuItem bReload = new MenuItem("Reload external libraries");
         bReload.setOnAction(event -> reloadExternalLibraries());
 
@@ -667,10 +645,10 @@ public class MainForm {
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
         back.disableProperty().bind(canNavigateBack.not());
         back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
-        back.setOnAction(this::goBack);
+        back.setOnAction(event2 -> goBack());
 
         MenuItem forwards = new MenuItem("Navigate forwards", loadIcon(Images.goRight));
-        forwards.setOnAction(this::goForwards);
+        forwards.setOnAction(event1 -> goForwards());
         forwards.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.CONTROL_DOWN));
         forwards.disableProperty().bind(canNavigateForwards.not());
 
@@ -687,12 +665,9 @@ public class MainForm {
         Menu runMenu = new Menu("Run", null, run, stop);
 
         MenuItem about = new MenuItem("About");
-        about.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                AboutSnowride aboutSnowride = new AboutSnowride();
-                aboutSnowride.show();
-            }
+        about.setOnAction(event -> {
+            AboutSnowride aboutSnowride = new AboutSnowride();
+            aboutSnowride.show();
         });
         MenuItem shortcuts = new MenuItem("Keyboard shortcuts");
         shortcuts.setOnAction(event -> {
@@ -728,20 +703,20 @@ public class MainForm {
         }
     }
 
-    private void openDirectory(ActionEvent actionEvent) {
+    private void openDirectory() {
         File openWhat = openFolderDialog.showDialog(this.stage);
         if (openWhat != null) {
             loadProjectFromFolder(openWhat);
         }
     }
 
-    private void goBack(ActionEvent event) {
+    private void goBack() {
         if (navigationStack.canNavigateBack.getValue()) {
             selectProgrammatically(navigationStack.navigateBackwards());
         }
     }
 
-    private void goForwards(ActionEvent event) {
+    private void goForwards() {
         if (navigationStack.canNavigateForwards.getValue()) {
             selectProgrammatically(navigationStack.navigateForwards());
         }
@@ -841,7 +816,7 @@ public class MainForm {
             if (result.isPresent()) {
                 ButtonType pressedButton = result.get();
                 if (pressedButton == save) {
-                    saveAll(null);
+                    saveAll();
                     return false;
                 } else if (pressedButton == dontSave) {
                     // proceed

@@ -39,7 +39,7 @@ public class UserKeyword implements IKnownKeyword {
                 mandatories++;
             }
         }
-        return new UserKeyword(s.getShortName(), s.getDocumentation(), mandatories, optionals, (Suite) s.parent, s);
+        return new UserKeyword(s.getShortName(), s.getDocumentation(), mandatories, optionals, s.parent, s);
     }
 
     @Override

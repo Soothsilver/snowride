@@ -10,8 +10,6 @@ import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -91,17 +89,14 @@ public class LogicalLine {
         while (cells.size() > wrappers.size()) {
             int index = wrappers.size();
             SimpleObjectProperty<Cell> wrapper = new SimpleObjectProperty<>();
-            wrapper.addListener(new ChangeListener<Cell>() {
-                @Override
-                public void changed(ObservableValue<? extends Cell> observable, Cell oldValue, Cell newValue) {
-                    String previousValue = cells.get(index).contents;
-                    cells.set(index, newValue);
-                    recalcStyles();
+            wrapper.addListener((observable, oldValue, newValue) -> {
+                String previousValue = cells.get(index).contents;
+                cells.set(index, newValue);
+                recalcStyles();
 
 
-                    if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
-                        getBelongsToHighElement().markAsStructurallyChanged(mainForm);
-                    }
+                if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
+                    getBelongsToHighElement().markAsStructurallyChanged(mainForm);
                 }
             });
             wrappers.add(wrapper);
