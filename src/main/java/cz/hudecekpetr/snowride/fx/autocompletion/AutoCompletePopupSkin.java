@@ -29,7 +29,6 @@ public class AutoCompletePopupSkin<T extends IAutocompleteOption> implements Ski
         this.suggestionList.minWidthProperty().bind(control.minWidthProperty());
         this.suggestionList.prefHeightProperty().addListener(this::ln);
         this.control.setOnShown(event -> {
-            System.out.println("shown: " + suggestionList.prefHeightProperty().getValue());
             control.heightBecame(suggestionList.prefHeightProperty().getValue());
             if (suggestionList.getFocusModel().getFocusedItem() != null) {
                 showOrHideDocumentation(suggestionList.getFocusModel().getFocusedItem());
