@@ -2,8 +2,7 @@
 A faster RIDE-like IDE for Robot Framework test suites 
 
 [![Build Status](https://travis-ci.com/Soothsilver/snowride.svg?branch=master)](https://travis-ci.com/Soothsilver/snowride)
-
-[Download version 1.8.](https://bintray.com/snowride/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F1.8%2Fsnowride-1.8-jar-with-dependencies.jar)
+[![Download](https://api.bintray.com/packages/snowride/snowride/snowride/images/download.svg?version=2.0)](https://bintray.com/snowride/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F2.0%2Fsnowride-2.0-jar-with-dependencies.jar)
 
 Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copies many elements of its user interface but it adds features RIDE doesn't have and is faster.
 
@@ -11,7 +10,7 @@ Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copie
 ![Screenshot](screenshots/Release1.PNG)
 
 **Download.**
-As a prerequisite, you must have Java 8 installed. Snowride doesn't work with any other version of Java. Use the "Download" link at the top of this readme file to download the executable JAR file, then run it.
+As a prerequisite, you must have Java 8 installed. Snowride doesn't work with any other version of Java. Use the "Download" link/button at the top of this readme file to download the executable JAR file, then run it.
 
 **Design principles of *Snowride*:**
 * **Responsive.** Every operation should happen immediately. Snowride should load within a second. 
