@@ -1,5 +1,21 @@
 package cz.hudecekpetr.snowride.ui;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.controlsfx.control.NotificationPane;
+
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
@@ -30,6 +46,7 @@ import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -66,20 +83,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.controlsfx.control.NotificationPane;
-
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
@@ -864,6 +867,8 @@ public class MainForm {
                         ((Suite) he).analyzeSemantics();
                     }
                 });
+
+                sortTree(ultimateRoot);
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
@@ -889,6 +894,20 @@ public class MainForm {
             }
         });
 
+    }
+
+    private void sortTree(HighElement element) {
+
+        // do not sort content of files
+        if (element instanceof FileSuite) {
+            return;
+        }
+
+        ObservableList<TreeItem<HighElement>> children = element.treeNode.getChildren();
+        if (!children.isEmpty()) {
+            children.forEach(child -> sortTree(child.getValue()));
+            children.sort(Comparator.comparing(child -> child.getValue().getShortName()));
+        }
     }
 
     private File loadSnowFileAndReturnRobotsDirectory(File snowFile) {
