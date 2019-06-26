@@ -21,7 +21,11 @@ public class SnowrideApplication extends Application {
             // Internet articles say that error messages shouldn't be closed with "OK". I'm not sure "Well, that happened." is better, though.
             new Alert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
         }));
-        Settings.load();
+        Settings.loadPrimaryFile();
+        if (args.length > 0) {
+            // Load the snow file with preference
+            Settings.getInstance().lastOpenedProject = args[0];
+        }
         GarbageCollectorCaller.maybeStart();
         launch(args);
     }
@@ -30,10 +34,10 @@ public class SnowrideApplication extends Application {
         MainForm mainForm = new MainForm(primaryStage);
         mainForm.show();
         try {
-            mainForm.loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
+            mainForm.loadProjectFromFolderOrSnowFile(new File(Settings.getInstance().lastOpenedProject).getAbsoluteFile());
             TooltipHack.hackDelayTimers(new Tooltip());
         } catch (Exception exception) {
-            mainForm.loadProjectFromFolder(new File("."));
+            mainForm.loadProjectFromFolderOrSnowFile(new File("."));
         }
     }
 }

@@ -505,7 +505,7 @@ public class RunTab {
         Settings.getInstance().cbWithTags = cbWithTags.isSelected();
         Settings.getInstance().tbWithoutTags = tbWithoutTags.getText();
         Settings.getInstance().tbWithTags = tbWithTags.getText();
-        Settings.getInstance().save();
+        Settings.getInstance().saveAllSettings();
     }
 
     public void updateResultsPanel() {

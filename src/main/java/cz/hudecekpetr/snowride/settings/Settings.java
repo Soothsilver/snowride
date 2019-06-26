@@ -7,15 +7,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Settings are loaded at the beginning. They're user-global. To access the settings, use {@link Settings#getInstance()}.
- * If you change the settings, use {@link Settings#save()}. Settings are serialized as XML using XStream. I'm not super
+ * If you change the settings, use {@link Settings#saveAllSettings()}. Settings are serialized as XML using XStream. I'm not super
  * sure about backwards compatibility so I recommend keeping existing fields in, even if they're no longer used. This
  * is because you don't want to throw away the settings of users as they upgrade to a new version of Snowride.
  */
@@ -57,6 +60,7 @@ public class Settings {
     public boolean cbRunGarbageCollection = false;
     public boolean cbHighlightSameCells = true;
     public boolean cbUseSystemColorWindow = false;
+    public int treeSizeItemHeight = 8;
 
     public static Settings getInstance() {
         if (instance == null) {
@@ -65,7 +69,7 @@ public class Settings {
         return instance;
     }
 
-    public static void load() {
+    public static void loadPrimaryFile() {
         try {
             XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
             XStream.setupDefaultSecurity(xStream);
@@ -114,7 +118,7 @@ public class Settings {
         }
     }
 
-    public void save() {
+    public void saveAllSettings() {
         XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
         String data = xStream.toXML(this);
         File settingsFile = getFile();
@@ -137,5 +141,9 @@ public class Settings {
             files.add(folderAsFile);
         }
         return files;
+    }
+
+    public void saveIntoSnow(File saveWhere) {
+        SnowFile.saveInto(saveWhere);
     }
 }

@@ -35,6 +35,13 @@ shortcuts, smart autocompletion, inspections, quick fixes, or good navigation.
 **Test runner screenshot:**
 ![Screenshot 2](screenshots/Release2.PNG)
 
+# `.snow` files
+You can export some configuration (loaded directory, additional paths and path to the runner script) as a `.snow` file. You can then load it into Snowride just like you load a directory.
+
+Loading a `.snow` file will load the suite from the directory and also change Snowride's settings to the settings in the `.snow` file.
+
+You can also pass a snow file as the first command line argument to Snowride, which will load it, like this `javaw -jar snowride.jar C:\snowfile.snow`.
+
 # Contributing
 Submit an issue or a pull request or request contributor access to the repository.
 

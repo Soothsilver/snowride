@@ -13,6 +13,7 @@ import cz.hudecekpetr.snowride.runner.TestResult;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.settings.SnowFile;
 import cz.hudecekpetr.snowride.tree.DeepCopy;
 import cz.hudecekpetr.snowride.tree.highelements.ExternalResourcesElement;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
@@ -57,10 +58,12 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.controlsfx.control.NotificationPane;
@@ -107,6 +110,8 @@ public class MainForm {
     private SeparatorMenuItem separatorBeforeRecentProjects;
     private SeparatorMenuItem separatorAfterRecentProjects;
     private DirectoryChooser openFolderDialog;
+    private FileChooser openSnowFileDialog;
+    private FileChooser saveSnowFileDialog;
     private Menu projectMenu;
     private TextField tbSearchTests;
     private ContextMenu treeContextMenu;
@@ -259,7 +264,7 @@ public class MainForm {
         Settings.getInstance().width = stage.getWidth();
         Settings.getInstance().height = stage.getHeight();
         Settings.getInstance().maximized = stage.isMaximized();
-        Settings.getInstance().save();
+        Settings.getInstance().saveAllSettings();
     }
 
     private VBox createLeftPane() {
@@ -268,7 +273,8 @@ public class MainForm {
         searchSuitesAutoCompletion = new SearchSuites(this);
         searchSuitesAutoCompletion.bind(tbSearchTests);
         projectTree = new TreeView<>();
-        projectTree.setFixedCellSize(16);
+        projectTree.setFixedCellSize(Region.USE_COMPUTED_SIZE);
+        projectTree.setStyle("-fx-font-size: " + Settings.getInstance().treeSizeItemHeight + "pt;");
         projectTree.setShowRoot(false);
         projectTree.setOnKeyPressed(event -> {
             // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts
@@ -454,22 +460,18 @@ public class MainForm {
 
                 MenuItem moveUp = new MenuItem("Move up");
                 moveUp.setAccelerator(new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN));
-                moveUp.setOnAction(event -> {
-                    moveScenario(asScenario, -1);
-                });
+                moveUp.setOnAction(event -> moveScenario(asScenario, -1));
                 menu.add(moveUp);
 
                 MenuItem moveDown = new MenuItem("Move down");
                 moveDown.setAccelerator(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN));
-                moveDown.setOnAction(event -> {
-                    moveScenario(asScenario, 1);
-                });
+                moveDown.setOnAction(event -> moveScenario(asScenario, 1));
                 menu.add(moveDown);
 
             }
         }
         if (element instanceof Scenario) {
-            Scenario asScenario = (Scenario)element;
+            Scenario asScenario = (Scenario) element;
             maybeAddSeparator(menu);
             if (asScenario.isTestCase()) {
                 MenuItem runThis = new MenuItem("Run just this test", loadIcon(Images.play));
@@ -502,18 +504,18 @@ public class MainForm {
     }
 
     private void moveScenario(Scenario asScenario, int indexDifference) {
-        System.out.println("Before: "+ projectTree.getRow(asScenario.treeNode));
+        System.out.println("Before: " + projectTree.getRow(asScenario.treeNode));
         asScenario.parent.displaceChildScenario(asScenario, indexDifference);
         // We can reselect the target immediately because we have a guarantee that it's expanded:
         int index = projectTree.getRow(asScenario.treeNode);
-        System.out.println("After: "+ projectTree.getRow(asScenario.treeNode));
+        System.out.println("After: " + projectTree.getRow(asScenario.treeNode));
         projectTree.getFocusModel().focus(index);
         projectTree.getSelectionModel().select(index);
     }
 
     private void renameIfAble(HighElement element) {
         if (element != getRootElement() && element.parent != getRootElement()
-            && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
+                && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
             String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
             if (newName != null) {
                 element.renameSelfTo(newName, MainForm.this);
@@ -633,7 +635,7 @@ public class MainForm {
     }
 
     public void reloadAll() {
-        loadProjectFromFolder(new File(Settings.getInstance().lastOpenedProject));
+        loadProjectFromFolderOrSnowFile(new File(Settings.getInstance().lastOpenedProject));
     }
 
     // Hello
@@ -684,10 +686,21 @@ public class MainForm {
         bLoadArbitrary.setOnAction(actionEvent1 -> openDirectory());
         openFolderDialog = new DirectoryChooser();
 
+
+        MenuItem  bLoadSnow = new MenuItem("Load snow project file...", loadIcon(Images.open));
+        bLoadSnow.setOnAction(actionEvent1 -> loadSnow());
+        openSnowFileDialog = new FileChooser();
+        openSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
+        saveSnowFileDialog = new FileChooser();
+        saveSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
+
         MenuItem bSaveAll = new MenuItem("Save all", loadIcon(Images.save));
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         bSaveAll.setOnAction(event3 -> saveAll());
         bSaveAll.disableProperty().bind(canSave.not());
+
+        MenuItem bSaveAsSnow = new MenuItem("Export project configuration as a snow file...", loadIcon(Images.save));
+        bSaveAsSnow.setOnAction(event3 -> saveAsSnow());
 
         MenuItem bSettings = new MenuItem("Settings", loadIcon(Images.keywordIcon));
         bSettings.setOnAction(event -> {
@@ -703,7 +716,7 @@ public class MainForm {
         bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
-        projectMenu.getItems().addAll(bLoadArbitrary, bSaveAll, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReloadAll, bReload, bExit);
+        projectMenu.getItems().addAll(bLoadArbitrary, bLoadSnow, bSaveAll, bSaveAsSnow, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReloadAll, bReload, bExit);
         refreshRecentlyOpenMenu();
 
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
@@ -759,6 +772,20 @@ public class MainForm {
         return mainMenu;
     }
 
+    private void loadSnow() {
+        File loadFromWhere = openSnowFileDialog.showOpenDialog(this.stage);
+        if (loadFromWhere != null) {
+            loadProjectFromFolderOrSnowFile(loadFromWhere.getAbsoluteFile());
+        }
+    }
+
+    private void saveAsSnow() {
+        File saveWhere = saveSnowFileDialog.showSaveDialog(this.stage);
+        if (saveWhere != null) {
+            Settings.getInstance().saveIntoSnow(saveWhere);
+        }
+    }
+
     private void navigateToWebsite(String uri) {
         try {
             Desktop.getDesktop().browse(URI.create(uri));
@@ -770,7 +797,7 @@ public class MainForm {
     private void openDirectory() {
         File openWhat = openFolderDialog.showDialog(this.stage);
         if (openWhat != null) {
-            loadProjectFromFolder(openWhat);
+            loadProjectFromFolderOrSnowFile(openWhat);
         }
     }
 
@@ -809,19 +836,24 @@ public class MainForm {
         expandUpTo.setExpanded(true);
     }
 
-    public void loadProjectFromFolder(File path) {
+    public void loadProjectFromFolderOrSnowFile(File path) {
 
         boolean abort = maybeOfferSaveDiscardOrCancel();
         if (abort) {
             return;
         }
+        File robotDirectory = path;
+        if (path.isFile() && path.getName().toLowerCase().endsWith(".snow")) {
+            robotDirectory = loadSnowFileAndReturnRobotsDirectory(path);
+        }
+        File loadRobotsFrom = robotDirectory;
         projectLoad.progress.set(0);
         navigationStack.clear();
         reloadElementIntoTabs(null);
         projectLoader.submit(() -> {
             try {
                 FilesystemWatcher.getInstance().forgetEverything();
-                File canonicalPath = path.getAbsoluteFile().getCanonicalFile();
+                File canonicalPath = loadRobotsFrom.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 0.8);
 
                 List<File> additionalFiles = Settings.getInstance().getAdditionalFoldersAsFiles();
@@ -844,10 +876,10 @@ public class MainForm {
                     runTab.maybeRunNumberChanged();
                     humanInControl = true;
 
-                    Settings.getInstance().lastOpenedProject = canonicalPath.toString();
-                    Settings.getInstance().addToRecentlyOpen(canonicalPath.toString());
+                    Settings.getInstance().lastOpenedProject = path.toString();
+                    Settings.getInstance().addToRecentlyOpen(path.toString());
                     refreshRecentlyOpenMenu();
-                    Settings.getInstance().save();
+                    Settings.getInstance().saveAllSettings();
                     reloadExternalLibraries();
                 });
             } catch (IOException e) {
@@ -857,6 +889,11 @@ public class MainForm {
             }
         });
 
+    }
+
+    private File loadSnowFileAndReturnRobotsDirectory(File snowFile) {
+        SnowFile.loadSnowFile(snowFile);
+        return new File(Settings.getInstance().lastOpenedProject);
     }
 
     /**
@@ -904,7 +941,7 @@ public class MainForm {
         List<MenuItem> newItems = new ArrayList<>();
         for (String whatShouldBeThere : Settings.getInstance().lastOpenedProjects) {
             MenuItem newItem = new MenuItem(whatShouldBeThere);
-            newItem.setOnAction(event -> loadProjectFromFolder(new File(whatShouldBeThere)));
+            newItem.setOnAction(event -> loadProjectFromFolderOrSnowFile(new File(whatShouldBeThere)));
             newItems.add(newItem);
         }
         projectMenu.getItems().addAll(startAt, newItems);

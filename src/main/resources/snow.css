@@ -1,7 +1,6 @@
 .tree-cell {
     -fx-label-padding: 0;
     -fx-padding: 0;
-    -fx-font-size: 8pt;
 }
 /* Custom styling for the "Assisted grid editing (snow) table". This does not take effect for the "Errors" table. */
 .table-view.snow:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,

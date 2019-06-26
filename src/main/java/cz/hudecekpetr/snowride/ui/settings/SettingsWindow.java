@@ -3,6 +3,8 @@ package cz.hudecekpetr.snowride.ui.settings;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 
 public class SettingsWindow extends Stage {
 
@@ -34,6 +37,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbGarbageCollect;
     private CheckBox cbHighlightSameCells;
     private CheckBox cbUseSystemColorWindow;
+    private TextField tbNumber2;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -105,11 +109,40 @@ public class SettingsWindow extends Stage {
         cbUseSystemColorWindow = new CheckBox("Use system color 'window' for background of text boxes instead of the default off-white color (requires a Snowride restart).");
         cbUseSystemColorWindow.setWrapText(true);
         cbUseSystemColorWindow.setSelected(Settings.getInstance().cbUseSystemColorWindow);
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow);
+
+        Label lblNumber2 = new Label("Size of tree view font (in points): ");
+        tbNumber2 = new TextField(Integer.toString(Settings.getInstance().treeSizeItemHeight));
+        tbNumber2.setTextFormatter(new TextFormatter<String>(change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        }));
+        tbNumber2.textProperty().addListener((ChangeListener<String>)this::treeSizeChanged);
+        HBox num2 = new HBox(5, lblNumber2, tbNumber2);
+
+
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow, num2);
         vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
+
+
         Tab tabImporting = new Tab("Settings", vboxImportingOptions);
         tabImporting.setClosable(false);
         return tabImporting;
+    }
+
+    private void treeSizeChanged(ObservableValue<? extends String> observableValue, String old, String newValue) {
+        if (StringUtils.isBlank(newValue)) {
+            return;
+        }
+        try {
+            int asInt = Integer.parseInt(newValue);
+            mainForm.getProjectTree().setStyle("-fx-font-size: " + asInt + "pt;");
+            Settings.getInstance().treeSizeItemHeight = asInt;
+        } catch (Exception e) {
+            throw new RuntimeException(newValue + " is not a number.");
+        }
     }
 
     private void applyAndClose(ActionEvent actionEvent) {
@@ -129,7 +162,7 @@ public class SettingsWindow extends Stage {
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        Settings.getInstance().save();
+        Settings.getInstance().saveAllSettings();
         mainForm.updateAdditionalToolbarButtonsVisibility();
         mainForm.reloadExternalLibraries();
         this.close();

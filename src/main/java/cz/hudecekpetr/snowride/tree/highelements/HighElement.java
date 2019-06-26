@@ -14,6 +14,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
@@ -58,6 +59,7 @@ public abstract class HighElement implements IAutocompleteOption {
         checkbox.selectedProperty().addListener((observable, oldValue, newValue) -> MainForm.INSTANCE.runTab.maybeRunNumberChanged());
         graphic.getChildren().add(imageView);
         graphic.getChildren().add(checkbox);
+        graphic.setAlignment(Pos.CENTER);
         treeNode = new TreeItem<>(this, graphic);
         this.shortNameProperty.addListener((observable, oldValue, newValue) -> invariantName = Extensions.toInvariant(newValue));
         this.shortNameProperty.set(shortName);
