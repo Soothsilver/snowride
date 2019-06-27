@@ -906,7 +906,10 @@ public class MainForm {
         ObservableList<TreeItem<HighElement>> children = element.treeNode.getChildren();
         if (!children.isEmpty()) {
             children.forEach(child -> sortTree(child.getValue()));
-            children.sort(Comparator.comparing(child -> child.getValue().getShortName()));
+            // exclude ultimate root because we want "External resources" to be second. In fact, we depend on it.
+            if (!(element instanceof UltimateRoot)) {
+                children.sort(Comparator.comparing(child -> child.getValue().getShortName()));
+            }
         }
     }
 
