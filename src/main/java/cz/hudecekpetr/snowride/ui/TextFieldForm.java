@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
 import javafx.scene.control.*;
 
 import javafx.application.Platform;
@@ -87,6 +88,7 @@ public class TextFieldForm extends Dialog<String> {
             ButtonData data = dialogButton == null ? null : dialogButton.getButtonData();
             return data == ButtonData.OK_DONE ? textField.getText() : null;
         });
+        CenterToParentUtility.prepareToShowAtCenterOfMainForm(this);
     }
 
 

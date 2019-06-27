@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui.settings;
 
+import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
@@ -57,6 +58,7 @@ public class SettingsWindow extends Stage {
         this.setScene(new Scene(all, 700, 600));
         this.getIcons().add(Images.keywordIcon);
         this.setTitle("Settings");
+        CenterToParentUtility.prepareToShowAtCenterOfMainForm(this);
     }
 
     private void applyCloseAndRefresh(ActionEvent actionEvent) {

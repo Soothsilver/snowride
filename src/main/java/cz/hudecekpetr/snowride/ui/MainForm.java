@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import org.controlsfx.control.NotificationPane;
 
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
@@ -397,7 +398,7 @@ public class MainForm {
             });
             menu.add(open_in_external_editor);
         }
-        if (element instanceof ISuite) {
+        if (element instanceof ISuite && !(element instanceof ExternalResourcesElement)) {
             MenuItem new_user_keyword = new MenuItem("New user keyword");
             new_user_keyword.setOnAction(event -> {
                 String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
@@ -439,7 +440,7 @@ public class MainForm {
             MenuItem delete = new MenuItem("Delete");
             delete.setOnAction(event -> {
                 ButtonType deleteAnswer = new ButtonType("Delete");
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
+                Alert alert = new SnowAlert(Alert.AlertType.CONFIRMATION, "Delete " + element + "?",
                         deleteAnswer,
                         ButtonType.NO);
                 if (alert.showAndWait().orElse(ButtonType.NO) == deleteAnswer) {
@@ -929,7 +930,7 @@ public class MainForm {
             ButtonType save = new ButtonType("Save changes");
             ButtonType dontSave = new ButtonType("Don't save");
             ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "You have unsaved changes.",
+            Alert alert = new SnowAlert(Alert.AlertType.CONFIRMATION, "You have unsaved changes.",
                     save,
                     dontSave,
                     cancel);
@@ -978,7 +979,7 @@ public class MainForm {
         selectProgrammatically(enterWhere);
     }
 
-    public Window getStage() {
+    public Stage getStage() {
         return this.stage;
     }
 

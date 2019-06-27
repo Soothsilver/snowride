@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride;
 
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.TooltipHack;
 import cz.hudecekpetr.snowride.generalpurpose.GarbageCollectorCaller;
 import cz.hudecekpetr.snowride.settings.Settings;
@@ -19,7 +20,7 @@ public class SnowrideApplication extends Application {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> Platform.runLater(() -> {
             e.printStackTrace();
             // Internet articles say that error messages shouldn't be closed with "OK". I'm not sure "Well, that happened." is better, though.
-            new Alert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
+            new SnowAlert(Alert.AlertType.WARNING, ExceptionUtils.getMessage(e), new ButtonType("Well, that happened.")).showAndWait();
         }));
         Settings.loadPrimaryFile();
         if (args.length > 0) {

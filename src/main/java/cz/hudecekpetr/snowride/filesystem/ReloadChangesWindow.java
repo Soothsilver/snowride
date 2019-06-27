@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.filesystem;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
 import cz.hudecekpetr.snowride.generalpurpose.Holder;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
 import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
@@ -51,6 +52,7 @@ class ReloadChangesWindow extends Stage {
         this.setAlwaysOnTop(true);
         this.getIcons().add(Images.snowflake);
         this.setOnHidden(event -> activeWindow = null);
+        CenterToParentUtility.prepareToShowAtCenterOfMainForm(this);
     }
 
     /**

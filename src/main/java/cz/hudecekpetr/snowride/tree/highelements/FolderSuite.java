@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.tree.highelements;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -86,7 +87,7 @@ public class FolderSuite extends Suite implements ISuite {
             this.parent.dissociateSelfFromChild(this);
         } else {
             ButtonType deleteType = new ButtonType("Delete folder and all files inside");
-            if (new Alert(Alert.AlertType.CONFIRMATION, "Could not delete folder '" + this.directoryPath.getName() + "' probably because it's not empty." +
+            if (new SnowAlert(Alert.AlertType.CONFIRMATION, "Could not delete folder '" + this.directoryPath.getName() + "' probably because it's not empty." +
                     " Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
                     == deleteType) {
                 try {

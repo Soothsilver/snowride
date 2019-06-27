@@ -1,11 +1,12 @@
 package cz.hudecekpetr.snowride.runner;
 
 import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.fx.DeferredActions;
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
-import cz.hudecekpetr.snowride.tree.Tag;
-import cz.hudecekpetr.snowride.fx.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.animation.KeyFrame;
@@ -22,13 +23,25 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
-import javafx.scene.control.*;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
@@ -66,6 +79,8 @@ public class RunTab {
     public Label lblKeyword;
     public Label lblMultirun;
     public SimpleStringProperty runCaption = new SimpleStringProperty("Run");
+    public SimpleIntegerProperty numberOfSuccessesToStop;
+    public boolean suppressRunNumberChangeNotifications = false;
     Multirunner multirunner;
     AnsiOutputStream ansiOutputStream = new AnsiOutputStream();
     private MainForm mainForm;
@@ -85,7 +100,9 @@ public class RunTab {
     private TextField tbWithoutTags;
     private TextField tbWithTags;
     private CheckBox cbWithTags;
-    public SimpleIntegerProperty numberOfSuccessesToStop;
+    private boolean thenDeselectPassingTests = false;
+    private boolean allTestsAreChosen = false;
+    private int numberOfTestsToBeRun = 0;
 
     public RunTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -207,17 +224,19 @@ public class RunTab {
         tabRun.setClosable(false);
         return tabRun;
     }
+
     private void tagsTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         maybeRunNumberChanged();
     }
-    private void tagsCheckboxChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
-    {
+
+    private void tagsCheckboxChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
         maybeRunNumberChanged();
     }
+
     private ContextMenu buildAdvancedRunContextMenu() {
         MenuItem untilFailureOrStop = new MenuItem("...until failure");
         MenuItem untilFailureOrXSuccess = new MenuItem("");
-        untilFailureOrXSuccess.textProperty().bind(Bindings.concat("...until failure or ", numberOfSuccessesToStop , " successes"));
+        untilFailureOrXSuccess.textProperty().bind(Bindings.concat("...until failure or ", numberOfSuccessesToStop, " successes"));
         MenuItem runOnlyFailedTests = new MenuItem("...only failed tests");
         CustomMenuItem runThenDeselect = new CustomMenuItem(new Label("...and then deselect passing tests"));
         untilFailureOrStop.disableProperty().bind(canRun.not());
@@ -271,8 +290,6 @@ public class RunTab {
         clickRun(actionEvent, false);
     }
 
-    private boolean thenDeselectPassingTests = false;
-
     public void clickRun(ActionEvent actionEvent, boolean thenDeselectPassingTests) {
         startANewRun(thenDeselectPassingTests);
     }
@@ -282,12 +299,14 @@ public class RunTab {
             this.thenDeselectPassingTests = thenDeselectPassingTests;
             List<Scenario> testCases = getCheckedTestCases();
             if (testCases.size() == 0) {
-                String warningText = "You didn't choose any test case. Do you want to run the entire suite?";
+                String warningText = "You didn't choose any test case.\nDo you want to run the entire suite?";
+                String yesText = "Run all tests";
                 if (!allTestsAreChosen) {
-                    warningText = "Do you want to run all test cases with the chosen tags (" + numberOfTestsToBeRun + " test cases in total)?";
+                    warningText = "Do you want to run all test cases with the chosen tags?\n(" + numberOfTestsToBeRun + " test cases in total)";
+                    yesText = "Run " + numberOfTestsToBeRun + " tests";
                 }
-                Optional<ButtonType> buttonType = new Alert(Alert.AlertType.CONFIRMATION,
-                        warningText, ButtonType.YES, ButtonType.NO).showAndWait();
+                Optional<ButtonType> buttonType = new SnowAlert(Alert.AlertType.CONFIRMATION,
+                        warningText, new ButtonType(yesText, ButtonBar.ButtonData.YES), ButtonType.NO).showAndWait();
                 if (buttonType.orElse(ButtonType.NO) == ButtonType.NO) {
                     // cancel
                     return;
@@ -297,7 +316,7 @@ public class RunTab {
                 ButtonType save_all = new ButtonType("Save all");
                 ButtonType run_without_saving = new ButtonType("Run without saving");
                 ButtonType cancel = new ButtonType("Cancel");
-                ButtonType decision = new Alert(Alert.AlertType.CONFIRMATION,
+                ButtonType decision = new SnowAlert(Alert.AlertType.CONFIRMATION,
                         "There are unsaved changes. Save all before running?",
                         save_all,
                         run_without_saving,
@@ -353,7 +372,7 @@ public class RunTab {
 
         } catch (Exception ex) {
             tbOutput.replaceText(Extensions.toStringWithTrace(ex));
-            new Alert(Alert.AlertType.WARNING,ex.getMessage(), ButtonType.CLOSE).showAndWait();
+            new SnowAlert(Alert.AlertType.WARNING, ex.getMessage(), ButtonType.CLOSE).showAndWait();
         }
     }
 
@@ -445,7 +464,7 @@ public class RunTab {
         result.add(argfile.toString());
         result.add("--listener");
         result.add(runnerAgent.toString() + ":" + tcpHost.portNumber + ":False");
-        for(String path : StringUtils.split( Settings.getInstance().additionalFolders,  '\n')) {
+        for (String path : StringUtils.split(Settings.getInstance().additionalFolders, '\n')) {
             String trimPath = path.trim();
             if (!trimPath.isEmpty()) {
                 result.add("--pythonpath");
@@ -544,10 +563,6 @@ public class RunTab {
             tbScript.setText(file.getAbsoluteFile().toString());
         }
     }
-
-    public boolean suppressRunNumberChangeNotifications = false;
-    private boolean allTestsAreChosen = false;
-    private int numberOfTestsToBeRun = 0;
 
     public void maybeRunNumberChanged() {
         if (suppressRunNumberChangeNotifications) {
