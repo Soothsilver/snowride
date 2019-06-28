@@ -39,6 +39,11 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement implements ISuite {
+    /**
+     * The name of this file or folder on disk, including the prefix that sets the execution order, and without changing
+     * cases of letters or replacing underscores with spaces. But, this already doesn't contain the .robot extension.
+     */
+    protected String shortNameAsOnDisk;
     public RobotFile fileParsed;
     public long importedResourcesLastRecursedDuringIteration = 0;
     public Set<Tag> forceTagsCumulative = new HashSet<>();
@@ -55,11 +60,17 @@ public abstract class Suite extends HighElement implements ISuite {
     private NewlineStyle newlineStyle = NewlineStyle.LF;
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
+        shortNameAsOnDisk = shortName;
         this.children.addListener((ListChangeListener.Change<? extends HighElement> change) -> childrenChanged());
         if (contents != null && contents.indexOf('\r') != -1) {
             // If you load it with \r, it's Windows-style line endings.
             newlineStyle = NewlineStyle.CRLF;
         }
+    }
+
+    @Override
+    public String getShortNameAsOnDisk() {
+        return shortNameAsOnDisk;
     }
 
     private void childrenChanged() {

@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride;
 
-import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class Extensions {
+    private static ConcurrentHashMap<String, String> invariantNames = new ConcurrentHashMap<>();
+
     public static String toStringWithTrace(Exception exc) {
         return ExceptionUtils.getMessage(exc) + "\n" + ExceptionUtils.getStackTrace(exc);
     }
@@ -58,13 +60,19 @@ public class Extensions {
         }
     }
 
-    private static ConcurrentHashMap<String, String> invariantNames = new ConcurrentHashMap<>();
-
     public static String toInvariant(String suiteOrKeywordName) {
         return invariantNames.computeIfAbsent(suiteOrKeywordName, key -> key.replace('_', ' ').replace(" ", "").toLowerCase());
     }
 
     public static String toPrettyName(String newName) {
+        // The file or directory name can contain a prefix to control the execution order of the suites.
+        // The prefix is separated from the base name by two underscores and, when constructing the actual test suite name,
+        // both the prefix and underscores are removed. For example files 01__some_tests.robot and 02__more_tests.robot
+        // create test suites Some Tests and More Tests, respectively, and the former is executed before the latter.
+        int underscores = newName.indexOf("__");
+        if (underscores != -1) {
+            return newName.substring(underscores + 2).replace('_', ' ');
+        }
         return newName.replace('_', ' ');
     }
 
@@ -83,14 +91,6 @@ public class Extensions {
             }
         }
         return false;
-    }
-
-    public static String english(int number, String singular, String twoOrMore) {
-        if (number == 1) {
-            return singular;
-        } else {
-            return number + " " + twoOrMore;
-        }
     }
 
     public static void optimizeLines(ObservableList<LogicalLine> lines) {

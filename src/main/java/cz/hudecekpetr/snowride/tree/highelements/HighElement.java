@@ -183,4 +183,11 @@ public abstract class HighElement implements IAutocompleteOption {
      * Recalculates all semantics, including cell semantics, and refreshes what errors appear in the Errors tab.
      */
     public abstract void analyzeCodeInSelf();
+
+    /**
+     * Gets the short name, except that it doesn't remove "01__" and similar execution order prefixes per http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html, 2.4.3.
+     */
+    public String getShortNameAsOnDisk() {
+        return getShortName();
+    }
 }

@@ -1,26 +1,10 @@
 package cz.hudecekpetr.snowride.ui;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import cz.hudecekpetr.snowride.fx.SnowAlert;
-import org.controlsfx.control.NotificationPane;
-
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.systemcolor.StringURLStreamHandlerFactory;
 import cz.hudecekpetr.snowride.fx.systemcolor.SystemColorService;
@@ -83,7 +67,21 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
+import org.controlsfx.control.NotificationPane;
+
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
@@ -520,7 +518,8 @@ public class MainForm {
     private void renameIfAble(HighElement element) {
         if (element != getRootElement() && element.parent != getRootElement()
                 && element.parent != null && !(element.parent instanceof ExternalResourcesElement)) {
-            String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortName());
+            // Not using getShortName() because we want to preserve underscores and, more importantly, execution order prefix.
+            String newName = TextFieldForm.askForText("Rename " + element, "New name:", "Rename", element.getShortNameAsOnDisk());
             if (newName != null) {
                 element.renameSelfTo(newName, MainForm.this);
             }
@@ -691,7 +690,7 @@ public class MainForm {
         openFolderDialog = new DirectoryChooser();
 
 
-        MenuItem  bLoadSnow = new MenuItem("Load snow project file...", loadIcon(Images.open));
+        MenuItem bLoadSnow = new MenuItem("Load snow project file...", loadIcon(Images.open));
         bLoadSnow.setOnAction(actionEvent1 -> loadSnow());
         openSnowFileDialog = new FileChooser();
         openSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
@@ -904,12 +903,14 @@ public class MainForm {
             return;
         }
 
-        ObservableList<TreeItem<HighElement>> children = element.treeNode.getChildren();
-        if (!children.isEmpty()) {
-            children.forEach(child -> sortTree(child.getValue()));
+        ObservableList<TreeItem<HighElement>> treeChildren = element.treeNode.getChildren();
+        ObservableList<HighElement> executionChildren = element.children;
+        if (!treeChildren.isEmpty()) {
+            treeChildren.forEach(child -> sortTree(child.getValue()));
             // exclude ultimate root because we want "External resources" to be second. In fact, we depend on it.
             if (!(element instanceof UltimateRoot)) {
-                children.sort(Comparator.comparing(child -> child.getValue().getShortName()));
+                treeChildren.sort(Comparator.comparing(child -> child.getValue().getShortNameAsOnDisk()));
+                executionChildren.sort(Comparator.comparing(child -> child.getShortNameAsOnDisk()));
             }
         }
     }

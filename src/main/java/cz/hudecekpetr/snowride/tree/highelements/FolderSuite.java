@@ -110,6 +110,7 @@ public class FolderSuite extends Suite implements ISuite {
         FilesystemWatcher.getInstance().ignoreNextChangeOf(oldFile.toPath());
         FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (this.directoryPath.renameTo(newFile)) {
+            this.shortNameAsOnDisk = newName;
             this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.directoryPath = newFile;
             if (this.initFile != null) {

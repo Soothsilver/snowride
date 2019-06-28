@@ -68,6 +68,7 @@ public class FileSuite extends Suite implements ISuite {
         FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (currentFile.renameTo(newFile)) {
             this.shortNameProperty.set(Extensions.toPrettyName(newName));
+            this.shortNameAsOnDisk = newName;
             this.file = newFile;
         } else {
             throw new RuntimeException("Could not rename the file suite '" + this.getShortName() + "'.");
