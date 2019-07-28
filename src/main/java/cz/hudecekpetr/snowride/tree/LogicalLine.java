@@ -171,6 +171,7 @@ public class LogicalLine {
             Cell cell = cells.get(i);
             CellSemantics cellSemantics = new CellSemantics(i);
             cell.setSemantics(cellSemantics);
+            cellSemantics.variablesList = getBelongsToHighElement().getVariablesList();
             indexOfThisAsArgument++;
             if (everythingIsAComment) {
                 cellSemantics.isComment = true;

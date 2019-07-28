@@ -190,4 +190,8 @@ public abstract class HighElement implements IAutocompleteOption {
     public String getShortNameAsOnDisk() {
         return getShortName();
     }
+
+    public List<? extends IAutocompleteOption> getVariablesList() {
+        return null;
+    }
 }

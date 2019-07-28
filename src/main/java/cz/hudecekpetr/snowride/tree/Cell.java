@@ -4,10 +4,7 @@ import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
-import cz.hudecekpetr.snowride.semantics.CellSemantics;
-import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
-import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.semantics.QualifiedKeyword;
+import cz.hudecekpetr.snowride.semantics.*;
 import cz.hudecekpetr.snowride.semantics.codecompletion.LibraryAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.QualifiedCompletionOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
@@ -163,7 +160,11 @@ public class Cell implements IHasQuickDocumentation {
                                 .filter(kw -> Extensions.toInvariant(kw.getSourceName()).equals(Extensions.toInvariant(whatWrittenSoFar.getSource())))
                                 .map(QualifiedCompletionOption::new));
             }
-
+        }
+        if (Settings.getInstance().cbAutocompleteVariables) {
+            if (semantics.cellIndex >= 1 && semantics.variablesList != null && snowTableKind != SnowTableKind.VARIABLES) {
+                options = Streams.concat(options, semantics.variablesList.stream());
+            }
         }
         return options;
     }

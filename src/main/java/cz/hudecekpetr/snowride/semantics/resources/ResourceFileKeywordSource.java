@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 
 import java.util.Objects;
@@ -29,5 +30,10 @@ public class ResourceFileKeywordSource extends KeywordSource {
     @Override
     public Stream<? extends IKnownKeyword> getAllKeywords() {
         return suite.getSelfKeywords();
+    }
+
+    @Override
+    public Stream<VariableCompletionOption> getAllVariables() {
+        return suite.getSelfVariables();
     }
 }

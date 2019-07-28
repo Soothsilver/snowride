@@ -12,7 +12,7 @@ Resource		rootfile.robot
 Library           String
 
 *** Variables ***
-Ahoy    Beta
+${ahoy}    Beta
 
 *** Test Cases ***
 Summation Test
@@ -25,7 +25,9 @@ Summation Test
     Log    This is CRLF.
     ${a}    Get Length    ${the list}
     Log    unlog
-    Log    terlog
+    Log    @{ahoy}
+    Log Many    ${the list}
+    Collections.Log List    ${the list}
 
 *** Keywords ***
 Return sum of numbers

@@ -19,7 +19,6 @@ Resource	cc.robot
 Resource	cc.robot
 Resource
 Resource
-
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
@@ -1405,7 +1404,6 @@ Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
-
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
@@ -1445,7 +1443,6 @@ Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
-
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
@@ -1485,7 +1482,6 @@ Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
 Resource	cc.robot
-
 
 *** Test Cases ***
 Performance test
@@ -1508,8 +1504,8 @@ Performance test
     Keyword Here2gsdfgsdfgfdsg
     Keyword Here2dsfgsdgvbfghnj
     Log    Hail, ${name}.
+    Log    ${ret}
 
 *** Variables ***
 ${name}    Glorious Leader
-
 

@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 
 import java.util.stream.Stream;
@@ -28,5 +29,10 @@ public class LibraryKeywordSource extends KeywordSource {
     @Override
     public Stream<? extends IKnownKeyword> getAllKeywords() {
         return externalLibrary.keywords.stream();
+    }
+
+    @Override
+    public Stream<VariableCompletionOption> getAllVariables() {
+        return Stream.empty();
     }
 }

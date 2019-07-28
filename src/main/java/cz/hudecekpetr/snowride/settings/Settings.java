@@ -61,6 +61,7 @@ public class Settings {
     public boolean cbHighlightSameCells = true;
     public boolean cbUseSystemColorWindow = false;
     public int treeSizeItemHeight = 8;
+    public boolean cbAutocompleteVariables = true;
 
     public static Settings getInstance() {
         if (instance == null) {

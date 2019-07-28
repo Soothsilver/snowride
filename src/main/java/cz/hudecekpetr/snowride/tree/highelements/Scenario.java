@@ -1,9 +1,12 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
+import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.Tag;
@@ -20,6 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Scenario extends HighElement {
 
@@ -30,6 +34,7 @@ public class Scenario extends HighElement {
     private Cell nameCell;
     private boolean isTestCase;
     private List<String> semanticsArguments = new ArrayList<>();
+    private List<IAutocompleteOption> thisScenarioVariables = new ArrayList<IAutocompleteOption>();
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
@@ -180,6 +185,8 @@ public class Scenario extends HighElement {
         semanticsIsTemplateTestCase = false;
         ArrayList<String> argCells = new ArrayList<>();
         semanticsDocumentation = "";
+        thisScenarioVariables.clear();
+        Set<String> variableCells = new HashSet<>();
         for (LogicalLine line : getLines()) {
             if (line.cells.size() >= 3) {
                 if (line.cells.get(1).contents.equalsIgnoreCase("[Documentation]")) {
@@ -200,10 +207,30 @@ public class Scenario extends HighElement {
                     semanticsIsTemplateTestCase = true;
                 }
             }
+            for (Cell cell : line.cells) {
+                considerAddingAsVariableDefinition(variableCells, cell.contents);
+            }
         }
+        for (String variableCell : variableCells) {
+            thisScenarioVariables.add(new VariableCompletionOption("${" + variableCell + "}", "A variable used in this test case or keyword."));
+            thisScenarioVariables.add(new VariableCompletionOption("@{" + variableCell + "}", "A variable used in this test case or keyword, as a list."));
+            thisScenarioVariables.add(new VariableCompletionOption("&{" + variableCell + "}", "A variable used in this test case or keyword, as a dictionary."));
+        }
+        thisScenarioVariables.addAll(parent.getVariablesList());
         this.semanticsArguments = argCells;
         if (argCells.size() > 0) {
             this.semanticsDocumentation = "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");
+        }
+    }
+
+    private void considerAddingAsVariableDefinition(Set<String> variableCells, String contents) {
+        if (contents.length() >= 3) {
+            int initialBrace = contents.indexOf('{');
+            int finalBrace = contents.indexOf('}');
+            if (finalBrace != -1 && initialBrace == 1) {
+                String trueName = contents.substring(2, finalBrace);
+                variableCells.add(trueName);
+            }
         }
     }
 
@@ -247,5 +274,10 @@ public class Scenario extends HighElement {
         for (LogicalLine line : lines) {
             line.reformat(SectionKind.TEST_CASES);
         }
+    }
+
+    @Override
+    public List<? extends IAutocompleteOption> getVariablesList() {
+        return thisScenarioVariables;
     }
 }

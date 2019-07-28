@@ -1,13 +1,13 @@
 *** Keywords ***
 Root Ahoy
     Log    Ahoy    WARN
-    Log    Another Ahoy
+    Log    ${realm}
 
 *** Settings ***
 Library    Collections
 Resource    infolder/ressurection.robot
 Test Timeout    5 minutes
-Test Setup    Log    Ahoy
+Test Setup    Log    ${yourname}
 
 *** Variables ***
 ${yourname}    Soothsilver

@@ -38,6 +38,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbGarbageCollect;
     private CheckBox cbHighlightSameCells;
     private CheckBox cbUseSystemColorWindow;
+    private CheckBox cbAutocompleteVariables;
     private TextField tbNumber2;
 
     public SettingsWindow(MainForm mainForm) {
@@ -124,8 +125,11 @@ public class SettingsWindow extends Stage {
         tbNumber2.textProperty().addListener((ChangeListener<String>)this::treeSizeChanged);
         HBox num2 = new HBox(5, lblNumber2, tbNumber2);
 
+        cbAutocompleteVariables = new CheckBox("Offer autocompletion for variables");
+        cbAutocompleteVariables.setWrapText(true);
+        cbAutocompleteVariables.setSelected(Settings.getInstance().cbAutocompleteVariables);
 
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow, num2);
+        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow, num2, cbAutocompleteVariables);
         vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
 
 
@@ -158,6 +162,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().cbHighlightSameCells = cbHighlightSameCells.isSelected();
         Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
         Settings.getInstance().cbUseSystemColorWindow = cbUseSystemColorWindow.isSelected();
+        Settings.getInstance().cbAutocompleteVariables = cbAutocompleteVariables.isSelected();
         try {
             Settings.getInstance().numberOfSuccessesBeforeEnd = Integer.parseInt(tbNumber.getText());
             mainForm.runTab.numberOfSuccessesToStop.setValue(Settings.getInstance().numberOfSuccessesBeforeEnd);

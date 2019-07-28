@@ -6,10 +6,12 @@ import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
+import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.semantics.UserKeyword;
+import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResourceKind;
@@ -51,6 +53,7 @@ public abstract class Suite extends HighElement implements ISuite {
     private List<ImportedResource> importedResources = new ArrayList<>();
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
+    private List<VariableCompletionOption> importedVariablesRecursively = new ArrayList<>();
     private Multimap<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName =
             MultimapBuilder.hashKeys().arrayListValues().build();
     public boolean childTestsAreTemplates = false;
@@ -109,6 +112,7 @@ public abstract class Suite extends HighElement implements ISuite {
     private void recalculateResources() {
         importedResourcesRecursively.clear();
         importedKeywordsRecursively.clear();
+        importedVariablesRecursively.clear();
         importedResourcesRecursively.add(new TestCaseSettingOptionLibrarySource());
         importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
         importedResourcesRecursively.add(new ResourceFileKeywordSource(this));
@@ -123,6 +127,12 @@ public abstract class Suite extends HighElement implements ISuite {
         importedKeywordsRecursively.sort(Comparator.comparingInt(IKnownKeyword::getCompletionPriority));
         importedKeywordsRecursivelyByInvariantName.clear();
         importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
+        importedResourcesRecursively.stream().flatMap(KeywordSource::getAllVariables).forEachOrdered(vco -> importedVariablesRecursively.add(vco));
+        // Built-ins:
+        importedVariablesRecursively.add(new VariableCompletionOption("${EMPTY}", "Built-in variable that's an empty string."));
+        importedVariablesRecursively.add(new VariableCompletionOption("@{EMPTY}", "Built-in variable that's an empty list."));
+        importedVariablesRecursively.add(new VariableCompletionOption("&{EMPTY}", "Built-in variable that's an empty dictionary."));
+        importedVariablesRecursively.add(new VariableCompletionOption("${SPACE}", "Built-in variable that's a single space."));
     }
 
     public Stream<IKnownKeyword> getSelfKeywords() {
@@ -342,5 +352,36 @@ public abstract class Suite extends HighElement implements ISuite {
         }
         list.add(insertionIndex, item);
         list.remove(deletionIndex);
+    }
+
+    @Override
+    public List<? extends IAutocompleteOption> getVariablesList() {
+        List<IAutocompleteOption> i = new ArrayList<>();
+        return importedVariablesRecursively;
+    }
+
+    public Stream<VariableCompletionOption> getSelfVariables() {
+        // Variables table:
+        List<VariableCompletionOption> vco = new ArrayList<>();
+        if (fileParsed != null) {
+            fileParsed.findOrCreateVariablesSection().pairs.forEach(pair -> {
+                if (pair.cells.size() > 0) {
+                    String name = pair.cells.get(0).contents;
+                    if (name.length() >= 3) {
+                        int finalBrace = name.indexOf('}');
+                        if (finalBrace != -1) {
+                            String trueName = name.substring(2, finalBrace);
+                            String desc = "A user-defined variable, originally defined as " + name + ".";
+                            vco.add(new VariableCompletionOption("${" + trueName + "}", desc));
+                            vco.add(new VariableCompletionOption("@{" + trueName + "}", desc));
+                            vco.add(new VariableCompletionOption("&{" + trueName + "}", desc));
+                        }
+                    }
+                }
+            });
+            return vco.stream();
+        } else {
+            return Stream.empty();
+        }
     }
 }
