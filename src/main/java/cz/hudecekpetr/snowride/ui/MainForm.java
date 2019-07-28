@@ -237,10 +237,21 @@ public class MainForm {
             } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
                 goForwards();
                 event.consume();
+            } else if (event.getCode() == KeyCode.LEFT && event.isAltDown()) {
+                goBack();
+                event.consume();
+            } else if (event.getCode() == KeyCode.RIGHT && event.isAltDown()) {
+                goForwards();
+                event.consume();
             } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
                 tbSearchTests.requestFocus();
                 searchSuitesAutoCompletion.trigger();
                 event.consume();
+            } else {
+                if (event.isAltDown()) {
+                    // "Alt" should not activate the main menu bar. Normal applications don't do that.
+                    event.consume();
+                }
             }
         });
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {

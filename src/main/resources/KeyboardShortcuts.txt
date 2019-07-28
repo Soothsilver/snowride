@@ -1,8 +1,8 @@
 F5, F8: Run tests
 Ctrl+N: Search suites/tests/keywords
 Ctrl+S: Save all
-Ctrl+Left: Navigate back
-Ctrl+Right: Navigate forwards
+Ctrl+Left, Alt+Left: Navigate back
+Ctrl+Right, Alt+Right: Navigate forwards
 Ctrl+I: Insert row above selected cell
 Ctrl+A: Append row below selected cell
 Ctrl+D: Delete content from selected rows
