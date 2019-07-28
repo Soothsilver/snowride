@@ -3,6 +3,8 @@ Library		Collections
 Library		Collections
 Library	Collections
 Library	Collections
+Library    Telnet
+Resource	rootfile.robot
 
 *** Variables ***
 Ahoy	Beta
@@ -17,6 +19,8 @@ Summation Test
     ${a}    Create List    delta    gamma
     Log     This is CRLF.
     ${a}    Get Length    ${the list}
+    Log    unlog
+    Log    terlog
 
 *** Keywords ***
 Return sum of numbers
@@ -24,3 +28,4 @@ Return sum of numbers
     ${result}    Evaluate    ${a}+${b}
     [Return]    ${result}
     [Documentation]    Returns the sum of two numbers.    If A is 4 and B is 8, returns 12.
+

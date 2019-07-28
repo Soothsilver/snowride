@@ -57,7 +57,7 @@ public abstract class Suite extends HighElement implements ISuite {
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
-    private NewlineStyle newlineStyle = NewlineStyle.LF;
+    public NewlineStyle newlineStyle = NewlineStyle.LF;
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
         shortNameAsOnDisk = shortName;

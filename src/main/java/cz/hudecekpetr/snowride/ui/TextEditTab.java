@@ -66,7 +66,7 @@ public class TextEditTab {
             if (!mainForm.switchingTextEditContents) {
                 HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
                 whatChanged.areTextChangesUnapplied = true;
-                whatChanged.contents = newValue;
+                whatChanged.contents = ((Suite)whatChanged).newlineStyle.convertToStyle(newValue);
                 mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
             }
         });
