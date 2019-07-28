@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.semantics.resources;
 import com.google.common.collect.Iterables;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
+import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
@@ -57,7 +58,8 @@ public class ImportedResource {
                     gatherIntoThis.add(new LibraryKeywordSource(ExternalLibrary.knownExternalLibraries.get(name)));
                     successfullyImported = true;
                 } else {
-                    // Unknown library
+                    // Unknown library. Maybe it's in the system pythonpath
+                    ReloadExternalLibraries.considerLoadingFromSystemPythonpath(name);
                     // Ignore it here. We'll put in the error list and such later.
                     successfullyImported = false;
                 }

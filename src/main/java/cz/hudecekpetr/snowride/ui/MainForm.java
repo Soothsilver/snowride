@@ -1020,12 +1020,14 @@ public class MainForm {
 
 
     public void reloadExternalLibraries() {
-        ReloadExternalLibraries.reload(() -> {
-            humanInControl = false;
-            // Reload current thing
-            reloadElementIntoTabs(getFocusedElement(), false);
-            humanInControl = true;
-        });
+        ReloadExternalLibraries.reload(this::reloadCurrentThing);
+    }
+
+    public void reloadCurrentThing() {
+        humanInControl = false;
+        // Reload current thing
+        reloadElementIntoTabs(getFocusedElement(), false);
+        humanInControl = true;
     }
 
     public FolderSuite getRootDirectoryElement() {
