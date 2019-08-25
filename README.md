@@ -35,7 +35,7 @@ shortcuts, smart autocompletion, inspections, quick fixes, or good navigation.
 ![Screenshot 2](screenshots/Release2.PNG)
 
 # `.snow` files
-You can export some configuration (loaded directory, additional paths and path to the runner script) as a `.snow` file. You can then load it into Snowride just like you load a directory.
+You can export some configuration (loaded directory, additional paths, path to the runner script and some settings on the "Run" tab) as a `.snow` file. You can then load it into Snowride just like you load a directory. You can also manually remove some of the settings from the `.snow` so that they won't be remembered and you'll be able to keep them from one session to another.
 
 Loading a `.snow` file will load the suite from the directory and also change Snowride's settings to the settings in the `.snow` file.
 
