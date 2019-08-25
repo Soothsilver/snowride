@@ -256,6 +256,9 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private void onKeyPressed(KeyEvent keyEvent) {
         MainForm.documentationPopup.hide();
+        if (keyEvent.getCode() == KeyCode.DIGIT3) {
+            int a = 5;
+        }
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
             // Insert
             insertRowBefore();
@@ -299,6 +302,10 @@ public class SnowTableView extends TableView<LogicalLine> {
             keyEvent.consume();
         } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isControlDown()) {
             commentOutOrUncomment(keyEvent.isShiftDown());
+        } else if ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isControlDown()) {
+            commentOutOrUncomment(false);
+        } else if ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isControlDown()) {
+            commentOutOrUncomment(true);
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
             if (getSelectionModel().getSelectedCells().size() > 0) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));

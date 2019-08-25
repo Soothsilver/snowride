@@ -92,7 +92,7 @@ public class FilesystemWatcher {
                                 boolean isInitRobot = asFile.getName().contains("__init__");
                                 Path reloadWhat = whatToReload(absolutePathToChangedFile, changedDirectory, kind, isNormalFile, isInitRobot);
                                 // We're not in Java FX thread here, so:
-                                Platform.runLater(() -> ReloadChangesWindow.activateWindowIfNotActive().addPath(reloadWhat));
+                                Platform.runLater(() -> ReloadChangesWindow.requireFileReload(reloadWhat));
                             }
                         }
                         key.reset();

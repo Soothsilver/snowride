@@ -62,6 +62,7 @@ public class Settings {
     public boolean cbUseSystemColorWindow = false;
     public int treeSizeItemHeight = 8;
     public boolean cbAutocompleteVariables = true;
+    public ReloadOnChangeStrategy reloadOnChangeStrategy = ReloadOnChangeStrategy.POPUP_DIALOG;
 
     public static Settings getInstance() {
         if (instance == null) {

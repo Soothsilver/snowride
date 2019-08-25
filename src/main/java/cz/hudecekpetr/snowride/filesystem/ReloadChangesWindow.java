@@ -3,12 +3,15 @@ package cz.hudecekpetr.snowride.filesystem;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
 import cz.hudecekpetr.snowride.generalpurpose.Holder;
+import cz.hudecekpetr.snowride.settings.ReloadOnChangeStrategy;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
 import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -64,6 +67,21 @@ class ReloadChangesWindow extends Stage {
             activeWindow.show();
         }
         return activeWindow;
+    }
+
+    public static void requireFileReload(Path reloadWhat) {
+        ReloadOnChangeStrategy reloadOnChangeStrategy = Settings.getInstance().reloadOnChangeStrategy;
+        if (reloadOnChangeStrategy == ReloadOnChangeStrategy.POPUP_DIALOG) {
+            activateWindowIfNotActive().addPath(reloadWhat);
+        } else if (reloadOnChangeStrategy == ReloadOnChangeStrategy.DO_NOTHING) {
+            // do nothing
+        } else if (reloadOnChangeStrategy == ReloadOnChangeStrategy.RELOAD_AUTOMATICALLY) {
+            Platform.runLater(()->{
+                ReloadChangesWindow reloadChangesWindow = new ReloadChangesWindow();
+                reloadChangesWindow.changedPaths.add(reloadWhat);
+                reloadChangesWindow.reloadAll();
+            });
+        }
     }
 
     /**

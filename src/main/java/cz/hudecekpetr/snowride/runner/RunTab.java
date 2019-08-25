@@ -85,7 +85,7 @@ public class RunTab {
     AnsiOutputStream ansiOutputStream = new AnsiOutputStream();
     private MainForm mainForm;
     private FileChooser openScriptFileDialog;
-    private TextField tbScript;
+    public TextField tbScript;
     private StyledTextArea<String, String> tbOutput;
     private Tab tabRun;
     private Label lblPassed;
@@ -93,13 +93,13 @@ public class RunTab {
     private Label lblTotalTime;
     private HBox hboxExecutionLine;
     private TcpHost tcpHost;
-    private TextField tbArguments;
+    public TextField tbArguments;
     private Path temporaryDirectory;
     private Executor executor = Executors.newFixedThreadPool(4);
-    private CheckBox cbWithoutTags;
-    private TextField tbWithoutTags;
-    private TextField tbWithTags;
-    private CheckBox cbWithTags;
+    public CheckBox cbWithoutTags;
+    public TextField tbWithoutTags;
+    public TextField tbWithTags;
+    public CheckBox cbWithTags;
     private boolean thenDeselectPassingTests = false;
     private boolean allTestsAreChosen = false;
     private int numberOfTestsToBeRun = 0;

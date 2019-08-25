@@ -1,22 +1,19 @@
 package cz.hudecekpetr.snowride.ui.settings;
 
 import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
+import cz.hudecekpetr.snowride.settings.ReloadOnChangeStrategy;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -40,11 +37,11 @@ public class SettingsWindow extends Stage {
     private CheckBox cbUseSystemColorWindow;
     private CheckBox cbAutocompleteVariables;
     private TextField tbNumber2;
+    private ComboBox<ReloadOnChangeStrategy> cbReloadStrategy;
 
     public SettingsWindow(MainForm mainForm) {
         this.mainForm = mainForm;
-        Tab tabImporting = createTabImporting();
-        TabPane tabs = new TabPane(tabImporting);
+        TabPane tabs = createAllTabs();
         Button buttonSuperOK = new Button("Apply, close, and reload project", new ImageView(Images.refresh));
         buttonSuperOK.setOnAction(this::applyCloseAndRefresh);
         Button buttonOK = new Button("Apply and close");
@@ -67,7 +64,7 @@ public class SettingsWindow extends Stage {
         mainForm.reloadAll();
     }
 
-    private Tab createTabImporting() {
+    private TabPane createAllTabs() {
         additionalXmlFilesBox = new TitledTextArea("Folders for XML, Python and Java files", Settings.getInstance().additionalFolders);
         Label folderDescription = new Label("Each line is an absolute path to a folder. Snowride will add these folders to the runner script's pythonpath, and it will browse these folders for XML files, Python files, and Robot Framework files in order to get documentation.");
         folderDescription.setWrapText(true);
@@ -97,6 +94,7 @@ public class SettingsWindow extends Stage {
             return null;
         }));
         HBox num = new HBox(5, lblNumber, tbNumber);
+        num.setAlignment(Pos.CENTER_LEFT);
         cbGarbageCollect = new CheckBox("Automatically garbage collect every 5 minutes. Changes to this will take effect when you next start Snowride. Additional action from your side required!: Add the following VM options to your launcher to force JVM to return freed memory back to the operating system.");
         cbGarbageCollect.setSelected(Settings.getInstance().cbRunGarbageCollection);
         cbGarbageCollect.setWrapText(true);
@@ -124,18 +122,42 @@ public class SettingsWindow extends Stage {
         }));
         tbNumber2.textProperty().addListener((ChangeListener<String>)this::treeSizeChanged);
         HBox num2 = new HBox(5, lblNumber2, tbNumber2);
+        num2.setAlignment(Pos.CENTER_LEFT);
 
         cbAutocompleteVariables = new CheckBox("Offer autocompletion for variables");
         cbAutocompleteVariables.setWrapText(true);
         cbAutocompleteVariables.setSelected(Settings.getInstance().cbAutocompleteVariables);
 
-        VBox vboxImportingOptions = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles, cbReloadAll, cbDeselectAll, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged, num, borderBox, cbHighlightSameCells, cbUseSystemColorWindow, num2, cbAutocompleteVariables);
-        vboxImportingOptions.setPadding(new Insets(5, 0, 0, 0));
+        Label lblReloadStrategy = new Label("When another application updates a file:");
+        ObservableList<ReloadOnChangeStrategy> options = FXCollections.observableArrayList(ReloadOnChangeStrategy.POPUP_DIALOG, ReloadOnChangeStrategy.DO_NOTHING, ReloadOnChangeStrategy.RELOAD_AUTOMATICALLY);
+        cbReloadStrategy = new ComboBox<>(options);
+        cbReloadStrategy.getSelectionModel().select(Settings.getInstance().reloadOnChangeStrategy);
+        HBox hboxReloadStrategy = new HBox(5, lblReloadStrategy, cbReloadStrategy);
+        hboxReloadStrategy.setAlignment(Pos.CENTER_LEFT);
+
+        VBox vboxEditor = new VBox(5, additionalXmlFilesBox, folderDescription, cbAlsoImportTxtFiles,
+              cbAutocompleteVariables, hboxReloadStrategy);
+        vboxEditor.setPadding(new Insets(5, 0, 0, 0));
+        VBox vboxAppearance = new VBox(5,
+                cbReloadAll, cbDeselectAll, cbHighlightSameCells, cbUseSystemColorWindow, num2);
+        vboxAppearance.setPadding(new Insets(5, 0, 0, 0));
+        VBox vboxBehavior = new VBox(5, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
+        vboxBehavior.setPadding(new Insets(5, 0, 0, 0));
+        VBox vboxAdvanced = new VBox(5, borderBox);
+        vboxAdvanced.setPadding(new Insets(5, 0, 0, 0));
 
 
-        Tab tabImporting = new Tab("Settings", vboxImportingOptions);
-        tabImporting.setClosable(false);
-        return tabImporting;
+        Tab tabEditor = new Tab("Editor", vboxEditor);
+        tabEditor.setClosable(false);
+        Tab tabAppearance = new Tab("Appearance", vboxAppearance);
+        tabAppearance.setClosable(false);
+        Tab tabBehaviour = new Tab("Behaviour", vboxBehavior);
+        tabBehaviour.setClosable(false);
+        Tab tabAdvanced = new Tab("Advanced", vboxAdvanced);
+        tabAdvanced.setClosable(false);
+
+        TabPane tabPane = new TabPane(tabEditor, tabAppearance, tabBehaviour, tabAdvanced);
+        return tabPane;
     }
 
     private void treeSizeChanged(ObservableValue<? extends String> observableValue, String old, String newValue) {
@@ -163,6 +185,7 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().cbUseStructureChanged = cbUseStructureChanged.isSelected();
         Settings.getInstance().cbUseSystemColorWindow = cbUseSystemColorWindow.isSelected();
         Settings.getInstance().cbAutocompleteVariables = cbAutocompleteVariables.isSelected();
+        Settings.getInstance().reloadOnChangeStrategy = cbReloadStrategy.getValue();
         try {
             Settings.getInstance().numberOfSuccessesBeforeEnd = Integer.parseInt(tbNumber.getText());
             mainForm.runTab.numberOfSuccessesToStop.setValue(Settings.getInstance().numberOfSuccessesBeforeEnd);
