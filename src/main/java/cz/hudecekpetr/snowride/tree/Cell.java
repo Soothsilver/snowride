@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.*;
+import cz.hudecekpetr.snowride.semantics.codecompletion.GherkinEnhancedOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.LibraryAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.QualifiedCompletionOption;
 import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
@@ -16,7 +17,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Cell implements IHasQuickDocumentation {
@@ -161,6 +164,12 @@ public class Cell implements IHasQuickDocumentation {
                                 .map(QualifiedCompletionOption::new));
             }
         }
+        String gherkinPrefix = GherkinKeywords.getPrefixWithSpaceIfAny(whatWrittenSoFar.getKeyword());
+        if (gherkinPrefix != null) {
+            List<IAutocompleteOption> asList = options.collect(Collectors.toList());
+            options = Streams.concat(asList.stream().map(co -> new GherkinEnhancedOption(gherkinPrefix, co)), asList.stream());
+        }
+        options = Streams.concat(options, GherkinKeywords.all.stream());
         if (Settings.getInstance().cbAutocompleteVariables) {
             if (semantics.cellIndex >= 1 && semantics.variablesList != null && snowTableKind != SnowTableKind.VARIABLES) {
                 options = Streams.concat(options, semantics.variablesList.stream());

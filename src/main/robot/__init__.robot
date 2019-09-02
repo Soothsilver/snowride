@@ -7,7 +7,7 @@ Root Ahoy
 Library    Collections
 Resource    infolder/ressurection.robot
 Test Timeout    5 minutes
-Test Setup    Log    ${yourname}
+Test Setup    And Log List    ${yourname}
 
 *** Variables ***
 ${yourname}    Soothsilver

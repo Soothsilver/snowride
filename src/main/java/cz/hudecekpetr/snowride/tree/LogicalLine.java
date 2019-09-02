@@ -220,7 +220,10 @@ public class LogicalLine {
                     }
                 }
                 if (cellSemantics.thisHereKeyword == null) {
-                    determineThisHereKeywordWithAdvancedProcedures(cell, cellSemantics, kind);
+                    determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, cell.contents);
+                }
+                if (cellSemantics.thisHereKeyword == null) {
+                    determineViaGherkin(cellSemantics, kind, cell.contents);
                 }
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
@@ -245,8 +248,31 @@ public class LogicalLine {
 
     }
 
-    private void determineThisHereKeywordWithAdvancedProcedures(Cell cell, CellSemantics cellSemantics, SnowTableKind kind) {
-        QualifiedKeyword qualifiedKeyword = QualifiedKeyword.fromDottedString(cell.contents);
+    private void determineViaGherkin(CellSemantics cellSemantics, SnowTableKind kind, String cellContents) {
+        int firstSpace = cellContents.indexOf(' ');
+        if (firstSpace != -1) {
+            String prefix = cellContents.substring(0, firstSpace);
+            if (prefix.equalsIgnoreCase("Given") ||
+                    prefix.equalsIgnoreCase("When") ||
+                    prefix.equalsIgnoreCase("Then") ||
+                    prefix.equalsIgnoreCase("And") ||
+                    prefix.equalsIgnoreCase("But")) {
+                String afterPrefix = cellContents.substring(firstSpace + 1);
+                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(afterPrefix));
+                for (IKnownKeyword homonym : homonyms) {
+                    if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                        cellSemantics.thisHereKeyword = homonym;
+                    }
+                }
+                if (cellSemantics.thisHereKeyword == null) {
+                    determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, afterPrefix);
+                }
+            }
+        }
+    }
+
+    private void determineThisHereKeywordWithAdvancedProcedures(CellSemantics cellSemantics, SnowTableKind kind, String cellContents) {
+        QualifiedKeyword qualifiedKeyword = QualifiedKeyword.fromDottedString(cellContents);
         if (qualifiedKeyword.getSource() != null) {
             Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(qualifiedKeyword.getKeyword()));
             for (IKnownKeyword homonym : homonyms) {

@@ -17,6 +17,7 @@ public class Images {
     public static Image b = staticImage("b16.png");
     public static Image brackets = staticImage("brackets16.png");
     public static Image python = staticImage("python16.png");
+    public static Image gherkin = staticImage("gherkin16.png");
     public static Image java = staticImage("java16.png");
     public static Image exit = staticImage("exit16.png");
     public static Image log = staticImage("log16.png");
