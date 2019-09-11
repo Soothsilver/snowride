@@ -1,7 +1,7 @@
 # Snowride
 A faster RIDE-like IDE for Robot Framework test suites 
 
-[![Download](https://api.bintray.com/packages/snowride/snowride/snowride/images/download.svg?version=2.5)](https://bintray.com/snowride/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F2.5%2Fsnowride-2.5-jar-with-dependencies.jar)
+[![Download](https://api.bintray.com/packages/snowride/snowride/snowride/images/download.svg?version=2.6)](https://bintray.com/snowride/snowride/download_file?file_path=cz%2Fhudecekpetr%2Fsnowride%2Fsnowride%2F2.6%2Fsnowride-2.6-jar-with-dependencies.jar)
 
 Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copies many elements of its user interface but it adds features RIDE doesn't have and is faster.
 
