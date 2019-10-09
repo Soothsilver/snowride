@@ -1,18 +1,20 @@
 package cz.hudecekpetr.snowride.semantics.resources;
 
-import com.google.common.collect.Iterables;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalLibrary;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ReloadExternalLibraries;
 import cz.hudecekpetr.snowride.settings.Settings;
+import cz.hudecekpetr.snowride.tree.highelements.ExternalResourcesElement;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Set;
 
 public class ImportedResource {
     private static long indexOfIteration = 0;
@@ -89,9 +91,14 @@ public class ImportedResource {
                         }
                         continue;
                     } else {
-                        Iterable<HighElement> children = suite.children;
+                        List<HighElement> children = new ArrayList<>(suite.children);
                         if (isFirstSection) {
-                            children = Iterables.concat(children, MainForm.INSTANCE.getExternalResourcesElement().children);
+                            ExternalResourcesElement resourceElement = MainForm.INSTANCE.getExternalResourcesElement();
+                            List<HighElement> resourceChildren = resourceElement.children;
+                            children.addAll(resourceChildren);
+
+                            // also traverse through the 2nd level of resource location
+                            resourceChildren.forEach(resourceChild -> children.addAll(resourceChild.children));
                         }
                         for (HighElement child : children) {
                             MatchStatus matchStatus = getMatchStatus(child.getShortName(), sectionString);
