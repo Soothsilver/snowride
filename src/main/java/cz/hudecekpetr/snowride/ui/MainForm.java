@@ -1,5 +1,21 @@
 package cz.hudecekpetr.snowride.ui;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.controlsfx.control.NotificationPane;
+
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
 import cz.hudecekpetr.snowride.filesystem.Filesystem;
 import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
@@ -67,21 +83,6 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.controlsfx.control.NotificationPane;
-
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 
 public class MainForm {
@@ -289,6 +290,7 @@ public class MainForm {
         projectTree.setFixedCellSize(Region.USE_COMPUTED_SIZE);
         projectTree.setStyle("-fx-font-size: " + Settings.getInstance().treeSizeItemHeight + "pt;");
         projectTree.setShowRoot(false);
+        projectTree.setSkin(new ProjectTreeViewSkin(projectTree));
         projectTree.setOnKeyPressed(event -> {
             // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts
             // to hard-move children.
@@ -838,7 +840,10 @@ public class MainForm {
             int index = projectTree.getRow(selectWhat);
             projectTree.getFocusModel().focus(index);
             projectTree.getSelectionModel().select(index);
-            projectTree.scrollTo(index);
+            ProjectTreeViewSkin treeViewSkin = (ProjectTreeViewSkin) projectTree.getSkin();
+            if (!treeViewSkin.isIndexVisible(index)) {
+                projectTree.scrollTo(index);
+            }
             humanInControl = true;
         });
     }
