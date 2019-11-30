@@ -14,6 +14,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import org.controlsfx.control.NotificationPane;
 
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
@@ -187,6 +190,14 @@ public class MainForm {
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake3.png")));
+        stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (newValue == true) {
+                    ReloadChangesWindow.considerActivating();
+                }
+            }
+        });
     }
 
     private void selectedTabChanged(Tab oldValue, Tab newValue) {

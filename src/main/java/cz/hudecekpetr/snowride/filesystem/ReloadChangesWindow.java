@@ -30,7 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
-class ReloadChangesWindow extends Stage {
+public class ReloadChangesWindow extends Stage {
     private static ReloadChangesWindow activeWindow = null;
     private final Label lblInfo;
     private LinkedHashSet<Path> changedPaths = new LinkedHashSet<>();
@@ -64,7 +64,9 @@ class ReloadChangesWindow extends Stage {
     public static ReloadChangesWindow activateWindowIfNotActive() {
         if (activeWindow == null) {
             activeWindow = new ReloadChangesWindow();
-            activeWindow.show();
+            if (MainForm.INSTANCE.getStage().isFocused()) {
+                activeWindow.show();
+            }
         }
         return activeWindow;
     }
@@ -73,6 +75,7 @@ class ReloadChangesWindow extends Stage {
         ReloadOnChangeStrategy reloadOnChangeStrategy = Settings.getInstance().reloadOnChangeStrategy;
         if (reloadOnChangeStrategy == ReloadOnChangeStrategy.POPUP_DIALOG) {
             activateWindowIfNotActive().addPath(reloadWhat);
+
         } else if (reloadOnChangeStrategy == ReloadOnChangeStrategy.DO_NOTHING) {
             // do nothing
         } else if (reloadOnChangeStrategy == ReloadOnChangeStrategy.RELOAD_AUTOMATICALLY) {
@@ -81,6 +84,12 @@ class ReloadChangesWindow extends Stage {
                 reloadChangesWindow.changedPaths.add(reloadWhat);
                 reloadChangesWindow.reloadAll();
             });
+        }
+    }
+
+    public static void considerActivating() {
+        if (activeWindow != null && !activeWindow.isShowing()) {
+            activeWindow.show();
         }
     }
 
