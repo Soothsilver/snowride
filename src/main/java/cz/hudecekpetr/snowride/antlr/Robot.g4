@@ -55,10 +55,18 @@ fragment AFTER_SECTION_HEADER:(([* ]*'*')|);
 fragment BASIC_CELLSPACE: ('  '[ \t]*)  |   ('\t'[ \t]*) | (' ''\t'[ \t]*);
 fragment ELLIPSIS: '...';
 fragment LN_FRAGMENT: ('\n'|'\r\n');
+fragment K : 'K' | 'k';
+fragment E : 'E' | 'e';
+fragment Y : 'Y' | 'y';
+fragment W : 'W' | 'w';
+fragment O : 'O' | 'o';
+fragment R : 'R' | 'r';
+fragment D : 'D' | 'd';
+fragment S : 'S' | 's';
 
 COMMENT: SINGLE_SPACE? '#'.*? (LINE_SEPARATOR | EOF);
 TEST_CASES_CELL: BEFORE_SECTION_HEADER'Test Cases'AFTER_SECTION_HEADER;
-KEYWORDS_CELL: BEFORE_SECTION_HEADER'Keywords'AFTER_SECTION_HEADER;
+KEYWORDS_CELL: BEFORE_SECTION_HEADER K E Y W O R D S? AFTER_SECTION_HEADER;
 SETTINGS_CELL: BEFORE_SECTION_HEADER'Settings'AFTER_SECTION_HEADER;
 VARIABLES_CELL: BEFORE_SECTION_HEADER'Variables'AFTER_SECTION_HEADER;
 CELLSPACE:
