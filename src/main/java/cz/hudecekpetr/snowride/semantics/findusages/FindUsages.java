@@ -25,7 +25,7 @@ public class FindUsages {
                 .map(usg -> (Scenario) usg.getElement()).distinct().collect(Collectors.toList());
     }
 
-    private static List<Usage> findUsagesInternal(IKnownKeyword needleAsKeyword, Scenario needleAsScenario, UltimateRoot root) {
+    public static List<Usage> findUsagesInternal(IKnownKeyword needleAsKeyword, Scenario needleAsScenario, UltimateRoot root) {
         List<Usage> usages = new ArrayList<>();
         List<HighElement> allTestsAndKeywords = root.selfAndDescendantHighElements().collect(Collectors.toList());
         for (HighElement he : allTestsAndKeywords) {
@@ -57,7 +57,7 @@ public class FindUsages {
                 IKnownKeyword keywordInThisCell = cell.getSemantics().thisHereKeyword;
                 if (keywordInThisCell != null && (keywordInThisCell == needleAsKeyword || keywordInThisCell.getScenarioIfPossible() == needleAsScenario && needleAsScenario != null)) {
                     String text = he.getShortName() + ":" + (line.lineNumber.intValue() + 1) + " — " + StringUtils.join(line.cells.stream().map(thaCell -> thaCell.contents).iterator(), " ");
-                    usages.add(new Usage(text, he));
+                    usages.add(new Usage(text, line, line.cells.indexOf(cell), he));
                 }
             }
         }

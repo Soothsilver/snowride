@@ -3,10 +3,14 @@ package cz.hudecekpetr.snowride.tree.highelements;
 import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
+import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.UserKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
+import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
+import cz.hudecekpetr.snowride.semantics.findusages.Usage;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.Tag;
@@ -16,14 +20,15 @@ import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
+import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Scenario extends HighElement {
 
@@ -75,6 +80,26 @@ public class Scenario extends HighElement {
 
     @Override
     public void renameSelfTo(String newName, MainForm mainForm) {
+        if (!this.isTestCase()) {
+            List<Usage> allUsages = FindUsages.findUsagesInternal(null, this, MainForm.INSTANCE.getRootElement());
+            if (allUsages.size() > 0) {
+                ButtonType yes = new ButtonType("Rename");
+                ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                Alert alert = new SnowAlert(Alert.AlertType.CONFIRMATION, "Renaming this keyword will also alter " + allUsages.size() + " usages of the keyword. It is possible that Snowride missed some usages, if they're used as arguments to other keywords. Proceed with renaming anyway?",
+                        yes,
+                        cancel);
+                Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+                stage.getIcons().add(Images.snowflake);
+                Optional<ButtonType> result = alert.showAndWait();
+                if (!result.isPresent() || result.get() != yes) {
+                    return;
+                }
+                for (Usage usage : allUsages) {
+                    usage.getUsageLine().getCellAsStringProperty(usage.getUsageCell(), MainForm.INSTANCE)
+                            .set(new Cell(newName, usage.getUsageLine().cells.get(usage.getUsageCell()).postTrivia, usage.getUsageLine()));
+                }
+            }
+        }
         this.nameCell = new Cell(newName, nameCell.postTrivia, null);
         this.shortNameProperty.set(newName);
         this.refreshToString();
