@@ -1,5 +1,12 @@
 package cz.hudecekpetr.snowride.tree;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.controlsfx.validation.Severity;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
@@ -13,12 +20,6 @@ import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.beans.property.SimpleObjectProperty;
-import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.validation.Severity;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Represents a line in Robot Framework code if it's part of a settings table, variables table or a scenario. One logical
@@ -135,6 +136,24 @@ public class LogicalLine {
         recalculateSemantics();
         for (Cell cell : cells) {
             cell.updateStyle();
+        }
+    }
+
+    public void shiftCellsRightFromIndex(int columnIndex, MainForm mainForm) {
+        int cellCount = cells.size();
+        for (int i = cellCount - 1; i >= columnIndex; i--) {
+            getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
+        }
+    }
+
+    public void shiftCellsLeftToIndex(int columnIndex, MainForm mainForm) {
+        int cellCount = cells.size();
+        for (int i = columnIndex + 1; i <= cellCount; i++) {
+            if (i == cellCount) {
+                getCellAsStringProperty(i - 1, mainForm).set(new Cell("", "    ", this));
+            } else {
+                getCellAsStringProperty(i - 1, mainForm).set(cells.get(i).copy());
+            }
         }
     }
 

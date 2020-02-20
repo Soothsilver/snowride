@@ -93,17 +93,28 @@ public class SnowTableView extends TableView<LogicalLine> {
     private List<MenuItem> recreateContextMenu(ContextMenuEvent contextMenuEvent) {
         List<MenuItem> contextMenuItems = new ArrayList<>();
 
+        MenuItem miInsertCell = new MenuItem("Insert cell");
+        miInsertCell.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.SHIFT_DOWN,
+                KeyCombination.CONTROL_DOWN));
+        miInsertCell.setOnAction(event -> insertCell());
 
-        MenuItem miInsert = new MenuItem("Insert row before this");
-        miInsert.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN));
-        miInsert.setOnAction(event -> insertRowBefore());
-        MenuItem miAppend = new MenuItem("Append row after this");
-        miAppend.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN));
-        miAppend.setOnAction(event -> appendRowAfter());
+        MenuItem miDeleteCell = new MenuItem("Delete cell");
+        miDeleteCell.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.SHIFT_DOWN,
+                KeyCombination.CONTROL_DOWN));
+        miDeleteCell.setOnAction(event -> deleteCell());
 
-        MenuItem miDelete = new MenuItem("Delete all selected rows");
-        miDelete.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN));
-        miDelete.setOnAction(event -> deleteSelectedRows());
+        MenuItem miInsertRow = new MenuItem("Insert row before this");
+        miInsertRow.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN));
+        miInsertRow.setOnAction(event -> insertRowBefore());
+
+        MenuItem miAppendRow = new MenuItem("Append row after this");
+        miAppendRow.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN));
+        miAppendRow.setOnAction(event -> appendRowAfter());
+
+        MenuItem miDeleteRows = new MenuItem("Delete all selected rows");
+        miDeleteRows.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN));
+        miDeleteRows.setOnAction(event -> deleteSelectedRows());
+
         if (getSelectionModel().getSelectedCells().size() > 0) {
             TablePosition lastPosition = getSelectionModel().getSelectedCells().get(0);
             if (lastPosition.getColumn() != -1 && lastPosition.getRow() != -1) {
@@ -143,9 +154,11 @@ public class SnowTableView extends TableView<LogicalLine> {
             contextMenuItems.add(miUncomment);
         }
 
-        contextMenuItems.add(miInsert);
-        contextMenuItems.add(miAppend);
-        contextMenuItems.add(miDelete);
+        contextMenuItems.add(miInsertCell);
+        contextMenuItems.add(miDeleteCell);
+        contextMenuItems.add(miInsertRow);
+        contextMenuItems.add(miAppendRow);
+        contextMenuItems.add(miDeleteRows);
         return contextMenuItems;
     }
 
@@ -259,8 +272,13 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (keyEvent.getCode() == KeyCode.DIGIT3) {
             int a = 5;
         }
-        if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
-            // Insert
+        if (keyEvent.getCode() == KeyCode.I && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
+            insertCell();
+            keyEvent.consume();
+        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
+            deleteCell();
+            keyEvent.consume();
+        } else if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
             insertRowBefore();
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
@@ -365,6 +383,23 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
         this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
         this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, this::createNewLine));
+    }
+
+    private void insertCell() {
+        TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
+        int rowIndex = selectedCell.getRow();
+        int columnIndex = selectedCell.getColumn();
+        LogicalLine line = getItems().get(rowIndex);
+        line.shiftCellsRightFromIndex(columnIndex, mainForm);
+        line.getCellAsStringProperty(columnIndex, mainForm).set(new Cell("", "    ", line));
+    }
+
+    private void deleteCell() {
+        TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
+        int rowIndex = selectedCell.getRow();
+        int columnIndex = selectedCell.getColumn();
+        LogicalLine line = getItems().get(rowIndex);
+        line.shiftCellsLeftToIndex(columnIndex, mainForm);
     }
 
     private void commentOutOrUncomment(boolean uncomment) {
