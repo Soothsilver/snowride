@@ -1,16 +1,24 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
 import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
-import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
-import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
@@ -41,12 +49,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
@@ -391,13 +393,38 @@ public class SnowTableView extends TableView<LogicalLine> {
             rows.add(selectedCell.getRow());
         }
 
-        for (Integer rowIndex : rows) {
-            TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
-            int columnIndex = selectedCell.getColumn();
-            LogicalLine line = getItems().get(rowIndex);
-            line.shiftCellsRightFromIndex(columnIndex, mainForm);
-            line.getCellAsStringProperty(columnIndex, mainForm).set(new Cell("", "    ", line));
+        // column index is always the most left position of selection
+        TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
+        int columnIndex = selectedCell.getColumn();
+
+        // process selected rows
+        List<ChangeTextOperation> operations = new ArrayList<>();
+        for (Integer row : rows) {
+            LogicalLine line = getItems().get(row);
+            int cellCount = line.cells.size();
+
+            // shift all following cells to the right
+            for (int i = cellCount - 1; i >= columnIndex; i--) {
+                SimpleObjectProperty<Cell> rightCellAsString = line.getCellAsStringProperty(i + 1, mainForm);
+                SimpleObjectProperty<Cell> currentCellAsString = line.getCellAsStringProperty(i, mainForm);
+                Cell currentCellCopy = currentCellAsString.get().copy();
+                operations.add(new ChangeTextOperation(
+                        getItems(), rightCellAsString.get().contents, currentCellCopy.contents, row, i + 1));
+
+                rightCellAsString.set(currentCellCopy);
+            }
+
+            // insert new empty cell (clear previous content)
+            SimpleObjectProperty<Cell> previousCellAsString = line.getCellAsStringProperty(columnIndex, mainForm);
+            Cell previousCell = previousCellAsString.get();
+            Cell newCell = new Cell("", "    ", line);
+            operations.add(new ChangeTextOperation(
+                    getItems(), previousCell.contents, newCell.contents, row, columnIndex));
+
+            previousCellAsString.set(newCell);
         }
+        getScenario().getUndoStack().iJustDid(new MassOperation(operations));
+        considerAddingVirtualRowsAndColumns();
     }
 
     private void deleteSelectedCells() {
@@ -406,12 +433,39 @@ public class SnowTableView extends TableView<LogicalLine> {
             rows.add(selectedCell.getRow());
         }
 
-        for (Integer rowIndex : rows) {
-            TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
-            int columnIndex = selectedCell.getColumn();
-            LogicalLine line = getItems().get(rowIndex);
-            line.shiftCellsLeftToIndex(columnIndex, mainForm);
+        // column index is always the most left position of selection
+        TablePosition selectedCell = getSelectionModel().getSelectedCells().get(0);
+        int columnIndex = selectedCell.getColumn();
+
+        // process selected rows
+        List<ChangeTextOperation> operations = new ArrayList<>();
+        for (Integer row : rows) {
+            LogicalLine line = getItems().get(row);
+            int cellCount = line.cells.size();
+
+            // shift all following cells to the left
+            for (int i = columnIndex + 1; i <= cellCount; i++) {
+                SimpleObjectProperty<Cell> leftCellAsString = line.getCellAsStringProperty(i - 1, mainForm);
+                Cell leftCell = leftCellAsString.get();
+                if (i == cellCount) {
+                    Cell newCell = new Cell("", "    ", line);
+                    operations.add(new ChangeTextOperation(
+                            getItems(), leftCell.contents, newCell.contents, row, i - 1));
+
+                    leftCellAsString.set(newCell);
+
+                } else {
+                    SimpleObjectProperty<Cell> currentCellAsString = line.getCellAsStringProperty(i, mainForm);
+                    Cell currentCellCopy = currentCellAsString.get().copy();
+                    operations.add(new ChangeTextOperation(
+                            getItems(), leftCell.contents, currentCellCopy.contents, row, i - 1));
+
+                    leftCellAsString.set(currentCellCopy);
+                }
+            }
         }
+        getScenario().getUndoStack().iJustDid(new MassOperation(operations));
+        considerAddingVirtualRowsAndColumns();
     }
 
     private void commentOutOrUncomment(boolean uncomment) {

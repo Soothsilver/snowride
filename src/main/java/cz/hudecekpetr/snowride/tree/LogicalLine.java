@@ -139,24 +139,6 @@ public class LogicalLine {
         }
     }
 
-    public void shiftCellsRightFromIndex(int columnIndex, MainForm mainForm) {
-        int cellCount = cells.size();
-        for (int i = cellCount - 1; i >= columnIndex; i--) {
-            getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
-        }
-    }
-
-    public void shiftCellsLeftToIndex(int columnIndex, MainForm mainForm) {
-        int cellCount = cells.size();
-        for (int i = columnIndex + 1; i <= cellCount; i++) {
-            if (i == cellCount) {
-                getCellAsStringProperty(i - 1, mainForm).set(new Cell("", "    ", this));
-            } else {
-                getCellAsStringProperty(i - 1, mainForm).set(cells.get(i).copy());
-            }
-        }
-    }
-
     public void shiftTrueCellsRight(MainForm mainForm) {
         int cellCount = cells.size();
         for (int i = cellCount - 1; i >= 1; i--) {
