@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui.popup;
 
+import com.sun.javafx.stage.PopupWindowHelper;
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
 import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -47,6 +48,6 @@ public class DocumentationPopup extends SnowPopup {
         documentationPane.setMaxHeight(500);
         documentationPane.setPadding(new Insets(6));
         this.setConsumeAutoHidingEvents(false);
-        this.getContent().add(documentationPane);
+        PopupWindowHelper.getContent(this).add(documentationPane);
     }
 }
