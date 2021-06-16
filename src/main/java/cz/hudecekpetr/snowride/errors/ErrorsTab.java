@@ -19,10 +19,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
-import org.controlsfx.validation.Severity;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.controlsfx.validation.Severity;
 
 
 public class ErrorsTab {
