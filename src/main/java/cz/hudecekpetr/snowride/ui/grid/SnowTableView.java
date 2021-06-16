@@ -7,9 +7,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
-
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -42,6 +39,7 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TablePositionBase;
 import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TableView;
+import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
@@ -67,10 +65,6 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.setStyle("-fx-selection-bar: lightyellow;");
-        this.skinProperty().addListener((observable, oldValue, newValue) -> {
-            final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
-            header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
-        });
         TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
@@ -213,11 +207,6 @@ public class SnowTableView extends TableView<LogicalLine> {
         for (LogicalLine item : getItems()) {
             item.recalcStyles();
         }
-    }
-
-    @Override
-    protected Skin<?> createDefaultSkin() {
-        return new PrecursorTableViewSkin<>(this);
     }
 
     private void onMouseClicked(MouseEvent mouseEvent) {
@@ -586,6 +575,7 @@ public class SnowTableView extends TableView<LogicalLine> {
     private TableColumn<LogicalLine, Cell> createColumn(int cellIndex) {
         TableColumn<LogicalLine, Cell> column = new TableColumn<>();
         column.setSortable(false);
+        column.setReorderable(false);
         column.setMinWidth(40);
         column.setCellFactory(param -> new IceCell(param, cellIndex, SnowTableView.this));
         if (cellIndex == 0 || cellIndex == 1) {
