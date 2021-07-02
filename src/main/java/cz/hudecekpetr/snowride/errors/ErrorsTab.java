@@ -1,16 +1,8 @@
 package cz.hudecekpetr.snowride.errors;
 
-import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
-import cz.hudecekpetr.snowride.semantics.findusages.Usage;
-import cz.hudecekpetr.snowride.tree.Cell;
-import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
-import cz.hudecekpetr.snowride.tree.highelements.Scenario;
-import cz.hudecekpetr.snowride.tree.highelements.Suite;
-import cz.hudecekpetr.snowride.tree.highelements.UltimateRoot;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -26,10 +18,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import org.apache.commons.lang3.StringUtils;
+
 import org.controlsfx.validation.Severity;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

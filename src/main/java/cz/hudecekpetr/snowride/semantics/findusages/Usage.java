@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.semantics.findusages;
 
-import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 

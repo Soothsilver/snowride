@@ -1,13 +1,11 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
-import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
-import cz.hudecekpetr.snowride.semantics.UserKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.findusages.Usage;
