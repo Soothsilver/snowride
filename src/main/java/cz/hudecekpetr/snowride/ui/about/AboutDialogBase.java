@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.ui.about;
 
 import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
-import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;

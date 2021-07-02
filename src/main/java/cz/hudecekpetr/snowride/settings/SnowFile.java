@@ -1,9 +1,8 @@
 package cz.hudecekpetr.snowride.settings;
 
 import cz.hudecekpetr.snowride.ui.MainForm;
-import javafx.application.Platform;
+
 import org.apache.commons.lang3.StringUtils;
-import sun.applet.Main;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -2,7 +2,6 @@ package cz.hudecekpetr.snowride.semantics;
 
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.TestCaseSettingOption;
-import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 
