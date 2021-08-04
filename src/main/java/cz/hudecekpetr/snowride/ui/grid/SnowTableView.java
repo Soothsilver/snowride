@@ -97,24 +97,24 @@ public class SnowTableView extends TableView<LogicalLine> {
 
         MenuItem miInsertCell = new MenuItem("Insert cell");
         miInsertCell.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.SHIFT_DOWN,
-                KeyCombination.CONTROL_DOWN));
+                KeyCombination.SHORTCUT_DOWN));
         miInsertCell.setOnAction(event -> insertSelectedCells());
 
         MenuItem miDeleteCell = new MenuItem("Delete cell");
         miDeleteCell.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.SHIFT_DOWN,
-                KeyCombination.CONTROL_DOWN));
+                KeyCombination.SHORTCUT_DOWN));
         miDeleteCell.setOnAction(event -> deleteSelectedCells());
 
         MenuItem miInsertRow = new MenuItem("Insert row before this");
-        miInsertRow.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN));
+        miInsertRow.setAccelerator(new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN));
         miInsertRow.setOnAction(event -> insertRowBefore());
 
         MenuItem miAppendRow = new MenuItem("Append row after this");
-        miAppendRow.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN));
+        miAppendRow.setAccelerator(new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN));
         miAppendRow.setOnAction(event -> appendRowAfter());
 
         MenuItem miDeleteRows = new MenuItem("Delete all selected rows");
-        miDeleteRows.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN));
+        miDeleteRows.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN));
         miDeleteRows.setOnAction(event -> deleteSelectedRows());
 
         if (getSelectionModel().getSelectedCells().size() > 0) {
@@ -147,10 +147,10 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
         if (snowTableKind == SnowTableKind.SCENARIO) {
             MenuItem miComment = new MenuItem("Comment out");
-            miComment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN));
+            miComment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN));
             miComment.setOnAction(event -> commentOutOrUncomment(false));
             MenuItem miUncomment = new MenuItem("Uncomment");
-            miUncomment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
+            miUncomment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN));
             miUncomment.setOnAction(event -> commentOutOrUncomment(true));
             contextMenuItems.add(miComment);
             contextMenuItems.add(miUncomment);
@@ -225,7 +225,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (lastPositionSelected != null && lastPositionSelected.getColumn() == 0) {
             mainForm.toast("In Snowride, you must not click the 'Row' column. Right-click the next column instead to get the correct context menu.");
         }
-        if (mouseEvent.isControlDown()) {
+        if (mouseEvent.isShortcutDown()) {
             Cell cell;
             if (snowTableKind.isScenario()) {
                 cell = getFocusedCell();
@@ -274,26 +274,26 @@ public class SnowTableView extends TableView<LogicalLine> {
         if (keyEvent.getCode() == KeyCode.DIGIT3) {
             int a = 5;
         }
-        if (keyEvent.getCode() == KeyCode.I && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
+        if (keyEvent.getCode() == KeyCode.I && keyEvent.isShiftDown() && keyEvent.isShortcutDown()) {
             insertSelectedCells();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isShiftDown() && keyEvent.isShortcutDown()) {
             deleteSelectedCells();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.I && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.I && keyEvent.isShortcutDown()) {
             insertRowBefore();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.A && keyEvent.isShortcutDown()) {
             appendRowAfter();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isShortcutDown()) {
             deleteSelectedRows();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isShortcutDown()) {
             getScenario().getUndoStack().undoIfAble();
-        } else if (keyEvent.getCode() == KeyCode.Y && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.Y && keyEvent.isShortcutDown()) {
             getScenario().getUndoStack().redoIfAble();
-        } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isShortcutDown()) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.triggerAutocompletionNext = true;
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
@@ -310,23 +310,23 @@ public class SnowTableView extends TableView<LogicalLine> {
                 getScenario().getUndoStack().iJustDid(new MassOperation(coordinates));
             }
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isShortcutDown()) {
             cutOrCopy(false);
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.X && keyEvent.isShortcutDown()) {
             cutOrCopy(true);
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
+        } else if (keyEvent.getCode() == KeyCode.V && keyEvent.isShortcutDown()) {
             TablePosition<LogicalLine, Cell> focusedTablePosition = getFocusedTablePosition();
             pasteStartingAt(focusedTablePosition);
             keyEvent.consume();
-        } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isControlDown()) {
+        } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isShortcutDown()) {
             commentOutOrUncomment(keyEvent.isShiftDown());
-        } else if ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isControlDown()) {
+        } else if ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isShortcutDown()) {
             commentOutOrUncomment(false);
-        } else if ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isControlDown()) {
+        } else if ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isShortcutDown()) {
             commentOutOrUncomment(true);
-        } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isControlDown()) || keyEvent.getCode() == KeyCode.F1) {
+        } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isShortcutDown()) || keyEvent.getCode() == KeyCode.F1) {
             if (getSelectionModel().getSelectedCells().size() > 0) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
                 Cell copy = cell.getValue().copy();
@@ -338,7 +338,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             selectCell(0,1);
             keyEvent.consume();
         } else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
-                && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isControlDown()
+                && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isShortcutDown()
                 && keyEvent.getCode() != KeyCode.ESCAPE) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.edit(focusedCell.getRow(), focusedCell.getTableColumn());
