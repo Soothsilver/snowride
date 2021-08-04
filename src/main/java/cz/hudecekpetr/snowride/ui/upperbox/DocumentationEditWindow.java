@@ -32,7 +32,7 @@ public class DocumentationEditWindow extends AboutDialogBase {
         TextArea documentationArea = new TextArea();
         bClose.setOnAction(event -> clickOK(line, element, documentationArea));
         this.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
+            if (event.getCode() == KeyCode.ENTER && event.isShortcutDown()) {
                 clickOK(line, element, documentationArea);
             }
         });

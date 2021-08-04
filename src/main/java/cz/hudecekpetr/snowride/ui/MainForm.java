@@ -233,20 +233,20 @@ public class MainForm {
 
     private void addGlobalShortcuts(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.CONTROL) {
+            if (event.getCode() == KeyCode.SHORTCUT) {
                 Underlining.ctrlDown = true;
                 Underlining.update();
             }
-            if (event.getCode() == KeyCode.F && event.isControlDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
+            if (event.getCode() == KeyCode.F && event.isShortcutDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
                 textEditTab.getTbSearchBox().requestFocus();
             }
             if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
                 event.consume();
-            } else if (event.getCode() == KeyCode.LEFT && event.isControlDown()) {
+            } else if (event.getCode() == KeyCode.LEFT && event.isShortcutDown()) {
                 goBack();
                 event.consume();
-            } else if (event.getCode() == KeyCode.RIGHT && event.isControlDown()) {
+            } else if (event.getCode() == KeyCode.RIGHT && event.isShortcutDown()) {
                 goForwards();
                 event.consume();
             } else if (event.getCode() == KeyCode.LEFT && event.isAltDown()) {
@@ -255,7 +255,7 @@ public class MainForm {
             } else if (event.getCode() == KeyCode.RIGHT && event.isAltDown()) {
                 goForwards();
                 event.consume();
-            } else if (event.getCode() == KeyCode.N && event.isControlDown()) {
+            } else if (event.getCode() == KeyCode.N && event.isShortcutDown()) {
                 tbSearchTests.requestFocus();
                 searchSuitesAutoCompletion.trigger();
                 event.consume();
@@ -267,7 +267,7 @@ public class MainForm {
             }
         });
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
-            if (event.getCode() == KeyCode.CONTROL) {
+            if (event.getCode() == KeyCode.SHORTCUT) {
                 Underlining.ctrlDown = false;
                 Underlining.update();
             }
@@ -305,10 +305,10 @@ public class MainForm {
         projectTree.setOnKeyPressed(event -> {
             // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts
             // to hard-move children.
-            if (event.getCode() == KeyCode.UP && event.isControlDown()) {
+            if (event.getCode() == KeyCode.UP && event.isShortcutDown()) {
                 event.consume();
             }
-            if (event.getCode() == KeyCode.DOWN && event.isControlDown()) {
+            if (event.getCode() == KeyCode.DOWN && event.isShortcutDown()) {
                 event.consume();
             }
         });
@@ -329,11 +329,11 @@ public class MainForm {
             TreeItem<HighElement> selectedItem = projectTree.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 if (selectedItem.getValue() instanceof Scenario) {
-                    if (event.getCode() == KeyCode.UP && event.isControlDown()) {
+                    if (event.getCode() == KeyCode.UP && event.isShortcutDown()) {
                         moveScenario((Scenario) selectedItem.getValue(), -1);
                         event.consume();
                     }
-                    if (event.getCode() == KeyCode.DOWN && event.isControlDown()) {
+                    if (event.getCode() == KeyCode.DOWN && event.isShortcutDown()) {
                         moveScenario((Scenario) selectedItem.getValue(), 1);
                         event.consume();
                     }
@@ -485,12 +485,12 @@ public class MainForm {
                 menu.add(copy);
 
                 MenuItem moveUp = new MenuItem("Move up");
-                moveUp.setAccelerator(new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN));
+                moveUp.setAccelerator(new KeyCodeCombination(KeyCode.UP, KeyCombination.SHORTCUT_DOWN));
                 moveUp.setOnAction(event -> moveScenario(asScenario, -1));
                 menu.add(moveUp);
 
                 MenuItem moveDown = new MenuItem("Move down");
-                moveDown.setAccelerator(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN));
+                moveDown.setAccelerator(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHORTCUT_DOWN));
                 moveDown.setOnAction(event -> moveScenario(asScenario, 1));
                 menu.add(moveDown);
 
@@ -709,7 +709,7 @@ public class MainForm {
         projectMenu = new Menu("Project");
 
         MenuItem bLoadArbitrary = new MenuItem("Load directory...", loadIcon(Images.open));
-        bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
+        bLoadArbitrary.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN));
         bLoadArbitrary.setOnAction(actionEvent1 -> openDirectory());
         openFolderDialog = new DirectoryChooser();
 
@@ -722,7 +722,7 @@ public class MainForm {
         saveSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
 
         MenuItem bSaveAll = new MenuItem("Save all", loadIcon(Images.save));
-        bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
+        bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
         bSaveAll.setOnAction(event3 -> saveAll());
         bSaveAll.disableProperty().bind(canSave.not());
 
@@ -748,12 +748,12 @@ public class MainForm {
 
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
         back.disableProperty().bind(canNavigateBack.not());
-        back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.CONTROL_DOWN));
+        back.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHORTCUT_DOWN));
         back.setOnAction(event2 -> goBack());
 
         MenuItem forwards = new MenuItem("Navigate forwards", loadIcon(Images.goRight));
         forwards.setOnAction(event1 -> goForwards());
-        forwards.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.CONTROL_DOWN));
+        forwards.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHORTCUT_DOWN));
         forwards.disableProperty().bind(canNavigateForwards.not());
 
         Menu navigateMenu = new Menu("Navigate", null, back, forwards);

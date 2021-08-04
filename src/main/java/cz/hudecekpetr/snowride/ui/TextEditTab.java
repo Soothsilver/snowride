@@ -87,7 +87,7 @@ public class TextEditTab {
         bReformat.setOnAction(event -> reformat());
         Tooltip.install(bReformat, new Tooltip("Reformats the file so that it looks as close as RIDE would reformat it. Does nothing if the file cannot be parsed."));
         mainForm.getStage().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.L && event.isControlDown()) {
+            if (event.getCode() == KeyCode.L && event.isShortcutDown()) {
                 reformat();
             }
         });
