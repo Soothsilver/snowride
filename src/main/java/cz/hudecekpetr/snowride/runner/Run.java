@@ -15,6 +15,7 @@ public class Run {
     public long lastKeywordBeganWhen = System.currentTimeMillis();
     public int countPassedTests = 0;
     public int countFailedTests = 0;
+    public int countSkippedTests = 0;
     public SimpleStringProperty logFile = new SimpleStringProperty(null);
     public SimpleStringProperty reportFile = new SimpleStringProperty(null);
     public Deque<String> keywordStack = new ArrayDeque<>();
@@ -22,8 +23,9 @@ public class Run {
 
     public void clear() {
         stoppableProcessId.set(-1);
-        countFailedTests = 0;
         countPassedTests = 0;
+        countFailedTests = 0;
+        countSkippedTests = 0;
         forciblyKilled = false;
         keywordStack.clear();
         lastKeywordBeganWhen = System.currentTimeMillis();

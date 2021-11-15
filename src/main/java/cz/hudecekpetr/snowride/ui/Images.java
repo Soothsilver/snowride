@@ -13,6 +13,7 @@ public class Images {
     public static Image yes = staticImage("yes16.png");
     public static Image xml = staticImage("xml16.png");
     public static Image no = staticImage("no16.png");
+    public static Image skip = staticImage("skip16.png");
     public static Image running = staticImage("running16.png");
     public static Image b = staticImage("b16.png");
     public static Image brackets = staticImage("brackets16.png");

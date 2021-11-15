@@ -90,6 +90,7 @@ public class RunTab {
     private Tab tabRun;
     private Label lblPassed;
     private Label lblFailed;
+    private Label lblSkipped;
     private Label lblTotalTime;
     private HBox hboxExecutionLine;
     private TcpHost tcpHost;
@@ -194,12 +195,14 @@ public class RunTab {
         lblTotalTime = new Label("0:00:00");
         lblTotalTime.setPadding(new Insets(0, 0, 0, 10));
         lblFailed = new Label("Failed: 0");
+        lblSkipped = new Label("Skipped: 0");
         lblPassed = new Label("Passed: 0");
         lblKeyword = new Label("No keyword running.");
         lblTotalTime.setMinWidth(90);
         lblFailed.setMinWidth(90);
+        lblSkipped.setMinWidth(90);
         lblPassed.setMinWidth(90);
-        hboxExecutionLine = new HBox(lblTotalTime, lblFailed, lblPassed, lblKeyword);
+        hboxExecutionLine = new HBox(lblTotalTime, lblFailed, lblSkipped, lblPassed, lblKeyword);
         hboxExecutionLine.setAlignment(Pos.CENTER_LEFT);
         cbWithTags = new CheckBox("Run only tests with tags:");
         cbWithTags.setSelected(Settings.getInstance().cbWithTags);
@@ -542,6 +545,7 @@ public class RunTab {
             setHboxBackgroundColor(Color.TRANSPARENT);
         }
         lblFailed.setText("Failed: " + run.countFailedTests);
+        lblSkipped.setText("Skipped: " + run.countSkippedTests);
         lblPassed.setText("Passed: " + run.countPassedTests);
     }
 

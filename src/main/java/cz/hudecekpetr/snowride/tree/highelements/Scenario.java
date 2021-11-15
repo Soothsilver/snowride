@@ -195,6 +195,9 @@ public class Scenario extends HighElement {
             case FAILED:
                 this.imageView.setImage(Images.no);
                 break;
+            case SKIP:
+                this.imageView.setImage(Images.skip);
+                break;
         }
     }
 

@@ -186,6 +186,9 @@ public class TcpHost {
                         runTab.run.countPassedTests++;
                         endingTest.markTestStatus(TestResult.PASSED);
                         runTab.possiblyDeselectPassingTest(endingTest);
+                    } else if (status.equals("SKIP")) {
+                        runTab.run.countSkippedTests++;
+                        endingTest.markTestStatus(TestResult.SKIP);
                     } else {
                         runTab.run.countFailedTests++;
                         endingTest.markTestStatus(TestResult.FAILED);
