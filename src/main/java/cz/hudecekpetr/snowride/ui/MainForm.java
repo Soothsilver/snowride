@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
 import javafx.beans.value.ChangeListener;
@@ -255,7 +256,7 @@ public class MainForm {
             } else if (event.getCode() == KeyCode.RIGHT && event.isAltDown()) {
                 goForwards();
                 event.consume();
-            } else if (event.getCode() == KeyCode.N && event.isShortcutDown()) {
+            } else if (event.getCode() == KeyCode.N && event.isShortcutDown() || event.getCode() == KeyCode.F && event.isShortcutDown()) {
                 tbSearchTests.requestFocus();
                 searchSuitesAutoCompletion.trigger();
                 event.consume();
@@ -329,12 +330,22 @@ public class MainForm {
             TreeItem<HighElement> selectedItem = projectTree.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 if (selectedItem.getValue() instanceof Scenario) {
-                    if (event.getCode() == KeyCode.UP && event.isShortcutDown()) {
+                    if (event.getCode() == KeyCode.UP && event.isShortcutDown() && !event.isAltDown()) {
                         moveScenario((Scenario) selectedItem.getValue(), -1);
                         event.consume();
                     }
-                    if (event.getCode() == KeyCode.DOWN && event.isShortcutDown()) {
+                    if (event.getCode() == KeyCode.DOWN && event.isShortcutDown() && !event.isAltDown()) {
                         moveScenario((Scenario) selectedItem.getValue(), 1);
+                        event.consume();
+                    }
+                }
+                if (selectedItem.getValue() != null) {
+                    if (event.getCode() == KeyCode.UP && event.isShortcutDown() && event.isAltDown() && event.isShortcutDown()) {
+                        navigateToSelectedScenario(selectedItem.getValue(), KeyCode.UP);
+                        event.consume();
+                    }
+                    if (event.getCode() == KeyCode.DOWN && event.isShortcutDown() && event.isAltDown() && event.isShortcutDown()) {
+                        navigateToSelectedScenario(selectedItem.getValue(), KeyCode.DOWN);
                         event.consume();
                     }
                 }
@@ -372,6 +383,34 @@ public class MainForm {
         if (oldValue != null) {
             oldValue.getValue().applyText();
         }
+    }
+
+    private void navigateToSelectedScenario(HighElement currentScenario, KeyCode direction) {
+        AtomicReference<Scenario> previousSelectedScenario = new AtomicReference<>();
+        AtomicReference<Boolean> navigateToNextSelectedScenario = new AtomicReference<>(false);
+
+        getRootElement().selfAndDescendantHighElements().anyMatch(element -> {
+            if (element == currentScenario) {
+                if (direction == KeyCode.DOWN) {
+                    navigateToNextSelectedScenario.set(true);
+                    return false;
+                } else if (previousSelectedScenario.get() != null) {
+                    selectProgrammatically(previousSelectedScenario.get());
+                    return true;
+                }
+            }
+            if (element instanceof Scenario) {
+                Scenario scenario = (Scenario) element;
+                if (scenario.isTestCase() && scenario.checkbox.isSelected()) {
+                    if (navigateToNextSelectedScenario.get()) {
+                        selectProgrammatically(scenario);
+                        return true;
+                    }
+                    previousSelectedScenario.set(scenario);
+                }
+            }
+            return false;
+        });
     }
 
     private List<MenuItem> buildContextMenuFor(TreeItem<HighElement> forWhat) {
