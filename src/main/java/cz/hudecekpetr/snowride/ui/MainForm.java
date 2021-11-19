@@ -1040,7 +1040,7 @@ public class MainForm {
     }
 
     public Optional<HighElement> findTestByFullyQualifiedName(String longname) {
-        return getProjectTree().getRoot().getValue().selfAndDescendantHighElements().filter(he -> he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase())).findFirst();
+        return getRootElement().selfAndDescendantHighElements().filter(he -> he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase())).findFirst();
     }
 
     public void toast(String toastMessage) {

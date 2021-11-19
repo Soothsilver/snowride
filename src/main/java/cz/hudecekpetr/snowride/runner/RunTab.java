@@ -248,7 +248,7 @@ public class RunTab {
         untilFailureOrXSuccess.setOnAction(event -> multirunner.runUntilFailure(numberOfSuccessesToStop.getValue()));
         runOnlyFailedTests.disableProperty().bind(canRun.not());
         runOnlyFailedTests.setOnAction(event -> {
-            mainForm.selectFailedTests(mainForm.getProjectTree().getRoot().getValue());
+            mainForm.selectFailedTests(mainForm.getRootElement());
             clickRun(event);
         });
         runThenDeselect.disableProperty().bind(canRun.not());
@@ -334,7 +334,7 @@ public class RunTab {
                 }
             }
             // Back to std. image
-            mainForm.getProjectTree().getRoot().getValue().selfAndDescendantHighElements().forEach((he) -> {
+            mainForm.getRootElement().selfAndDescendantHighElements().forEach((he) -> {
                 if (he instanceof Scenario && ((Scenario) he).isTestCase()) {
                     ((Scenario) he).markTestStatus(TestResult.NOT_YET_RUN);
                 }
@@ -387,7 +387,7 @@ public class RunTab {
     }
 
     private List<Scenario> getCheckedTestCases() {
-        HighElement element = mainForm.getProjectTree().getRoot().getValue();
+        HighElement element = mainForm.getRootElement();
         List<Scenario> checkedStuff = new ArrayList<>();
         collectCheckedTestCases(element, checkedStuff);
         return checkedStuff;
