@@ -1,10 +1,13 @@
 package cz.hudecekpetr.snowride.ui;
 
+import org.robotframework.jaxb.OutputElement;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.util.Pair;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,7 +16,14 @@ public class NavigationStack {
     private List<HighElement> navigationStack = new ArrayList<>();
     private int displayingWhat = -1;
 
+    // output.xml related fields
+    public OutputElement currentOutputElement;
+    private LinkedList<Pair<HighElement, OutputElement>> outputElementsStack = new LinkedList<>();
+    private int currentOutputElementStackIndex = -1;
+
     public void standardEnter(HighElement enterWhat) {
+        addOutputElementToStack(enterWhat);
+
         // Remove elements until you remove everything over our position
         while (displayingWhat + 1 < navigationStack.size()) {
             // debugging: System.out.println("Destroying " + navigationStack.get(navigationStack.size() -1).getShortName() + " (stack: " + getTheStack() + ")");
@@ -35,11 +45,13 @@ public class NavigationStack {
     }
 
     public HighElement navigateForwards() {
+        currentOutputElementStackIndex++;
         displayingWhat++;
         updatePossibilities();
         return navigationStack.get(displayingWhat);
     }
     public HighElement navigateBackwards() {
+        currentOutputElementStackIndex--;
         displayingWhat--;
         updatePossibilities();
         return navigationStack.get(displayingWhat);
@@ -48,9 +60,38 @@ public class NavigationStack {
     public BooleanProperty canNavigateForwards = new SimpleBooleanProperty();
 
     public void clear() {
+        clearOutputElementStack();
         navigationStack.clear();
         displayingWhat = -1;
         updatePossibilities();
+    }
+
+    public OutputElement currentOutputElement() {
+        if (currentOutputElementStackIndex < 0) {
+            return null;
+        }
+        return outputElementsStack.get(currentOutputElementStackIndex).getValue();
+    }
+
+    private void addOutputElementToStack(HighElement enterWhat) {
+        // clear outputElements stack
+        if (enterWhat.outputElement != null) {
+            clearOutputElementStack();
+        }
+        // remove outputElements until everything over current position is removed
+        while (!outputElementsStack.isEmpty() && currentOutputElementStackIndex + 1 < outputElementsStack.size()) {
+            outputElementsStack.removeLast();
+        }
+        // add outputElement to stack
+        if (currentOutputElement != null) {
+            outputElementsStack.add(new Pair(enterWhat, currentOutputElement));
+            currentOutputElementStackIndex++;
+        }
+    }
+
+    public void clearOutputElementStack() {
+        outputElementsStack.clear();
+        currentOutputElementStackIndex = -1;
     }
 
     public void remove(HighElement he) {

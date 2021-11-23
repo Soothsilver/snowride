@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
 import javafx.scene.Node;
+import org.robotframework.jaxb.OutputElement;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -50,6 +51,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public Suite parent;
     public String semanticsDocumentation;
     public LogicalLine semanticsDocumentationLine;
+    public OutputElement outputElement;
     private ObservableMultiset<SnowrideError> allErrorsRecursiveSource = new ObservableMultiset<>();
     private String invariantName;
     private UndoStack undoStack = new UndoStack();

@@ -1,19 +1,24 @@
 package cz.hudecekpetr.snowride.ui;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
-import cz.hudecekpetr.snowride.ui.grid.SnowTableView;
+import cz.hudecekpetr.snowride.output.OutputMatcher;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
+import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
 import cz.hudecekpetr.snowride.tree.highelements.FolderSuite;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
-import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableView;
 import cz.hudecekpetr.snowride.ui.upperbox.UpperBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,6 +106,21 @@ public class GridTab {
             tabGrid.setContent(lblParseError);
             lblParseError.setText("No element is loaded.");
             tabGrid.setContent(lblParseError);
+        }
+    }
+
+    public void updateTablesLineNumberCellsStyle() {
+        updateLineNumberCellsStyle(tableSettings);
+        updateLineNumberCellsStyle(tableVariables);
+        updateLineNumberCellsStyle(spreadsheetViewTable);
+    }
+
+    private void updateLineNumberCellsStyle(SnowTableView table) {
+        OutputMatcher.matchLines(table.scenario, table.getItems());
+        for (LogicalLine line : table.getItems()) {
+            if (line.lineNumberCell != null) {
+                line.lineNumberCell.updateLineNumberCellStyle();
+            }
         }
     }
 

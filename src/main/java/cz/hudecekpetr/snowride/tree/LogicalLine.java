@@ -1,16 +1,13 @@
 package cz.hudecekpetr.snowride.tree;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.validation.Severity;
-
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import org.robotframework.jaxb.BodyItemStatusValue;
+import org.robotframework.jaxb.For;
+import org.robotframework.jaxb.ForIteration;
+import org.robotframework.jaxb.Keyword;
 import cz.hudecekpetr.snowride.semantics.CellSemantics;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.QualifiedKeyword;
@@ -20,6 +17,15 @@ import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.beans.property.SimpleObjectProperty;
+import org.apache.commons.lang3.StringUtils;
+import org.controlsfx.validation.Severity;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static cz.hudecekpetr.snowride.Extensions.toInvariant;
 
 import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.getVariableName;
 import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.isVariable;
@@ -36,10 +42,19 @@ public class LogicalLine {
      * cell 0 is empty and the line actually begins with the cell zero's post-trivia.
      */
     public List<Cell> cells = new ArrayList<>();
+    public Cell lineNumberCell;
     public PositionInListProperty lineNumber;
     public SnowTableKind belongsWhere;
     private HighElement belongsToHighElement;
     private List<SimpleObjectProperty<Cell>> wrappers = new ArrayList<>();
+
+    // output.xml related fields
+    public BodyItemStatusValue status;
+    public boolean doesNotMatch;
+    public Keyword keyword;
+    public List<String> keywordArguments;
+    public List<ForIteration> forIterations;
+    public For forLoop;
 
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
@@ -134,7 +149,6 @@ public class LogicalLine {
 
     }
 
-
     public void recalcStyles() {
         recalculateSemantics();
         for (Cell cell : cells) {
@@ -218,7 +232,7 @@ public class LogicalLine {
                 // This is the keyword.
                 cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
                 cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
-                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(cell.contents));
+                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(cell.contents));
                 for (IKnownKeyword homonym : homonyms) {
                     if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
                         cellSemantics.thisHereKeyword = homonym;
@@ -267,7 +281,7 @@ public class LogicalLine {
                     prefix.equalsIgnoreCase("And") ||
                     prefix.equalsIgnoreCase("But")) {
                 String afterPrefix = cellContents.substring(firstSpace + 1);
-                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(afterPrefix));
+                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(afterPrefix));
                 for (IKnownKeyword homonym : homonyms) {
                     if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
                         cellSemantics.thisHereKeyword = homonym;
@@ -283,11 +297,11 @@ public class LogicalLine {
     private void determineThisHereKeywordWithAdvancedProcedures(CellSemantics cellSemantics, SnowTableKind kind, String cellContents) {
         QualifiedKeyword qualifiedKeyword = QualifiedKeyword.fromDottedString(cellContents);
         if (qualifiedKeyword.getSource() != null) {
-            Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(Extensions.toInvariant(qualifiedKeyword.getKeyword()));
+            Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(qualifiedKeyword.getKeyword()));
             for (IKnownKeyword homonym : homonyms) {
                 if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
                     String sourceName = homonym.getSourceName();
-                    if (!StringUtils.isEmpty(sourceName) && Extensions.toInvariant(sourceName).equals(Extensions.toInvariant(qualifiedKeyword.getSource()))) {
+                    if (!StringUtils.isEmpty(sourceName) && toInvariant(sourceName).equals(toInvariant(qualifiedKeyword.getSource()))) {
                         cellSemantics.thisHereKeyword = homonym;
                         break;
                     }
@@ -344,5 +358,54 @@ public class LogicalLine {
                 belongsToHighElement.selfErrors.add(new SnowrideError(belongsToHighElement, ErrorKind.MISSING_ARGUMENT, Severity.WARNING, "Not enough arguments on line " + this.lineNumber.intValue() + "."));
             }
         }
+    }
+
+    public List<String> asLineArgs() {
+        return cells.subList(1, cells.size()).stream()
+//                .map(cell -> toInvariant(cell.contents).replaceAll("\\s*=\\s*$", ""))
+                .map(cell -> toInvariant(cell.contents))
+                .filter(StringUtils::isNotBlank)
+                .filter(s -> !s.startsWith("#"))  // filter out comments
+                .collect(Collectors.toList());
+    }
+
+    public boolean matchesKeyword(Keyword keyword) {
+        // remove empty and comment cells
+        List<String> cellsToMatch = cells.subList(1, cells.size()).stream()
+                .map(cell -> cell.contents)
+                .filter(StringUtils::isNotBlank)
+                .filter(s -> !s.startsWith("#"))  // filter out comments
+                .collect(Collectors.toList());
+
+        // quick check
+        if (cellsToMatch.size() != keyword.getVariables().size() + keyword.getArguments().size() + 1) {
+            return false;
+        }
+
+        List<String> varsToMatch = cellsToMatch.subList(0, keyword.getVariables().size()).stream()
+                .map(contents -> toInvariant(contents).replaceAll("\\s*=\\s*$", ""))
+                .collect(Collectors.toList());
+        if (!varsToMatch.equals(keyword.getVariables().stream().map(contents -> toInvariant(contents).replaceAll("\\s*=\\s*$", "")).collect(Collectors.toList()))) {
+            return false;
+        }
+
+        int index = keyword.getVariables().size() == 0 ? 0 : 1;
+        if (!toInvariant(cellsToMatch.get(index)).equals(toInvariant(keyword.getName()))) {
+            return false;
+        }
+
+        if (keyword.getArguments().isEmpty() || cellsToMatch.subList(index + 1, cellsToMatch.size()).equals(keyword.getArguments())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public void clearOutputFields() {
+        status = null;
+        keyword = null;
+        keywordArguments = null;
+        forIterations = null;
+        doesNotMatch = false;
     }
 }

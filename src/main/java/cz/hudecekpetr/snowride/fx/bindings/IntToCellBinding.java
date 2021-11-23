@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.fx.bindings;
 
 import cz.hudecekpetr.snowride.tree.Cell;
+import cz.hudecekpetr.snowride.tree.LogicalLine;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ObservableValue;
 
@@ -10,16 +11,18 @@ import javafx.beans.value.ObservableValue;
  */
 public class IntToCellBinding extends ObjectBinding<Cell> {
     private ObservableValue<Number> integer;
+    private LogicalLine line;
 
-    public IntToCellBinding(ObservableValue<Number> integer) {
+    public IntToCellBinding(ObservableValue<Number> integer, LogicalLine line) {
         this.integer = integer;
+        this.line = line;
         this.bind(integer);
     }
 
     @Override
     protected Cell computeValue() {
-        Cell lineNumberCell = new Cell(integer.getValue().toString(), "irrelevant", null);
-        lineNumberCell.isLineNumberCell = true;
+        Cell lineNumberCell = new Cell(integer.getValue().toString(), "irrelevant", line, true);
+        line.lineNumberCell = lineNumberCell;
         return lineNumberCell;
     }
 }

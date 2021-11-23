@@ -4,12 +4,14 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.generalpurpose.ByteArrayBuilder;
+import cz.hudecekpetr.snowride.output.OutputParser;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.fx.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.application.Platform;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -194,6 +196,11 @@ public class TcpHost {
                         endingTest.markTestStatus(TestResult.FAILED);
                     }
                     runTab.updateResultsPanel();
+                    break;
+                case "output_file":
+                    String path = arguments.get(0).as(String.class);
+                    runTab.run.outputFile.set(path);
+                    OutputParser.parseOutput(new File(path));
                     break;
                 case "log_file":
                     runTab.run.logFile.set(arguments.get(0).as(String.class));

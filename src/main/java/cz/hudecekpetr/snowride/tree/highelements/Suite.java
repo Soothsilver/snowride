@@ -288,6 +288,7 @@ public abstract class Suite extends HighElement implements ISuite {
                     continue;
                 }
                 newElement.updateGraphics(currentNode.getGraphic(), currentElement);
+                newElement.outputElement = currentElement.outputElement;
                 currentNode.setValue(newElement);
                 newElement.treeNode = currentNode;
                 currentElement.treeNode = null;

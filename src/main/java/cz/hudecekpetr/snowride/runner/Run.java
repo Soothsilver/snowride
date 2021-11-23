@@ -18,6 +18,7 @@ public class Run {
     public int countSkippedTests = 0;
     public SimpleStringProperty logFile = new SimpleStringProperty(null);
     public SimpleStringProperty reportFile = new SimpleStringProperty(null);
+    public SimpleStringProperty outputFile = new SimpleStringProperty(null);
     public Deque<String> keywordStack = new ArrayDeque<>();
     public boolean forciblyKilled;
 

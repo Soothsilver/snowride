@@ -51,6 +51,8 @@ public class Settings {
     // Customization:
     public boolean toolbarReloadAll = true;
     public boolean toolbarDeselectEverything = true;
+    public boolean disableOutputParsing = false;
+    public boolean disableOutputParsingWarning = false;
     public boolean cbShowNonexistentOptionFirst = false;
     public boolean cbAutoExpandSelectedTests = true;
     public boolean cbUseStructureChanged = false;

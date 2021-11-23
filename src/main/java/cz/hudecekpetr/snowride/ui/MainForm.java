@@ -15,6 +15,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
+import cz.hudecekpetr.snowride.output.OutputParser;
+import cz.hudecekpetr.snowride.ui.popup.DocumentationPopup;
+import cz.hudecekpetr.snowride.ui.popup.MessagesPopup;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
@@ -80,6 +83,7 @@ public class MainForm {
     public static final Font TEXT_EDIT_FONT = new Font("Courier New", 12);
     public static MainForm INSTANCE;
     public static DocumentationPopup documentationPopup = new DocumentationPopup();
+    public static MessagesPopup messagesPopup = new MessagesPopup();
     private final SerializingTab serializingTab;
     private final TabPane tabs;
     private final Tab tabTextEdit;
@@ -105,6 +109,7 @@ public class MainForm {
     private SeparatorMenuItem separatorAfterRecentProjects;
     private DirectoryChooser openFolderDialog;
     private FileChooser openSnowFileDialog;
+    private FileChooser openOutputFileDialog;
     private FileChooser saveSnowFileDialog;
     private Menu projectMenu;
     private TextField tbSearchTests;
@@ -724,13 +729,15 @@ public class MainForm {
         bLoadArbitrary.setOnAction(actionEvent1 -> openDirectory());
         openFolderDialog = new DirectoryChooser();
 
-
         MenuItem bLoadSnow = new MenuItem("Load snow project file...", loadIcon(Images.open));
         bLoadSnow.setOnAction(actionEvent1 -> loadSnow());
         openSnowFileDialog = new FileChooser();
         openSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
-        saveSnowFileDialog = new FileChooser();
-        saveSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
+
+        MenuItem bLoadOutputFile = new MenuItem("Load output.xml file...", loadIcon(Images.xml));
+        bLoadOutputFile.setOnAction(actionEvent1 -> loadOutput());
+        openOutputFileDialog = new FileChooser();
+        openOutputFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("output.xml files", "*.xml"));
 
         MenuItem bSaveAll = new MenuItem("Save all", loadIcon(Images.save));
         bSaveAll.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
@@ -754,7 +761,7 @@ public class MainForm {
         bExit.setOnAction(event -> System.exit(0));
         separatorBeforeRecentProjects = new SeparatorMenuItem();
         separatorAfterRecentProjects = new SeparatorMenuItem();
-        projectMenu.getItems().addAll(bLoadArbitrary, bLoadSnow, bSaveAll, bSaveAsSnow, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReloadAll, bReload, bExit);
+        projectMenu.getItems().addAll(bLoadArbitrary, bLoadSnow, bLoadOutputFile, bSaveAll, bSaveAsSnow, separatorBeforeRecentProjects, separatorAfterRecentProjects, bSettings, bReloadAll, bReload, bExit);
         refreshRecentlyOpenMenu();
 
         MenuItem back = new MenuItem("Navigate back", loadIcon(Images.goLeft));
@@ -817,6 +824,13 @@ public class MainForm {
         }
     }
 
+    private void loadOutput() {
+        File loadFromWhere = openOutputFileDialog.showOpenDialog(this.stage);
+        if (loadFromWhere != null) {
+            OutputParser.parseOutput(loadFromWhere.getAbsoluteFile());
+        }
+    }
+
     private void saveAsSnow() {
         File saveWhere = saveSnowFileDialog.showSaveDialog(this.stage);
         if (saveWhere != null) {
@@ -833,7 +847,7 @@ public class MainForm {
     }
 
     private void openDirectory() {
-        if (this.getRootDirectoryElement() != null) {
+        if (getProjectTree().getRoot() != null && getRootDirectoryElement() != null) {
             openFolderDialog.setInitialDirectory(this.getRootDirectoryElement().directoryPath);
         }
         File openWhat = openFolderDialog.showDialog(this.stage);

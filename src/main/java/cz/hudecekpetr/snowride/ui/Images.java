@@ -22,6 +22,7 @@ public class Images {
     public static Image java = staticImage("java16.png");
     public static Image exit = staticImage("exit16.png");
     public static Image log = staticImage("log16.png");
+    public static Image output = staticImage("output16.png");
     public static Image report = staticImage("report16.png");
     public static Image open = staticImage("open16.png");
     public static Image stop = staticImage("stop16.png");

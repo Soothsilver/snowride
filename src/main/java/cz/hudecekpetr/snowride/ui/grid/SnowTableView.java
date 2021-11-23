@@ -1,20 +1,13 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
-
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
 import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import cz.hudecekpetr.snowride.output.OutputMatcher;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.tree.Cell;
@@ -31,24 +24,11 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.Skin;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableFocusModel;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TablePositionBase;
-import javafx.scene.control.TableSelectionModel;
-import javafx.scene.control.TableView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.*;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
@@ -56,7 +36,7 @@ public class SnowTableView extends TableView<LogicalLine> {
     public SnowTableKind snowTableKind;
     public boolean triggerAutocompletionNext;
     public HighElement scenario;
-    private MainForm mainForm;
+    private final MainForm mainForm;
 
     public SnowTableView(MainForm mainForm, SnowTableKind snowTableKind) {
         super();
@@ -161,6 +141,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     TablePosition<LogicalLine, Cell> lastPositionSelected;
     private boolean dontChangeLastPosition = false;
+
     private void cellSelectionChanged(ListChangeListener.Change<? extends TablePosition> change) {
         List<TablePosition> toClear = new ArrayList<>();
         List<TablePosition> toSelect = new ArrayList<>();
@@ -221,13 +202,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             mainForm.toast("In Snowride, you must not click the 'Row' column. Right-click the next column instead to get the correct context menu.");
         }
         if (mouseEvent.isShortcutDown()) {
-            Cell cell;
-            if (snowTableKind.isScenario()) {
-                cell = getFocusedCell();
-            } else {
-                cell = getFocusedCellInSettingsTable();
-            }
-
+            Cell cell = getCurrentCell();
             if (cell != null) {
                 if (cell.leadsToSuite != null) {
                     mainForm.selectProgrammaticallyAndRememberInHistory(cell.leadsToSuite);
@@ -236,6 +211,8 @@ public class SnowTableView extends TableView<LogicalLine> {
                     if (keyword != null) {
                         Scenario highElement = keyword.getScenarioIfPossible();
                         if (highElement != null) {
+                            // TestStack
+                            mainForm.navigationStack.currentOutputElement = cell.partOfLine.keyword;
                             mainForm.selectProgrammaticallyAndRememberInHistory(highElement);
                         } else {
                             mainForm.toast("Keyword '" + keyword.getAutocompleteText() + "' is not a known user keyword. Cannot go to definition.");
@@ -246,7 +223,15 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
-
+    private Cell getCurrentCell() {
+        Cell cell;
+        if (snowTableKind.isScenario()) {
+            cell = getFocusedCell();
+        } else {
+            cell = getFocusedCellInSettingsTable();
+        }
+        return cell;
+    }
 
     private Cell getFocusedCellInSettingsTable() {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
@@ -329,8 +314,16 @@ public class SnowTableView extends TableView<LogicalLine> {
                 cell.set(copy);
                 keyEvent.consume();
             }
+        } else if ((keyEvent.getCode() == KeyCode.W && keyEvent.isShortcutDown()) || keyEvent.getCode() == KeyCode.F4) {
+            if (getSelectionModel().getSelectedCells().size() > 0) {
+                SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
+                Cell copy = cell.getValue().copy();
+                copy.triggerMessagesNext = true;
+                cell.set(copy);
+                keyEvent.consume();
+            }
         } else if (keyEvent.getCode() == KeyCode.TAB) {
-            selectCell(0,1);
+            selectCell(0, 1);
             keyEvent.consume();
         } else if (!keyEvent.getCode().isArrowKey() && !keyEvent.getCode().isFunctionKey() && !keyEvent.getCode().isModifierKey()
                 && !keyEvent.getCode().isNavigationKey() && !keyEvent.getCode().isWhitespaceKey() && !keyEvent.isShortcutDown()
@@ -349,7 +342,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         List<ChangeTextOperation> operations = new ArrayList<>();
         for (Integer row : rows) {
             LogicalLine line = getItems().get(row);
-            for (int i =0; i < line.cells.size(); i++) {
+            for (int i = 0; i < line.cells.size(); i++) {
                 SimpleObjectProperty<Cell> cellAsStringProperty = line.getCellAsStringProperty(i, mainForm);
                 Cell current = cellAsStringProperty.get();
                 operations.add(new ChangeTextOperation(getItems(), current.contents, "", row, i));
@@ -591,7 +584,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
         column.setCellValueFactory(param -> {
             if (cellIndex == -1) {
-                return new IntToCellBinding(param.getValue().lineNumber.add(1));
+                return new IntToCellBinding(param.getValue().lineNumber.add(1), param.getValue());
             }
             if (param.getValue() != null) {
                 return param.getValue().getCellAsStringProperty(cellIndex, mainForm);
@@ -603,6 +596,9 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     public void loadLines(HighElement highElement, ObservableList<LogicalLine> lines) {
+        // match lines from output.xml
+        OutputMatcher.matchLines(highElement, lines);
+
         scenario = highElement;
         // For key-value tables:
         for (LogicalLine line : lines) {
@@ -647,7 +643,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             int numberOfColumnsOfThisLine = line.cells.size();
             if (numberOfColumnsOfThisLine > 0) {
                 int lastNonemptyThisLine = -1;
-                for (int j = line.cells.size()-1;j>0;j--) {
+                for (int j = line.cells.size() - 1; j > 0; j--) {
                     Cell cell = line.cells.get(j);
                     if (!StringUtils.isEmpty(cell.contents)) {
                         lastNonemptyThisLine = j;
@@ -674,7 +670,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             if (snowTableKind.isScenario()) {
                 getColumns().add(createColumn(getColumns().size()));
             } else {
-                getColumns().add(createColumn(getColumns().size()-1));
+                getColumns().add(createColumn(getColumns().size() - 1));
             }
         }
         while (virtualRows < 4) {
@@ -710,12 +706,14 @@ public class SnowTableView extends TableView<LogicalLine> {
         else if (columnDiff > 0 && currentColumn == -1) return;
 
         TableColumn tc = focusedCell.getTableColumn();
-        tc = getVisibleLeafColumn(getVisibleLeafIndex(tc) +  columnDiff);
+        tc = getVisibleLeafColumn(getVisibleLeafIndex(tc) + columnDiff);
 
 
         int row = focusedCell.getRow() + rowDiff;
         sm.clearAndSelect(row, tc);
-    }private Cell getFocusedCell() {
+    }
+
+    private Cell getFocusedCell() {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
         SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
         return cellSimpleObjectProperty.getValue();

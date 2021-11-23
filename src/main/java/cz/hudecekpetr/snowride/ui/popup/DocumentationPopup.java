@@ -1,22 +1,18 @@
-package cz.hudecekpetr.snowride.ui;
+package cz.hudecekpetr.snowride.ui.popup;
 
 import cz.hudecekpetr.snowride.fx.DocumentationTextArea;
 import cz.hudecekpetr.snowride.semantics.IHasQuickDocumentation;
-import cz.hudecekpetr.snowride.fx.ScreenEdgeAvoidance;
-import javafx.geometry.Dimension2D;
+import cz.hudecekpetr.snowride.ui.Images;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Popup;
-import javafx.stage.Window;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
 
-public class DocumentationPopup extends Popup {
+public class DocumentationPopup extends SnowPopup {
 
     private final Label keyword_name;
     private final Label keyword_source;
@@ -29,7 +25,6 @@ public class DocumentationPopup extends Popup {
         icon.setImage(option.getAutocompleteIcon());
         keyword_documentation.setDocumentation(option.getFullDocumentation());
     }
-
 
     public DocumentationPopup() {
         this.setAutoFix(false);
@@ -53,10 +48,5 @@ public class DocumentationPopup extends Popup {
         documentationPane.setPadding(new Insets(6));
         this.setConsumeAutoHidingEvents(false);
         this.getContent().add(documentationPane);
-    }
-
-    public void showRightIfPossible(Window parent, double anchorLeft, double anchorWidth, double y) {
-        Point2D finalPoint = ScreenEdgeAvoidance.determineStartingPositionForDocumentationPopup(anchorLeft, y, anchorWidth, new Dimension2D(450, 500));
-        show(parent, finalPoint.getX(), finalPoint.getY());
     }
 }

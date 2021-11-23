@@ -4,6 +4,8 @@ import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
+import cz.hudecekpetr.snowride.ui.grid.IceCell;
+import org.robotframework.jaxb.BodyItemStatusValue;
 import cz.hudecekpetr.snowride.semantics.*;
 import cz.hudecekpetr.snowride.semantics.codecompletion.GherkinEnhancedOption;
 import cz.hudecekpetr.snowride.semantics.codecompletion.LibraryAutocompleteOption;
@@ -27,6 +29,9 @@ import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.*;
 import static cz.hudecekpetr.snowride.ui.grid.YellowHighlight.lastPositionSelectText;
 
 public class Cell implements IHasQuickDocumentation {
+    private static final String LINE_NUMBER_CELL_STYLE = "-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;";
+    private static final String LINE_NUMBER_CELL_STYLE_DEFAULT = LINE_NUMBER_CELL_STYLE + "-fx-background-color: lavender";
+
     private static final List<String> CONDITIONAL_KEYWORDS = new ArrayList<>(Arrays.asList(": FOR", ":FOR", "FOR", "END", "IF", "ELSE IF", "ELSE"));
 
     // Permanent fields:
@@ -40,9 +45,22 @@ public class Cell implements IHasQuickDocumentation {
     // Fields via analysis:
     public boolean virtual;
     public boolean triggerDocumentationNext;
+    public boolean triggerMessagesNext;
     public boolean isLineNumberCell;
-    private SimpleStringProperty styleProperty = new SimpleStringProperty(null);
+    public BodyItemStatusValue status;
+    private final SimpleStringProperty styleProperty = new SimpleStringProperty(null);
+    public IceCell iceCell;
     private CellSemantics semantics;
+
+    public Cell(String contents, String postTrivia, LogicalLine partOfLine, boolean isLineNumberCell) {
+        this.contents = contents;
+        this.postTrivia = postTrivia;
+        this.partOfLine = partOfLine;
+        this.isLineNumberCell = isLineNumberCell;
+        if (isLineNumberCell) {
+            styleProperty.set(LINE_NUMBER_CELL_STYLE_DEFAULT);
+        }
+    }
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
         this.contents = contents;
@@ -61,18 +79,17 @@ public class Cell implements IHasQuickDocumentation {
         return contents;
     }
 
-    public void updateStyle() {
-        leadsToSuite = null;
-        String style = "";
-        if (isLineNumberCell) {
-            style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-text-alignment: right; -fx-alignment: center; ";
-        } else {
-            style += getStyle();
+    public void updateLineNumberCellStyle() {
+        if (iceCell != null) {
+            iceCell.updateLineNumberCellStyle(this);
         }
-        styleProperty.set(style);
     }
 
-    private String getStyle() {
+    public void updateStyle() {
+        if (isLineNumberCell) {
+            return;
+        }
+        leadsToSuite = null;
         String style = "";
         if (semantics.cellIndex == 0) {
             style += "-fx-font-weight: bold; ";
@@ -160,7 +177,7 @@ public class Cell implements IHasQuickDocumentation {
                     break;
             }
         }
-        return style;
+        styleProperty.set(style);
     }
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {

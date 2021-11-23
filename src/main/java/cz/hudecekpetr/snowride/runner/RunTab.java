@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.runner;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.DeferredActions;
 import cz.hudecekpetr.snowride.fx.SnowAlert;
+import cz.hudecekpetr.snowride.output.OutputParser;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
@@ -37,6 +38,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
@@ -168,10 +170,14 @@ public class RunTab {
         bStop.disableProperty().bind(canStop.not());
         Button bLog = new Button("Log", new ImageView(Images.log));
         bLog.disableProperty().bind(Bindings.isNull(run.logFile));
-        bLog.setOnAction(event -> openFile(RunTab.this.run.logFile.getValue()));
+        bLog.setOnMouseClicked(event -> openFileOrDirectory(event, RunTab.this.run.logFile.getValue()));
         Button bReport = new Button("Report", new ImageView(Images.report));
-        bReport.setOnAction(event -> openFile(RunTab.this.run.reportFile.getValue()));
+        bReport.setOnMouseClicked(event -> openFileOrDirectory(event, RunTab.this.run.reportFile.getValue()));
         bReport.disableProperty().bind(Bindings.isNull(run.reportFile));
+        Button bOutput = new Button("Output", new ImageView(Images.output));
+        bOutput.setOnMouseClicked(event -> openFileOrDirectory(event, RunTab.this.run.outputFile.getValue()));
+        bOutput.setOnMouseClicked(event -> openFileOrDirectory(event, RunTab.this.run.outputFile.getValue()));
+        bOutput.disableProperty().bind(Bindings.isNull(run.outputFile));
         Button bRunAdvanced = new Button("Advanced run...", new ImageView(Images.play));
         bRunAdvanced.disableProperty().bind(canRun.not());
         ContextMenu advancedRunContextMenu = buildAdvancedRunContextMenu();
@@ -182,7 +188,7 @@ public class RunTab {
         lblMultirun = new Label("Running until failure (0 successes so far)");
         lblMultirun.managedProperty().bind(lblMultirun.visibleProperty());
         lblMultirun.setVisible(false);
-        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport, bRunAdvanced, lblMultirun);
+        HBox hboxButtons = new HBox(5, bRun, bStop, bLog, bReport, bOutput, bRunAdvanced, lblMultirun);
         hboxButtons.setAlignment(Pos.CENTER_LEFT);
         hboxButtons.setPadding(new Insets(2));
         Label labelArguments = new Label("Arguments:");
@@ -290,6 +296,7 @@ public class RunTab {
     }
 
     public void clickRun(ActionEvent actionEvent) {
+        OutputParser.cleanup();
         clickRun(actionEvent, false);
     }
 
@@ -566,12 +573,13 @@ public class RunTab {
         hboxExecutionLine.setBackground(new Background(new BackgroundFill(color, null, null)));
     }
 
-    private void openFile(String filename) {
+    private void openFileOrDirectory(MouseEvent event, String filename) {
+        String fileToOpen = event.isShortcutDown() ? new File(filename).getParent() : filename;
         if( Desktop.isDesktopSupported() )
         {
             new Thread(() -> {
                 try {
-                    Desktop.getDesktop().open(new File(filename));
+                    Desktop.getDesktop().open(new File(fileToOpen));
                 } catch (IOException e) {
                     throw new RuntimeException(e.getMessage() + "\n\nIt's possible you don't have Windows set up to automatically open HTML files in a browser. You can do that in 'Default Apps' or with 'Choose default program...'.", e);
                 }

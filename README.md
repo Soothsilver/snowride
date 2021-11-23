@@ -22,12 +22,19 @@ shortcuts, smart autocompletion, inspections, quick fixes, or good navigation.
 **Advantages over other Robot Framework IDEs:** 
 * Very fast 
 * Doesn't freeze up
+* Error reporting directly inside IDE
 * Automated repeated testing
 * Search Anything-style autocompletion
 * Fast test runner
 * Skeuomorphically pretty ^^
 * Single file executable
 * Quality-of-life efficiency features
+
+
+**Error reporting**
+* shows passing/failing KWs from output.xml inside "Assisted grid editing"
+* Press **F4** anywhere on a line to show _messages_ / _arguments_ / _FOR iteratios_
+![Screenshot 3](screenshots/Release3.PNG)
 
 **Test runner screenshot:**
 ![Screenshot 2](screenshots/Release2.PNG)

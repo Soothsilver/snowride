@@ -11,11 +11,17 @@ import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Window;
+import org.robotframework.jaxb.BodyItemStatusValue;
+import org.robotframework.jaxb.Keyword;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
+    private static final String LINE_NUMBER_CELL_STYLE = "-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;";
+
     private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
     private final SnowTableView snowTableView;
     private TableColumn<LogicalLine, Cell> column;
@@ -66,15 +72,25 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         Cell focusedCell = getItem();
         if (focusedCell.hasDocumentation()) {
             MainForm.documentationPopup.setData(focusedCell);
-            Window parent = IceCell.this.getScene().getWindow();
-            MainForm.documentationPopup.showRightIfPossible(parent,
-                    parent.getX() + IceCell.this.localToScene(0.0D, 0.0D).getX() +
-                            IceCell.this.getScene().getX(), IceCell.this.getWidth(),
-                    parent.getY() + IceCell.this.localToScene(0.0D, 0.0D).getY() +
-                            IceCell.this.getScene().getY() + 0);
+            MainForm.documentationPopup.showRightIfPossible(this);
         }
     }
 
+    private void triggerMessages(Cell item) {
+        if (item.partOfLine.keywordArguments != null) {
+            MainForm.messagesPopup.setArgs(item.partOfLine.keywordArguments);
+            MainForm.messagesPopup.showRightIfPossible(this);
+        } else if (item.partOfLine.forIterations != null) {
+            MainForm.messagesPopup.setIterations(item.partOfLine.forIterations);
+            MainForm.messagesPopup.showRightIfPossible(this);
+        } else if (item.partOfLine.forLoop != null) {
+            MainForm.messagesPopup.setMessages(item.partOfLine.forLoop.getMsg());
+            MainForm.messagesPopup.showRightIfPossible(this);
+        } else if (item.partOfLine.keyword != null) {
+            MainForm.messagesPopup.setKeyword(item.partOfLine.keyword);
+            MainForm.messagesPopup.showRightIfPossible(this);
+        }
+    }
 
     @Override
     public void startEdit() {
@@ -181,7 +197,6 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     @Override
     protected void updateItem(Cell item, boolean empty) {
-
         super.updateItem(item, empty);
         styleProperty().unbind();
         if (empty || item == null) {
@@ -190,11 +205,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             setStyle(null);
         } else {
             setTextAndGraphicTo(item);
-            if (item.isLineNumberCell) {
-                String style = "-fx-padding: 0; -fx-background-insets: 0.0; ";
-                style += "-fx-font-weight: bold; -fx-background-color: lavender; -fx-alignment: center; ";
-                setStyle(style);
-            } else {
+            updateLineNumberCellStyle(item);
+            if (!item.isLineNumberCell) {
                 // TODO This is a potential performance bottleneck.
                 styleProperty().bind(item.getStyleProperty());
             }
@@ -202,8 +214,48 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 triggerDocumentation();
                 item.triggerDocumentationNext = false;
             }
+            if (item.triggerMessagesNext) {
+                triggerMessages(item);
+                item.triggerMessagesNext = false;
+            }
         }
     }
+
+    public void updateLineNumberCellStyle(Cell cell) {
+        if (cell.isLineNumberCell) {
+            if (cell.iceCell == null) {
+                cell.iceCell = this;
+            }
+            String style = LINE_NUMBER_CELL_STYLE;
+            String color = "lavender";
+            if (cell.partOfLine != null && cell.partOfLine.status != null) {
+                BodyItemStatusValue status = cell.partOfLine.status;
+                if (status == BodyItemStatusValue.FAIL) {
+                    color = "#ce3e01";
+                    //style += "-fx-background-color: #ce3e01;";
+                } else if (status == BodyItemStatusValue.PASS) {
+                    color = "#97bd61";
+                    //style += "-fx-background-color: #97bd61;";
+                } else if (status == BodyItemStatusValue.SKIP) {
+                    color = "#dddddd";
+                    //style += "-fx-background-color: #dddddd;";
+                } else if (status == BodyItemStatusValue.NOT_RUN) {
+                    color = "lightgray";
+                    //style += "-fx-background-color: lightgray;";
+                }
+
+                if (cell.partOfLine.doesNotMatch) {
+                    style += "-fx-background-color: linear-gradient(from 12px 12px to 0px 0px, " + color + " 50%, #F4A460 10%);";
+                } else {
+                    style += "-fx-background-color: " + color + ";";
+                }
+            } else {
+                style += "-fx-background-color: lavender;";
+            }
+            setStyle(style);
+        }
+    }
+
 
     private void setTextAndGraphicTo(Cell item) {
         setText(item.contents);

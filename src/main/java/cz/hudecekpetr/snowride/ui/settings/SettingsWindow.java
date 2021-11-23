@@ -28,6 +28,8 @@ public class SettingsWindow extends Stage {
     private CheckBox cbAlsoImportTxtFiles;
     private CheckBox cbDeselectAll;
     private CheckBox cbReloadAll;
+    private CheckBox cbDisableOutputParsing;
+    private CheckBox cbDisableOutputParsingWarning;
     private CheckBox cbFirstCompletionOption;
     private CheckBox cbAutoExpandSelectedTests;
     private CheckBox cbUseStructureChanged;
@@ -74,6 +76,12 @@ public class SettingsWindow extends Stage {
         cbReloadAll.setSelected(Settings.getInstance().toolbarReloadAll);
         cbDeselectAll = new CheckBox("Show 'Deselect all' button in the toolbar.");
         cbDeselectAll.setSelected(Settings.getInstance().toolbarDeselectEverything);
+        cbDisableOutputParsing = new CheckBox("Disable output.xml parsing.");
+        cbDisableOutputParsing.setWrapText(true);
+        cbDisableOutputParsing.setSelected(Settings.getInstance().disableOutputParsing);
+        cbDisableOutputParsingWarning = new CheckBox("Disable Warning popup (old Robot version) during output.xml parsing.");
+        cbDisableOutputParsingWarning.setWrapText(true);
+        cbDisableOutputParsingWarning.setSelected(Settings.getInstance().disableOutputParsingWarning);
         cbFirstCompletionOption = new CheckBox("If you type a nonexistent keyword, confirm it with Enter instead of choosing the first completion option.");
         cbFirstCompletionOption.setWrapText(true);
         cbFirstCompletionOption.setSelected(Settings.getInstance().cbShowNonexistentOptionFirst);
@@ -141,7 +149,7 @@ public class SettingsWindow extends Stage {
         VBox vboxAppearance = new VBox(5,
                 cbReloadAll, cbDeselectAll, cbHighlightSameCells, cbUseSystemColorWindow, num2);
         vboxAppearance.setPadding(new Insets(5, 0, 0, 0));
-        VBox vboxBehavior = new VBox(5, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
+        VBox vboxBehavior = new VBox(5, cbDisableOutputParsing, cbDisableOutputParsingWarning, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
         vboxBehavior.setPadding(new Insets(5, 0, 0, 0));
         VBox vboxAdvanced = new VBox(5, borderBox);
         vboxAdvanced.setPadding(new Insets(5, 0, 0, 0));
@@ -177,6 +185,8 @@ public class SettingsWindow extends Stage {
         Settings.getInstance().additionalFolders = additionalXmlFilesBox.getText();
         Settings.getInstance().cbAlsoImportTxtFiles = cbAlsoImportTxtFiles.isSelected();
         Settings.getInstance().toolbarDeselectEverything = cbDeselectAll.isSelected();
+        Settings.getInstance().disableOutputParsing = cbDisableOutputParsing.isSelected();
+        Settings.getInstance().disableOutputParsingWarning = cbDisableOutputParsingWarning.isSelected();
         Settings.getInstance().cbShowNonexistentOptionFirst = cbFirstCompletionOption.isSelected();
         Settings.getInstance().toolbarReloadAll = cbReloadAll.isSelected();
         Settings.getInstance().cbAutoExpandSelectedTests = cbAutoExpandSelectedTests.isSelected();

@@ -11,5 +11,6 @@ Ctrl+D: Delete content from selected rows
 Ctrl+/, Ctrl+3: Comment line out (Ctrl+3 doesn't always work)
 Ctrl+Shift+/, Ctrl+4: Uncomment line (Ctrl+4 doesn't always work)
 F1, Ctrl+Q: Show quick documentation for selected cell
+F4, Ctrl+W: Show "messages / arguments / FOR iterations" on passing/failing for selected line
 Ctrl+Z: Undo (you must have a table focused)
 Ctrl+Y: Redo
