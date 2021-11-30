@@ -2,12 +2,13 @@ package cz.hudecekpetr.snowride;
 
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
+import cz.hudecekpetr.snowride.undo.RemoveRowsOperation;
+import cz.hudecekpetr.snowride.undo.UndoStack;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -93,20 +94,26 @@ public class Extensions {
         return false;
     }
 
-    public static void optimizeLines(ObservableList<LogicalLine> lines) {
+    public static void optimizeLines(ObservableList<LogicalLine> lines, UndoStack undoStack) {
+        Map<Integer, LogicalLine> indexes = new TreeMap<>();
         int lineIndex = lines.size() - 1;
         boolean permitOne = true;
         while (lineIndex >= 0) {
             LogicalLine line = lines.get(lineIndex);
             if (line.isFullyVirtual()) {
                 if (!permitOne) {
-                    lines.remove(lineIndex);
+                    indexes.put(lineIndex, lines.get(lineIndex));
                 }
                 permitOne = false;
             } else {
                 permitOne = false;
             }
             lineIndex--;
+        }
+
+        if (undoStack != null && !indexes.isEmpty()) {
+            lines.removeAll(indexes.values());
+            undoStack.iJustDid(new RemoveRowsOperation(lines, indexes));
         }
     }
 

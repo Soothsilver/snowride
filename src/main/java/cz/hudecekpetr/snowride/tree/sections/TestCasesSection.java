@@ -2,6 +2,7 @@ package cz.hudecekpetr.snowride.tree.sections;
 
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.undo.UndoStack;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class TestCasesSection extends RobotSection implements IScenarioSection {
     }
 
     @Override
-    public void optimizeStructure() {
+    public void optimizeStructure(UndoStack undoStack) {
         for (Scenario s : testCases) {
             s.optimizeStructure();
         }

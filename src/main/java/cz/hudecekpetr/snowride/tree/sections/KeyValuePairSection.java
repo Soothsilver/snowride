@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.undo.UndoStack;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -45,13 +46,13 @@ public class KeyValuePairSection extends RobotSection {
     }
 
     @Override
-    public void optimizeStructure() {
-        Extensions.optimizeLines(pairs);
+    public void optimizeStructure(UndoStack undoStack) {
+        Extensions.optimizeLines(pairs, undoStack);
     }
 
     @Override
     public void reformat() {
-        optimizeStructure();
+        optimizeStructure(null);
         for (LogicalLine pair : pairs) {
             pair.reformat(header.sectionKind);
         }

@@ -230,7 +230,7 @@ public abstract class Suite extends HighElement implements ISuite {
     public final void optimizeStructure() {
         if (fileParsed != null) {
             for (RobotSection section : fileParsed.sections) {
-                section.optimizeStructure();
+                section.optimizeStructure(this.getUndoStack());
             }
         }
     }

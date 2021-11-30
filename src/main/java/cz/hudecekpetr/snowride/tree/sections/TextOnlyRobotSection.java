@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.tree.sections;
 
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.undo.UndoStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class TextOnlyRobotSection extends RobotSection {
     }
 
     @Override
-    public void optimizeStructure() {
+    public void optimizeStructure(UndoStack undoStack) {
         // do nothing
     }
 

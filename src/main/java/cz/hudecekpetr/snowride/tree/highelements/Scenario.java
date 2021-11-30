@@ -117,7 +117,7 @@ public class Scenario extends HighElement {
 
     @Override
     public void optimizeStructure() {
-        Extensions.optimizeLines(lines);
+        Extensions.optimizeLines(lines, getUndoStack());
     }
 
     @Override
