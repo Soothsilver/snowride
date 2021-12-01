@@ -85,10 +85,17 @@ public class Settings {
 
     private static File getFile() {
         String appdata = System.getenv("APPDATA");
-        Path path = Paths.get(appdata, "Snowride");
-        File fileFolder = path.toFile();
-        fileFolder.mkdir();
-        return path.resolve("settings.xml").toFile();
+        if (appdata == null) {
+            String userHome = System.getProperty("user.home");
+            File snowRideHome = new File(userHome, ".snowride");
+            snowRideHome.mkdirs();
+            return new File(snowRideHome, "settings.xml");
+        } else {
+            Path path = Paths.get(appdata, "Snowride");
+            File fileFolder = path.toFile();
+            fileFolder.mkdir();
+            return path.resolve("settings.xml").toFile();
+        }
     }
 
     public void addToRecentlyOpen(String path) {
