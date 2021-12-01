@@ -2,10 +2,3 @@ language: java
 dist: trusty
 jdk: oraclejdk8
 script: mvn package -B
-deploy:
-  provider: bintray
-  file: bintray.json
-  user: soothsilver
-  key:
-    secure: Ll1hBMzXneSMKWmZZcgerwywA2TUMcutElSr5uPyprLn6SvzKw2WenvlDZ/02jSvMs8JE/rymYvblUrUzeYx9cXeyZZUcRiYmdxftQ95sqLGe9UbHWyG1/B7qUk1CrA3GFb3yhUG8zO/BjYbBjCHsklD+rSz/z0iftvz6gOUxTD/Sb/P7OEap+HkP6PjfN0GWhBngd/Ynmx9cvfyAfPypOFiaa71aXBaZgMqmtzhz32+Z2/RjyZ0LVt9UhmiaSGJ0C2+tcd2lzLwPCjEQdUTBrCON8OI+yx37uwlgY1Ca/3NPGAUtIy7tJGKu3ofE1yuHvbeWukjDy5eZ77+M1JL696tG3diZgchkaJeBl2wrKAC81+UbkRVn8SKaZtl1TrIFwPL0fRkU/YQ0CBE0YNnWXQ2iDceFldOiBQnEIU26hwCC1d4PuUPGxHjFyxSE6dqPiigQU5TXGW4lxi4vSlKi/8kUkUgO9UgkaFmojP/1hi8tF6o5SSIaOWa6d26hSUhUZgHztImwTFIjAc4p7pTGg3O30ztJjiZdRg8+47cPezWlpNY7zDk7CSUr0ZUHt6G3dGd1zPnNaX0dkUxeEbIGv/0VPUUcnr1wHIceY+DU1ebSOXyHHeZ8tFYY4lAy4Jph/YxExS43khZcHuE4r2MDu/jg5z+8X3i367OfSjFnq8=
-  skip_cleanup: true
