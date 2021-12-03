@@ -554,10 +554,15 @@ public class RunTab {
     }
 
     private void openFile(String filename) {
-        try {
-            Desktop.getDesktop().open(new File(filename));
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage() + "\n\nIt's possible you don't have Windows set up to automatically open HTML files in a browser. You can do that in 'Default Apps' or with 'Choose default program...'.", e);
+        if( Desktop.isDesktopSupported() )
+        {
+            new Thread(() -> {
+                try {
+                    Desktop.getDesktop().open(new File(filename));
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage() + "\n\nIt's possible you don't have Windows set up to automatically open HTML files in a browser. You can do that in 'Default Apps' or with 'Choose default program...'.", e);
+                }
+            }).start();
         }
     }
 
