@@ -244,12 +244,6 @@ public class MainForm {
             if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
                 event.consume();
-            } else if (event.getCode() == KeyCode.LEFT && event.isShortcutDown()) {
-                goBack();
-                event.consume();
-            } else if (event.getCode() == KeyCode.RIGHT && event.isShortcutDown()) {
-                goForwards();
-                event.consume();
             } else if (event.getCode() == KeyCode.LEFT && event.isAltDown()) {
                 goBack();
                 event.consume();
