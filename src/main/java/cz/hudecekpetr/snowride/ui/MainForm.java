@@ -861,6 +861,9 @@ public class MainForm {
     }
 
     private void openDirectory() {
+        if (this.getRootDirectoryElement() != null) {
+            openFolderDialog.setInitialDirectory(this.getRootDirectoryElement().directoryPath);
+        }
         File openWhat = openFolderDialog.showDialog(this.stage);
         if (openWhat != null) {
             loadProjectFromFolderOrSnowFile(openWhat);
