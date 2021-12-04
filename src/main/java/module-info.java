@@ -1,7 +1,6 @@
 module cz.hudecekpetr.snowride {
     requires javafx.controls;
     requires javafx.base;
-    requires com.google.common;
     requires org.apache.commons.lang3;
     requires org.controlsfx.controls;
     requires org.apache.commons.io;
@@ -14,8 +13,12 @@ module cz.hudecekpetr.snowride {
     requires zt.process.killer;
     requires jsoniter;
     requires org.antlr.antlr4.runtime;
-    requires java.xml.bind;
+    requires jakarta.xml.bind;
+    requires kotlin.stdlib;
+    requires org.fxmisc.undo;
+    requires wellbehavedfx;
     exports cz.hudecekpetr.snowride;
 
     opens cz.hudecekpetr.snowride.settings;
+    opens org.robotframework.jaxb to jakarta.xml.bind;
 }
