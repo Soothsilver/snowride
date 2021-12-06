@@ -349,9 +349,16 @@ public class RunTab {
             rememberRunPageSettings();
             planRobots();
 
-            String runner = tbScript.getText();
-            File runnerFile = new File(runner);
-            File runnerDirectory = runnerFile.getParentFile();
+            String runner;
+            File runnerDirectory;
+            if (StringUtils.isBlank(tbScript.getText())) {
+                runner = "python -m robot";
+                runnerDirectory = MainForm.INSTANCE.getRootDirectoryElement().directoryPath;
+            } else {
+                runner = tbScript.getText();
+                File runnerFile = new File(runner);
+                runnerDirectory = runnerFile.getParentFile();
+            }
 
             ProcessBuilder processBuilder = new ProcessBuilder();
             List<String> command = composeScriptAndArguments(testCases);
@@ -462,7 +469,13 @@ public class RunTab {
             throw new RuntimeException(e);
         }
         List<String> result = new ArrayList<>();
-        result.add(this.tbScript.getText());
+        if (StringUtils.isBlank(tbScript.getText())) {
+            result.add("python");
+            result.add("-m");
+            result.add("robot");
+        } else {
+            result.add(tbScript.getText());
+        }
         result.add("--argumentfile");
         result.add(argfile.toString());
         result.add("--listener");
