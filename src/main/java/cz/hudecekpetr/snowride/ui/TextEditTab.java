@@ -181,7 +181,8 @@ public class TextEditTab {
         }
         this.lastLoaded = value;
         if (value instanceof Scenario) {
-            tabTextEdit.setContent(warningPane);
+            tbTextEdit.setText(value.parent.contents);
+            tabTextEdit.setContent(editorPane);
         } else if (value != null) {
             tbTextEdit.setText(value.contents);
             tabTextEdit.setContent(editorPane);
@@ -192,14 +193,6 @@ public class TextEditTab {
     }
 
     public void selTabChanged(Tab newValue) {
-        if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
-            mainForm.selectProgrammatically(lastLoaded.parent);
-            Platform.runLater(() -> {
-                if (mainForm.getTabs().getSelectionModel().getSelectedItem() != this.tabTextEdit) {
-                    mainForm.getTabs().getSelectionModel().select(this.tabTextEdit);
-                }
-            });
-        }
         if (newValue == this.tabTextEdit) {
             TreeItem<HighElement> focusedItem = mainForm.getProjectTree().getFocusModel().getFocusedItem();
             if (focusedItem != null) {
