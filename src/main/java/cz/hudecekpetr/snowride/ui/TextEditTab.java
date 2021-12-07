@@ -4,7 +4,7 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
-import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -14,7 +14,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -32,6 +31,7 @@ public class TextEditTab {
     private Tab tabTextEdit;
     private HighElement lastLoaded;
     private TextField tbSearchBox;
+    private Scenario lastLoadedScenario;
 
     public TextEditTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -181,8 +181,7 @@ public class TextEditTab {
         }
         this.lastLoaded = value;
         if (value instanceof Scenario) {
-            tbTextEdit.setText(value.parent.contents);
-            tabTextEdit.setContent(editorPane);
+            tabTextEdit.setContent(warningPane);
         } else if (value != null) {
             tbTextEdit.setText(value.contents);
             tabTextEdit.setContent(editorPane);
@@ -192,11 +191,17 @@ public class TextEditTab {
         }
     }
 
-    public void selTabChanged(Tab newValue) {
-        if (newValue == this.tabTextEdit) {
-            TreeItem<HighElement> focusedItem = mainForm.getProjectTree().getFocusModel().getFocusedItem();
-            if (focusedItem != null) {
-                loadElement(focusedItem.getValue());
+    public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+        if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
+            this.lastLoadedScenario = (Scenario) lastLoaded;
+            mainForm.keepTabSelection = true;
+            mainForm.selectProgrammatically(lastLoaded.parent);
+        }
+        if (oldValue == this.tabTextEdit) {
+            HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
+            whatChanged.applyText();
+            if ( lastLoadedScenario != null) {
+                mainForm.selectChildOfFocusedElementIfAvailable(lastLoadedScenario);
             }
         }
     }

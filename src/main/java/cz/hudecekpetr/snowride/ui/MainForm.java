@@ -18,6 +18,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import org.controlsfx.control.NotificationPane;
 
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
@@ -55,24 +61,6 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToolBar;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -106,6 +94,7 @@ public class MainForm {
     public NavigationStack navigationStack = new NavigationStack();
     public LongRunningOperation projectLoad = new LongRunningOperation();
     public GridTab gridTab;
+    public boolean keepTabSelection;
     boolean switchingTextEditContents = false;
     private boolean humanInControl = true;
     private BooleanProperty canNavigateBack = new SimpleBooleanProperty(false);
@@ -164,8 +153,7 @@ public class MainForm {
                 tabErrors);
         tabs.getSelectionModel().select(tabGrid);
         tabs.getSelectionModel().selectedItemProperty().addListener(serializingTab::selTabChanged);
-        tabs.getSelectionModel().selectedItemProperty().addListener((observable2, oldValue2, newValue2) -> textEditTab.selTabChanged(newValue2));
-        tabs.getSelectionModel().selectedItemProperty().addListener((observable1, oldValue1, newValue1) -> selectedTabChanged(oldValue1, newValue1));
+        tabs.getSelectionModel().selectedItemProperty().addListener(textEditTab::selTabChanged);
         SplitPane treeAndGrid = new SplitPane(searchableTree, tabs);
         treeAndGrid.setOrientation(Orientation.HORIZONTAL);
         SplitPane.setResizableWithParent(searchableTree, false);
@@ -201,14 +189,9 @@ public class MainForm {
         });
     }
 
-    private void selectedTabChanged(Tab oldValue, Tab newValue) {
-        if (getFocusedElement() != null) {
-            if (oldValue == tabTextEdit) {
-                getFocusedElement().applyText();
-            }
-            if (newValue == gridTab.getTabGrid()) {
-                gridTab.loadElement(getFocusedElement());
-            }
+    public void selectChildOfFocusedElementIfAvailable(HighElement element) {
+        if (humanInControl) {
+            getFocusedElement().children.stream().filter(child -> child.getInvariantName().equals(element.getInvariantName())).findFirst().ifPresent(this::selectProgrammatically);
         }
     }
 
@@ -346,8 +329,23 @@ public class MainForm {
             }
         });
         projectTree.getFocusModel().focusedItemProperty().addListener((observable, oldValue, newValue) -> {
-            onFocusTreeNode(oldValue);
-            focusTreeNode(newValue);
+            if (oldValue != null) {
+                // FIXME: Corner case scenario, when user does changes in 'Text edit' tab, does NOT safe them and tries to navigate to Scenario/Keyword
+                //        In such case "applyText()" will try "reparse" the text which removed Nodes (Tests/Keywords) from project tree
+                // NOTE: "IndexOutOfBoundsException" will still be thrown even with this workaround, prevents 'UnsupportedOperationException' when removing Nodes from project tree
+                if (newValue != null && oldValue.getValue().children.contains(newValue.getValue()) && oldValue.getValue().areTextChangesUnapplied) {
+                    int index = projectTree.getRow(oldValue.getValue().treeNode);
+                    projectTree.getFocusModel().focus(index);
+                    return;
+                }
+                oldValue.getValue().applyText();
+            }
+            if (newValue != null) {
+                if (humanInControl) {
+                    navigationStack.standardEnter(newValue.getValue());
+                }
+                reloadElementIntoTabs(newValue.getValue());
+            }
         });
         treeContextMenu = new ContextMenu();
         treeContextMenu.getItems().add(new MenuItem("A"));
@@ -371,12 +369,6 @@ public class MainForm {
         VBox vBox = new VBox(tbSearchTests, stackPane);
         VBox.setVgrow(stackPane, Priority.ALWAYS);
         return vBox;
-    }
-
-    private void onFocusTreeNode(TreeItem<HighElement> oldValue) {
-        if (oldValue != null) {
-            oldValue.getValue().applyText();
-        }
     }
 
     private void navigateToSelectedScenario(HighElement currentScenario, KeyCode direction) {
@@ -703,15 +695,6 @@ public class MainForm {
         return new ImageView(image);
     }
 
-    private void focusTreeNode(TreeItem<HighElement> focusedNode) {
-        if (focusedNode != null) {
-            if (humanInControl) {
-                navigationStack.standardEnter(focusedNode.getValue());
-            }
-            reloadElementIntoTabs(focusedNode.getValue());
-        }
-    }
-
     private void reloadElementIntoTabs(HighElement element) {
         reloadElementIntoTabs(element, true);
     }
@@ -723,7 +706,11 @@ public class MainForm {
         serializingTab.loadElement(element);
         switchingTextEditContents = false;
         if (element != null && andSwitchToGrid) {
-            tabs.getSelectionModel().select(gridTab.getTabGrid());
+            if (keepTabSelection) {
+                keepTabSelection = false;
+            } else {
+                tabs.getSelectionModel().select(gridTab.getTabGrid());
+            }
         }
     }
 
