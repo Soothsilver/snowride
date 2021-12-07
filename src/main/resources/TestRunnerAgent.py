@@ -1,8 +1,5 @@
-#
-# Copied from RIDE's test runner.
-#
-
-
+#!/usr/bin/env python
+# ----------------------------------------------------------------------------
 # Copyright 2010 Orbitz WorldWide
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,55 +35,102 @@
 #   Licensed under the Apache License, Version 2.0
 #      http://www.apache.org/licenses/LICENSE-2.0
 
-'''A Robot Framework listener that sends information to a socket
+#
+# Modified by Mateusz Marzec under NSN copyrights
+# Copyright 2015 Nokia Solutions and Networks
+# * Licensed under the Apache License, Version 2.0,
+# * see license.txt file for details.
+#
+
+# Ammended by Helio Guilherme <helioxentric@gmail.com>
+#  Copyright 2008-2015 Nokia Networks
+#  Copyright 2016-     Robot Framework Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""A Robot Framework listener that sends information to a socket
 
 This uses a custom streamhandler module, preferring json but sending either
 json or pickle to send objects to the listening server. It should probably be
 refactored to call an XMLRPC server.
-'''
+"""
 
+import copy
 import os
+import platform
 import sys
 import socket
 import threading
-import SocketServer
+
+PLATFORM = platform.python_implementation()
+PY2 = sys.version_info[0] == 2
+PY3 = not PY2
 
 try:
+    import SocketServer
+except ImportError:  #py3
+    try:
+        import socketserver as SocketServer
+    except ImportError as e:
+        raise e
+
+try:
+    # to find robot (we use provided lib)
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib'))
     from robot.errors import ExecutionFailed
     from robot.running import EXECUTION_CONTEXTS
     from robot.running.signalhandler import STOP_SIGNAL_MONITOR
     from robot.utils import encoding
+    from robot.utils.encoding import SYSTEM_ENCODING
 except ImportError:
     encoding = None
+    # print("TestRunnerAgent: Maybe you did not installed RIDE under this Python?")  # DEBUG
+    raise     # DEBUG
 
+# print("DEBUG: console %s system %s" % (encoding.CONSOLE_ENCODING, encoding.SYSTEM_ENCODING))
 
 if sys.hexversion > 0x2060000:
     import json
-    _JSONAVAIL=True
+    _JSONAVAIL = True
 else:
     try:
         import simplejson as json
-        _JSONAVAIL=True
+        _JSONAVAIL = True
     except ImportError:
-        _JSONAVAIL=False
+        _JSONAVAIL = False
 
 try:
     import cPickle as pickle
-except ImportError:
+except ImportError:  # py3
     import pickle as pickle
 
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    try:
+        from StringIO import StringIO
+    except ImportError:  # py3
+        from io import StringIO
 
 HOST = "localhost"
 
 # Setting Output encoding to UTF-8 and ignoring the platform specs
 # RIDE will expect UTF-8
 # Set output encoding to UTF-8 for piped output streams
-if encoding:
-    encoding.OUTPUT_ENCODING = 'UTF-8'
+# DEBUG This was working in Linux always!
+#if encoding:
+#    encoding.OUTPUT_ENCODING = 'UTF-8'
+# print("DEBUG: TestRunnerAgent encoding %s\n" % SYSTEM_ENCODING )
 
 
 def _is_logged(level):
@@ -115,8 +159,10 @@ class TestRunnerAgent:
         self.streamhandler = None
         self._connect()
         self._send_pid()
-        self._create_debugger((len(args)>=2) and (args[1] == 'True'))
+        self._create_debugger((len(args) >= 2) and (args[1] == 'True'))
         self._create_kill_server()
+        print("TestRunnerAgent: Running under %s %s\n" %
+              (PLATFORM, sys.version.split()[0]))
 
     def _create_debugger(self, pause_on_failure):
         self._debugger = RobotDebugger(pause_on_failure)
@@ -142,14 +188,29 @@ class TestRunnerAgent:
         self._send_socket("end_test", name, attrs)
 
     def start_suite(self, name, attrs):
-        self._send_socket("start_suite", name, attrs)
+        attrs_copy = copy.copy(attrs)
+        del attrs_copy['doc']
+        attrs_copy['is_dir'] = os.path.isdir(attrs['source'])
+        self._send_socket("start_suite", name, attrs_copy)
 
     def end_suite(self, name, attrs):
-        self._send_socket("end_suite", name, attrs)
+        attrs_copy = copy.copy(attrs)
+        del attrs_copy['doc']
+        attrs_copy['is_dir'] = os.path.isdir(attrs['source'])
+        self._send_socket("end_suite", name, attrs_copy)
 
     def start_keyword(self, name, attrs):
-        self._send_socket("start_keyword", name, attrs)
-        if self._debugger.is_breakpoint(name, attrs):
+        # pass empty args, see https://github.com/nokia/RED/issues/32
+
+        # we're cutting args from original attrs dict, because it may contain
+        # objects which are not json-serializable and we don't need them anyway
+        attrs_copy = copy.copy(attrs)
+        del attrs_copy['args']
+        del attrs_copy['doc']
+        del attrs_copy['assign']
+
+        self._send_socket("start_keyword", name, attrs_copy)
+        if self._debugger.is_breakpoint(name, attrs):  # must check original
             self._debugger.pause()
         paused = self._debugger.is_paused()
         if paused:
@@ -159,8 +220,14 @@ class TestRunnerAgent:
             self._send_socket('continue')
 
     def end_keyword(self, name, attrs):
-        self._send_socket("end_keyword", name, attrs)
-        self._debugger.end_keyword(attrs['status']=='PASS')
+        # pass empty args, see https://github.com/nokia/RED/issues/32
+        attrs_copy = copy.copy(attrs)
+        del attrs_copy['args']
+        del attrs_copy['doc']
+        del attrs_copy['assign']
+
+        self._send_socket("end_keyword", name, attrs_copy)
+        self._debugger.end_keyword(attrs['status'] == 'PASS')
 
     def message(self, message):
         pass
@@ -173,6 +240,7 @@ class TestRunnerAgent:
         self._send_socket("log_file", path)
 
     def output_file(self, path):
+        self._send_socket("output_file", path)
         pass
 
     def report_file(self, path):
@@ -191,14 +259,14 @@ class TestRunnerAgent:
             self.sock.close()
 
     def _connect(self):
-        '''Establish a connection for sending data'''
+        """Establish a connection for sending data"""
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((self.host, self.port))
             # Iron python does not return right object type if not binary mode
             self.filehandler = self.sock.makefile('wb')
             self.streamhandler = StreamHandler(self.filehandler)
-        except socket.error, e:
+        except socket.error as e:
             print('unable to open socket to "%s:%s" error: %s'
                   % (self.host, self.port, str(e)))
             self.sock = None
@@ -228,7 +296,9 @@ class RobotDebugger(object):
 
     @staticmethod
     def is_breakpoint(name, attrs):
-        return name == 'BuiltIn.Comment' and attrs['args'] == ['PAUSE']
+        if len(attrs['args']) > 0:
+            return name == 'BuiltIn.Comment' and \
+                   str(attrs['args'][0]).upper().startswith(u"PAUSE")
 
     def pause(self):
         self._resume.clear()
@@ -263,8 +333,8 @@ class RobotDebugger(object):
 
     def end_keyword(self, passed=True):
         self._keyword_level -= 1
-        if self._keyword_level == self._pause_when_on_level \
-        or (self._pause_on_failure and not passed):
+        if self._keyword_level == self._pause_when_on_level or \
+                (self._pause_on_failure and not passed):
             self._state = 'pause'
 
     def is_paused(self):
@@ -273,9 +343,11 @@ class RobotDebugger(object):
 
 class RobotKillerServer(SocketServer.TCPServer):
     allow_reuse_address = True
+
     def __init__(self, debugger):
-        SocketServer.TCPServer.__init__(self, ("",0), RobotKillerHandler)
+        SocketServer.TCPServer.__init__(self, ("", 0), RobotKillerHandler)
         self.debugger = debugger
+
 
 class RobotKillerHandler(SocketServer.StreamRequestHandler):
     def handle(self):
@@ -298,7 +370,7 @@ class RobotKillerHandler(SocketServer.StreamRequestHandler):
     @staticmethod
     def _signal_kill():
         try:
-            STOP_SIGNAL_MONITOR(1,'')
+            STOP_SIGNAL_MONITOR(1, '')
         except ExecutionFailed:
             pass
 
@@ -334,11 +406,14 @@ class DecodeError(StreamError):
         if hasattr(json, 'JSONDecodeError'):
             wrapped_exceptions = (pickle.UnpicklingError, json.JSONDecodeError)
 
+
 def dump(obj, fp):
     StreamHandler(fp).dump(obj)
 
+
 def load(fp):
     return StreamHandler(fp).load()
+
 
 def dumps(obj):
     """
@@ -352,6 +427,7 @@ def dumps(obj):
     fp = StringIO()
     StreamHandler(fp).dump(obj)
     return fp.getvalue()
+
 
 def loads(s):
     """
@@ -369,7 +445,7 @@ def loads(s):
 
 
 class StreamHandler(object):
-    '''
+    """
     This class provides a common streaming approach for the purpose
     of reliably sending data over a socket interface. Replaces usage of
     Unpickler.load where possible with JSON format prepended by message length
@@ -389,7 +465,7 @@ class StreamHandler(object):
     in theory (assuming json is available), but performance of repeatedly
     failing to parse written data would make this an unworkable solution in
     many cases.
-    '''
+    """
     loads = staticmethod(loads)
     dumps = staticmethod(dumps)
 
@@ -406,7 +482,7 @@ class StreamHandler(object):
         """
         if _JSONAVAIL:
             self._json_encoder = json.JSONEncoder(separators=(',', ':'),
-                                        sort_keys=True).encode
+                                                  sort_keys=True).encode
             self._json_decoder = json.JSONDecoder(strict=False).decode
         else:
             def json_not_impl(dummy):
@@ -431,15 +507,22 @@ class StreamHandler(object):
         #       of the StreamHandler class (treating pickle and json the same)
         write_list = []
         if _JSONAVAIL:
-            write_list.append('J')
-            s = self._json_encoder(obj)
-            write_list.extend([str(len(s)), '|', s])
-        else:
-            write_list.append('P')
+            try:
+                s = self._json_encoder(obj)
+                write_list.append('J')
+                write_list.extend([str(len(s)), '|', s])
+            except:
+                # Probably just failed to JSON-encode an object; try pickle.
+                pass
+        if not write_list:
             s = pickle.dumps(obj, pickle.HIGHEST_PROTOCOL)
+            write_list.append('P')
             write_list.extend([str(len(s)), '|', s])
-        self.fp.write(''.join(write_list))
-        #self.fp.flush()
+        if PY2:
+            self.fp.write(''.join(write_list))
+        elif PY3:
+            self.fp.write(bytes(''.join(write_list), "UTF-8"))
+        # self.fp.flush()
 
     def load(self):
         """
@@ -468,7 +551,7 @@ class StreamHandler(object):
                 return pickle.loads(buff.getvalue())
             else:
                 raise DecodeError("Message type %r not supported" % msgtype)
-        except DecodeError.wrapped_exceptions, e:
+        except DecodeError.wrapped_exceptions as e:
             raise DecodeError(str(e))
 
     def _load_header(self):
