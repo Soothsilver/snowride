@@ -32,6 +32,7 @@ public class TextEditTab {
     private HighElement lastLoaded;
     private TextField tbSearchBox;
     private Scenario lastLoadedScenario;
+    private boolean cleanLastLoadedScenario = true;
 
     public TextEditTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -180,7 +181,14 @@ public class TextEditTab {
             asSuite.contents = asSuite.serialize();
         }
         this.lastLoaded = value;
+
+        if (cleanLastLoadedScenario) {
+            lastLoadedScenario = null;
+        }
+        cleanLastLoadedScenario = true;
+
         if (value instanceof Scenario) {
+            lastLoadedScenario = (Scenario) value;
             tabTextEdit.setContent(warningPane);
         } else if (value != null) {
             tbTextEdit.setText(value.contents);
@@ -193,7 +201,7 @@ public class TextEditTab {
 
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (newValue == this.tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
-            this.lastLoadedScenario = (Scenario) lastLoaded;
+            cleanLastLoadedScenario = false;
             mainForm.keepTabSelection = true;
             mainForm.selectProgrammatically(lastLoaded.parent);
         }
