@@ -146,14 +146,9 @@ public class SnowTableView extends TableView<LogicalLine> {
             }
         }
         if (snowTableKind == SnowTableKind.SCENARIO) {
-            MenuItem miComment = new MenuItem("Comment out");
-            miComment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN));
-            miComment.setOnAction(event -> commentOutOrUncomment(false));
-            MenuItem miUncomment = new MenuItem("Uncomment");
-            miUncomment.setAccelerator(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN));
-            miUncomment.setOnAction(event -> commentOutOrUncomment(true));
+            MenuItem miComment = new MenuItem("Comment/Uncomment");
+            miComment.setOnAction(event -> commentOutOrUncomment());
             contextMenuItems.add(miComment);
-            contextMenuItems.add(miUncomment);
         }
 
         contextMenuItems.add(miInsertCell);
@@ -320,12 +315,12 @@ public class SnowTableView extends TableView<LogicalLine> {
             TablePosition<LogicalLine, Cell> focusedTablePosition = getFocusedTablePosition();
             pasteStartingAt(focusedTablePosition);
             keyEvent.consume();
-        } else if ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isShortcutDown()) {
-            commentOutOrUncomment(keyEvent.isShiftDown());
-        } else if ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isShortcutDown()) {
-            commentOutOrUncomment(false);
-        } else if ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isShortcutDown()) {
-            commentOutOrUncomment(true);
+        } else if (
+                ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isShortcutDown()) ||
+                        ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isShortcutDown()) ||
+                        ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isShortcutDown())
+        ) {
+            commentOutOrUncomment();
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isShortcutDown()) || keyEvent.getCode() == KeyCode.F1) {
             if (getSelectionModel().getSelectedCells().size() > 0) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(getSelectionModel().getSelectedCells().get(0));
@@ -468,19 +463,20 @@ public class SnowTableView extends TableView<LogicalLine> {
         considerAddingVirtualRowsAndColumns();
     }
 
-    private void commentOutOrUncomment(boolean uncomment) {
+    private void commentOutOrUncomment() {
         Set<LogicalLine> lines = new HashSet<>();
         for (TablePosition selectedCell : getSelectionModel().getSelectedCells()) {
             int row = selectedCell.getRow();
             lines.add(getItems().get(row));
         }
+        boolean uncomment = lines.stream().allMatch(line -> {
+            Cell cell = line.getCellAsStringProperty(1, mainForm).getValue();
+            return Extensions.toInvariant(cell.contents).equalsIgnoreCase("Comment");
+        });
         for (LogicalLine theLine : lines) {
-            Cell firstCell = theLine.getCellAsStringProperty(1, mainForm).getValue();
             if (uncomment) {
                 // uncomment
-                if (Extensions.toInvariant(firstCell.contents).equalsIgnoreCase("Comment")) {
-                    theLine.shiftTrueCellsLeft(mainForm);
-                }
+                theLine.shiftTrueCellsLeft(mainForm);
                 theLine.getCellAsStringProperty(0, mainForm).set(new Cell("", "    ", theLine));
             } else {
                 // comment out
