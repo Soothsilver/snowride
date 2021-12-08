@@ -67,7 +67,7 @@ public class TextEditTab {
             if (!mainForm.switchingTextEditContents) {
                 HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
                 whatChanged.areTextChangesUnapplied = true;
-                whatChanged.contents = ((Suite)whatChanged).newlineStyle.convertToStyle(newValue);
+                whatChanged.contents = ((Suite) whatChanged).newlineStyle.convertToStyle(newValue);
                 mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
             }
         });
@@ -208,7 +208,7 @@ public class TextEditTab {
         if (oldValue == this.tabTextEdit) {
             HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
             whatChanged.applyText();
-            if ( lastLoadedScenario != null) {
+            if (lastLoadedScenario != null) {
                 mainForm.selectChildOfFocusedElementIfAvailable(lastLoadedScenario);
             }
         }

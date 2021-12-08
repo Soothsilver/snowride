@@ -191,6 +191,7 @@ public class MainForm {
 
     public void selectChildOfFocusedElementIfAvailable(HighElement element) {
         if (humanInControl) {
+            keepTabSelection = true;
             getFocusedElement().children.stream().filter(child -> child.getInvariantName().equals(element.getInvariantName())).findFirst().ifPresent(this::selectProgrammatically);
         }
     }
