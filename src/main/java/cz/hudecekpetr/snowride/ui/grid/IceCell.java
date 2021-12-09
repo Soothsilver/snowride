@@ -1,9 +1,12 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
 import cz.hudecekpetr.snowride.fx.Underlining;
+import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
+import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
-import cz.hudecekpetr.snowride.semantics.codecompletion.CodeCompletionBinding;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
@@ -97,11 +100,19 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         super.commitEdit(newValue);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
             ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
-            newValue.partOfLine.recalcStyles();
         }
         if (getScene().getFocusOwner() == textField) {
             column.getTableView().requestFocus();
         }
+
+        // recalculate styles when new value is entered
+        HighElement belongsToHighElement = newValue.partOfLine.getBelongsToHighElement();
+        if (belongsToHighElement instanceof Scenario && Settings.getInstance().cbHighlightSameCells) {
+            YellowHighlight.lastPositionSelectText = newValue.contents;
+            Scenario scenario = (Scenario) belongsToHighElement;
+            scenario.getLines().forEach(LogicalLine::recalcStyles);
+        }
+
         snowTableView.considerAddingVirtualRowsAndColumns();
     }
 

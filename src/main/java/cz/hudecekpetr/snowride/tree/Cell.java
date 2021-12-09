@@ -22,6 +22,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.*;
+import static cz.hudecekpetr.snowride.ui.grid.YellowHighlight.lastPositionSelectText;
+
 public class Cell implements IHasQuickDocumentation {
     // Permanent fields:
     public final String contents;
@@ -117,11 +120,13 @@ public class Cell implements IHasQuickDocumentation {
                     style += "-fx-text-fill: dodgerblue; ";
                 }
             }
-        } else if (contents.contains("${") || contents.contains("@{") || contents.contains("&{")) {
+        } else if (containsVariable(contents)) {
             style += "-fx-text-fill: green; ";
         }
         style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
-        if (!StringUtils.isBlank(contents) && YellowHighlight.lastPositionSelectText.equals(contents) && Settings.getInstance().cbHighlightSameCells) {
+        if (!StringUtils.isBlank(contents) && Settings.getInstance().cbHighlightSameCells &&
+                (contents.equals(lastPositionSelectText) || (isVariable(lastPositionSelectText) && containsVariable(contents, lastPositionSelectText)))
+        ) {
             style += "-fx-background-color: #FFFF77; ";
         } else {
             switch (semantics.argumentStatus) {
@@ -145,7 +150,6 @@ public class Cell implements IHasQuickDocumentation {
         }
         return style;
     }
-
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {
         partOfLine.recalculateSemantics();
