@@ -20,6 +20,9 @@ public class ForLoops {
                 "For loops can be used with both test cases and user keywords. Except for really simple cases, user keywords are better, because they hide the complexity introduced by for loops. The basic for loop syntax, FOR item IN sequence, is derived from Python, but similar syntax is supported also by various other programming languages.", Lists.newArrayList(new Parameter("arguments", ParameterKind.VARARGS)), builtIn));
 
 
+        builtIn.keywords.add(new ExternalKeyword("IF", "Sometimes there is a need to execute some keywords conditionally. Starting from Robot Framework 4.0 there is a separate if expression syntax, but there are also other ways to execute keywords conditionally. Notice that if the logic gets complicated, it is typically better to move it into a test library.", Lists.newArrayList(), builtIn));
+        builtIn.keywords.add(new ExternalKeyword("ELSE IF", "Robot Framework also supports ELSE IF branches that have their own condition that is evaluated if the initial condition is not true. There can be any number of ELSE IF branches and they are gone through in the order they are specified. If one of the ELSE IF conditions is true, the block following it is executed and remaining ELSE IF branches are ignored. An optional ELSE branch can follow ELSE IF branches and it is executed if all conditions are false..", Lists.newArrayList(), builtIn));
+        builtIn.keywords.add(new ExternalKeyword("ELSE", "Like most other languages supporting conditional execution, Robot Framework IF syntax also supports ELSE branches that are executed if the IF condition is not true.", Lists.newArrayList(), builtIn));
         builtIn.keywords.add(new ExternalKeyword("END", "This token, on a line on its own, ends the new Robot Framework for loop syntax.", Lists.newArrayList(), builtIn));
 
     }
