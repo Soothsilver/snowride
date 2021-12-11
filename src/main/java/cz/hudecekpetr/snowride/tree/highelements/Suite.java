@@ -29,6 +29,8 @@ import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.tree.TagKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
@@ -38,6 +40,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement implements ISuite {
@@ -61,6 +64,7 @@ public abstract class Suite extends HighElement implements ISuite {
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
      */
     public NewlineStyle newlineStyle = NewlineStyle.LF;
+
     public Suite(String shortName, String contents, List<HighElement> children) {
         super(Extensions.toPrettyName(shortName), contents, children);
         shortNameAsOnDisk = shortName;
@@ -153,16 +157,22 @@ public abstract class Suite extends HighElement implements ISuite {
 
     public void reparse() {
         if (contents != null) {
-            this.children.removeIf(he -> he instanceof Scenario);
-            this.treeNode.getChildren().removeIf(ti -> ti.getValue() instanceof Scenario);
             RobotFile parsed = GateParser.parse(contents, this);
-            this.fileParsed = parsed;
-            this.selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
+            fileParsed = parsed;
+            selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
             for (Exception exception : parsed.errors) {
                 this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
             this.reparseResources();
-            this.addChildren(parsed.getHighElements());
+            addOrUpdateTreeNodes(parsed.getHighElements(), treeNode, children);
+
+            children.removeIf(he -> he instanceof Scenario);
+            children.addAll(parsed.getHighElements());
+            for (HighElement child : children) {
+                if (child instanceof Scenario) {
+                    child.parent = this;
+                }
+            }
         }
     }
 
@@ -241,13 +251,46 @@ public abstract class Suite extends HighElement implements ISuite {
     }
 
 
-    public void replaceChildWithAnotherChild(HighElement oldElement, Suite newElement) {
+    public void replaceChildWithAnotherChild(HighElement oldElement, Suite newSuite) {
         int indexOld = children.indexOf(oldElement);
         int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
-        dissociateSelfFromChild(oldElement);
-        newElement.parent = this;
-        children.add(indexOld, newElement);
-        treeNode.getChildren().add(indexTreeOld, newElement.treeNode);
+
+        children.remove(oldElement);
+        newSuite.parent = this;
+        children.add(indexOld, newSuite);
+
+        TreeItem<HighElement> oldTreeNode = treeNode.getChildren().get(indexTreeOld);
+        addOrUpdateTreeNodes(newSuite.children, oldTreeNode, oldTreeNode.getValue().children);
+        MainForm.INSTANCE.reloadCurrentThing();
+        oldTreeNode.setValue(newSuite);
+        newSuite.treeNode = oldTreeNode;
+    }
+
+    private void addOrUpdateTreeNodes(List<HighElement> newHighElements, TreeItem<HighElement> treeNode, ObservableList<HighElement> children) {
+        if (newHighElements.stream().anyMatch(highElement -> !(highElement instanceof Scenario))) {
+            throw new RuntimeException("Only scenarios were expected!");
+        }
+
+        // TreeNode - delete removed nodes
+        List<HighElement> removedNodes = children.stream()
+                .filter(highElement -> highElement instanceof Scenario)
+                .filter(currentElement -> newHighElements.stream().noneMatch(newElement -> currentElement.getInvariantName().equals(newElement.getInvariantName())))
+                .collect(Collectors.toList());
+        treeNode.getChildren().removeIf(ti -> removedNodes.contains(ti.getValue()));
+
+        // TreeNode - add or update existing nodes
+        for (int i = 0; i < newHighElements.size(); i++) {
+            HighElement newElement = newHighElements.get(i);
+            if (i >= treeNode.getChildren().size() || !newElement.getInvariantName().equals(treeNode.getChildren().get(i).getValue().getInvariantName())) {
+                treeNode.getChildren().add(i, newElement.treeNode);
+            } else {
+                TreeItem<HighElement> currentNode = treeNode.getChildren().get(i);
+                newElement.updateGraphics(currentNode.getGraphic(), currentNode.getValue());
+                newElement.outputElement = currentNode.getValue().outputElement;
+                currentNode.setValue(newElement);
+                newElement.treeNode = currentNode;
+            }
+        }
     }
 
     public boolean excludedFromQualifiedName() {
@@ -284,7 +327,7 @@ public abstract class Suite extends HighElement implements ISuite {
         }
         if (defaultTags.size() > 0) {
             if (!StringUtils.isEmpty(t)) {
-                t+="\n";
+                t += "\n";
             }
             t += "*Default tags:* " + StringUtils.join(defaultTags.stream().map(Tag::getTag).iterator(), ", ");
         }

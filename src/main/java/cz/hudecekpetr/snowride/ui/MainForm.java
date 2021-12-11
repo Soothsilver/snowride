@@ -331,14 +331,6 @@ public class MainForm {
         });
         projectTree.getFocusModel().focusedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (oldValue != null) {
-                // FIXME: Corner case scenario, when user does changes in 'Text edit' tab, does NOT safe them and tries to navigate to Scenario/Keyword
-                //        In such case "applyText()" will try "reparse" the text which removed Nodes (Tests/Keywords) from project tree
-                // NOTE: "IndexOutOfBoundsException" will still be thrown even with this workaround, prevents 'UnsupportedOperationException' when removing Nodes from project tree
-                if (newValue != null && oldValue.getValue().children.contains(newValue.getValue()) && oldValue.getValue().areTextChangesUnapplied) {
-                    int index = projectTree.getRow(oldValue.getValue().treeNode);
-                    projectTree.getFocusModel().focus(index);
-                    return;
-                }
                 oldValue.getValue().applyText();
             }
             if (newValue != null) {

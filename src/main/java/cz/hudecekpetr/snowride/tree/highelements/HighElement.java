@@ -5,6 +5,7 @@ import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.ObservableMultiset;
+import javafx.scene.Node;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -193,5 +194,14 @@ public abstract class HighElement implements IAutocompleteOption {
 
     public List<? extends IAutocompleteOption> getVariablesList() {
         return null;
+    }
+
+    protected void updateGraphics(Node graphic, HighElement oldHighElement) {
+        checkbox.setSelected(oldHighElement.checkbox.isSelected());
+        imageView.setImage(oldHighElement.imageView.getImage());
+        ObservableList<Node> graphicChildren = ((HBox) graphic).getChildren();
+        graphicChildren.clear();
+        graphicChildren.add(imageView);
+        graphicChildren.add(checkbox);
     }
 }
