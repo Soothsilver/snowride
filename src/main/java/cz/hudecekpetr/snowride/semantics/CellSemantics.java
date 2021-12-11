@@ -10,6 +10,7 @@ public class CellSemantics {
     public int cellIndex;
     public boolean isComment;
     public boolean isKeyword;
+    public boolean isVariable;
     public List<IKnownKeyword> permissibleKeywords;
     public List<? extends IAutocompleteOption> variablesList;
     public Multimap<String, IKnownKeyword> permissibleKeywordsByInvariantName;

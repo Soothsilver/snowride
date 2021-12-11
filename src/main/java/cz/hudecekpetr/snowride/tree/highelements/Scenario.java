@@ -37,7 +37,7 @@ public class Scenario extends HighElement {
     private Cell nameCell;
     private boolean isTestCase;
     private List<String> semanticsArguments = new ArrayList<>();
-    private List<IAutocompleteOption> thisScenarioVariables = new ArrayList<IAutocompleteOption>();
+    private List<IAutocompleteOption> thisScenarioVariables = new ArrayList<>();
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
@@ -212,6 +212,7 @@ public class Scenario extends HighElement {
         ArrayList<String> argCells = new ArrayList<>();
         semanticsDocumentation = "";
         thisScenarioVariables.clear();
+        variables.clear();
         Set<String> variableCells = new HashSet<>();
         for (LogicalLine line : getLines()) {
             if (line.cells.size() >= 3) {
@@ -243,6 +244,7 @@ public class Scenario extends HighElement {
             thisScenarioVariables.add(new VariableCompletionOption("&{" + variableCell + "}", "A variable used in this test case or keyword, as a dictionary."));
         }
         thisScenarioVariables.addAll(parent.getVariablesList());
+        variables.addAll(parent.variables);
         this.semanticsArguments = argCells;
         if (argCells.size() > 0) {
             this.semanticsDocumentation = "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");

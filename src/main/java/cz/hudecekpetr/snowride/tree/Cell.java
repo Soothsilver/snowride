@@ -12,7 +12,6 @@ import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
-import cz.hudecekpetr.snowride.ui.grid.YellowHighlight;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
@@ -120,12 +119,21 @@ public class Cell implements IHasQuickDocumentation {
                     style += "-fx-text-fill: dodgerblue; ";
                 }
             }
-        } else if (containsVariable(contents)) {
+        } else if (semantics.isVariable) {
             style += "-fx-text-fill: green; ";
+        } else if (containsAnyVariable(contents)) {
+            if (containsVariable(contents, partOfLine.getBelongsToHighElement().variables)) {
+                style += "-fx-text-fill: green; ";
+            } else {
+                style += "-fx-text-fill: darkkhaki; ";
+            }
         }
         style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
         if (!StringUtils.isBlank(contents) && Settings.getInstance().cbHighlightSameCells &&
-                (contents.equals(lastPositionSelectText) || (isVariable(lastPositionSelectText) && containsVariable(contents, lastPositionSelectText)))
+                (contents.equals(lastPositionSelectText)
+                        || (isVariable(lastPositionSelectText) && containsVariable(contents, getVariableName(lastPositionSelectText)))
+                        || (containsVariable(lastPositionSelectText) && containsVariable(contents, getVariableName(lastPositionSelectText)))
+                )
         ) {
             style += "-fx-background-color: #FFFF77; ";
         } else {

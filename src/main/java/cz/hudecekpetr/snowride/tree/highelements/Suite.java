@@ -9,6 +9,7 @@ import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
+import cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils;
 import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.semantics.UserKeyword;
 import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
@@ -117,6 +118,7 @@ public abstract class Suite extends HighElement implements ISuite {
         importedResourcesRecursively.clear();
         importedKeywordsRecursively.clear();
         importedVariablesRecursively.clear();
+        variables.clear();
         importedResourcesRecursively.add(new TestCaseSettingOptionLibrarySource());
         importedResourcesRecursively.add(new LibraryKeywordSource(ExternalLibrary.builtIn));
         importedResourcesRecursively.add(new ResourceFileKeywordSource(this));
@@ -132,6 +134,10 @@ public abstract class Suite extends HighElement implements ISuite {
         importedKeywordsRecursivelyByInvariantName.clear();
         importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllVariables).forEachOrdered(vco -> importedVariablesRecursively.add(vco));
+        importedResourcesRecursively.stream().flatMap(KeywordSource::getAllVariables)
+                .map(VariableCompletionOption::getAutocompleteText)
+                .map(RobotFrameworkVariableUtils::getVariableName)
+                .forEachOrdered(v -> variables.add(v));
         // Built-ins:
         importedVariablesRecursively.add(new VariableCompletionOption("${EMPTY}", "Built-in variable that's an empty string."));
         importedVariablesRecursively.add(new VariableCompletionOption("@{EMPTY}", "Built-in variable that's an empty list."));

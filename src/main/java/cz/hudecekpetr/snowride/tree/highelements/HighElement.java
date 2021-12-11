@@ -24,7 +24,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public abstract class HighElement implements IAutocompleteOption {
@@ -34,6 +36,8 @@ public abstract class HighElement implements IAutocompleteOption {
     public final ObservableMultiset<HighElement> childrenRecursively = new ObservableMultiset<>();
     public SimpleStringProperty shortNameProperty = new SimpleStringProperty();
     public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
+    public Set<String> variables = new HashSet<>();
+
     /**
      * Observable list of all {@link SnowrideError}s from this element and all children. It updates automatically from
      * children's {@link #allErrorsRecursive} and its own {@link #selfErrors}.

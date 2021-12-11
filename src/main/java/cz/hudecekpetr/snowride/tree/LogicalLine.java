@@ -21,6 +21,9 @@ import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.beans.property.SimpleObjectProperty;
 
+import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.getVariableName;
+import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.isVariable;
+
 /**
  * Represents a line in Robot Framework code if it's part of a settings table, variables table or a scenario. One logical
  * line can be on multiple consecutive physical lines if they're joined by the ellipsis (...).  A logical line consists
@@ -190,7 +193,7 @@ public class LogicalLine {
             }
 
             cellSemantics.argumentStatus = Cell.ArgumentStatus.UNKNOWN;
-            if (cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
+            if (cell.contents.equals("IF") ||cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
                 ignoreEverythingFromNowOn = true;
             }
             if (currentKeyword != null && !ignoreEverythingFromNowOn) {
@@ -207,7 +210,8 @@ public class LogicalLine {
                 }
             }
 
-            boolean isCertainlyNotAKeyword = isInScenario && (cell.contents.startsWith("${") || cell.contents.startsWith("@{") || cell.contents.startsWith("&{") || cell.contents.trim().equals("\\"));
+            boolean isVariable = isVariable(cell.contents);
+            boolean isCertainlyNotAKeyword = isInScenario && (isVariable || cell.contents.trim().equals("\\"));
             boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
             if (canKeywordBeHere) {
 
@@ -237,6 +241,10 @@ public class LogicalLine {
                     }
                 }
                 if (isCertainlyNotAKeyword) {
+                    if (isVariable) {
+                        getBelongsToHighElement().variables.add(getVariableName(cell.contents));
+                        cellSemantics.isVariable = true;
+                    }
                     // Don't prevent further cells from being a keyword.
                 } else {
                     cellSemantics.isKeyword = true;
