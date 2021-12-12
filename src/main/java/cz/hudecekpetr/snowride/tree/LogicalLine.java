@@ -403,9 +403,10 @@ public class LogicalLine {
 
     public void clearOutputFields() {
         status = null;
+        doesNotMatch = false;
         keyword = null;
         keywordArguments = null;
         forIterations = null;
-        doesNotMatch = false;
+        forLoop = null;
     }
 }

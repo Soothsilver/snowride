@@ -78,7 +78,7 @@ public class Test extends OutputElement {
         return kwOrForOrIf.stream()
                 .filter(e -> e instanceof Keyword)
                 .map(e -> (Keyword) e)
-                .filter(e -> e.getType() != null && e.getStatus().getStatus() == BodyItemStatusValue.FAIL)
+                .filter(e -> e.isSetupOrTearDown() && e.getStatus().getStatus() == BodyItemStatusValue.FAIL)
                 .collect(Collectors.toList());
     }
 

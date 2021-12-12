@@ -27,7 +27,7 @@ public class RobotFrameworkVariableUtils {
     }
 
     public static boolean containsVariable(String text, String variable) {
-        if (variable.startsWith(ENVIRONMENT_VARIABLE)) {
+        if (variable != null && variable.startsWith(ENVIRONMENT_VARIABLE)) {
             return false;
         }
         return VARIABLE_TYPE_IDENTIFIERS.stream().anyMatch(typeIdentifier -> text.contains(typeIdentifier + "{" + variable + "}"));

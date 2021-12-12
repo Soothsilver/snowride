@@ -80,6 +80,14 @@ public class Keyword extends OutputElement {
     @XmlAttribute(name = "type")
     protected KeywordType type;
 
+    // RobotFramework 3.X
+    @XmlElementWrapper(name="arguments")
+    @XmlElement(name = "arg", type = String.class)
+    protected List<String> rf3Args = new LinkedList<>();
+    @XmlElementWrapper(name="assign")
+    @XmlElement(name = "var", type = String.class)
+    protected List<String> rf3vars = new LinkedList<>();
+
     @Override
     public List<OutputElement> getElements() {
         return kwOrForOrIf;
@@ -94,10 +102,16 @@ public class Keyword extends OutputElement {
     }
 
     public List<String> getArguments() {
+        if (!rf3Args.isEmpty()) {
+            return rf3Args;
+        }
         return args;
     }
 
     public List<String> getVariables() {
+        if (!rf3vars.isEmpty()) {
+            return rf3vars;
+        }
         return vars;
     }
 
@@ -143,6 +157,10 @@ public class Keyword extends OutputElement {
 
     public KeywordType getType() {
         return type;
+    }
+
+    public boolean isSetupOrTearDown() {
+        return type != null && type != KeywordType.FOR && type != KeywordType.FORITEM;
     }
 
     public void setType(KeywordType value) {

@@ -356,19 +356,24 @@ public class RunTab {
             rememberRunPageSettings();
             planRobots();
 
-            String runner;
+            String[] runner;
             File runnerDirectory;
             if (StringUtils.isBlank(tbScript.getText())) {
-                runner = "python -m robot";
+                runner = "python -m robot".split(" ");
                 runnerDirectory = MainForm.INSTANCE.getRootDirectoryElement().directoryPath;
             } else {
-                runner = tbScript.getText();
-                File runnerFile = new File(runner);
-                runnerDirectory = runnerFile.getParentFile();
+                runner = new String[]{tbScript.getText()};
+                File runnerFile = new File(runner[0]);
+                if (!runnerFile.exists()) {
+                    runner = tbScript.getText().split(" ");
+                    runnerDirectory = MainForm.INSTANCE.getRootDirectoryElement().directoryPath;
+                } else {
+                    runnerDirectory = runnerFile.getParentFile();
+                }
             }
 
             ProcessBuilder processBuilder = new ProcessBuilder();
-            List<String> command = composeScriptAndArguments(testCases);
+            List<String> command = composeScriptAndArguments(runner, testCases);
             tbOutput.clear();
             appendGreenTextNoNewline("> " + String.join(" ", command));
             processBuilder.command(command);
@@ -460,7 +465,7 @@ public class RunTab {
         });
     }
 
-    private List<String> composeScriptAndArguments(List<Scenario> testCases) {
+    private List<String> composeScriptAndArguments(String[] runner, List<Scenario> testCases) {
         File argfile;
         File runnerAgent;
         try {
@@ -475,14 +480,7 @@ public class RunTab {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        List<String> result = new ArrayList<>();
-        if (StringUtils.isBlank(tbScript.getText())) {
-            result.add("python");
-            result.add("-m");
-            result.add("robot");
-        } else {
-            result.add(tbScript.getText());
-        }
+        List<String> result = new ArrayList<>(Arrays.asList(runner));
         result.add("--argumentfile");
         result.add(argfile.toString());
         result.add("--listener");
@@ -575,8 +573,7 @@ public class RunTab {
 
     private void openFileOrDirectory(MouseEvent event, String filename) {
         String fileToOpen = event.isShortcutDown() ? new File(filename).getParent() : filename;
-        if( Desktop.isDesktopSupported() )
-        {
+        if (Desktop.isDesktopSupported()) {
             new Thread(() -> {
                 try {
                     Desktop.getDesktop().open(new File(fileToOpen));

@@ -7,14 +7,7 @@ import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.StringUtils;
-import org.robotframework.jaxb.BodyItemStatusValue;
-import org.robotframework.jaxb.For;
-import org.robotframework.jaxb.ForIteration;
-import org.robotframework.jaxb.If;
-import org.robotframework.jaxb.IfBranch;
-import org.robotframework.jaxb.Keyword;
-import org.robotframework.jaxb.OutputElement;
-import org.robotframework.jaxb.OutputSuite;
+import org.robotframework.jaxb.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,9 +29,11 @@ public class OutputMatcher {
             for (Keyword keyword : outputSuite.getKeywords()) {
                 switch (keyword.getType()) {
                     case SETUP:
+                    case SETUP_RF3:
                         findLineAndAttachKeyword("Suite Setup", lines, 0, keyword);
                         break;
                     case TEARDOWN:
+                    case TEARDOWN_RF3:
                         findLineAndAttachKeyword("Suite Teardown", lines, 0, keyword);
                         break;
                     case TEST_SETUP:
@@ -66,14 +61,19 @@ public class OutputMatcher {
             LinkedList<OutputElement> kwOrForOrIf = new LinkedList<>(element.getElements());
 
             // Handle Test Setup/Teardown
-            List<Keyword> setupAndTeardown = kwOrForOrIf.stream().filter(outElement -> outElement instanceof Keyword && ((Keyword) outElement).getType() != null).map(outputElement -> (Keyword) outputElement).collect(Collectors.toList());
+            List<Keyword> setupAndTeardown = kwOrForOrIf.stream()
+                    .filter(outElement -> outElement instanceof Keyword && ((Keyword) outElement).isSetupOrTearDown())
+                    .map(outputElement -> (Keyword) outputElement)
+                    .collect(Collectors.toList());
             kwOrForOrIf.removeAll(setupAndTeardown);
             for (Keyword keyword : setupAndTeardown) {
                 switch (keyword.getType()) {
                     case SETUP:
+                    case SETUP_RF3:
                         findLineAndAttachKeyword("[Setup]", lines, 1, keyword);
                         break;
                     case TEARDOWN:
+                    case TEARDOWN_RF3:
                         findLineAndAttachKeyword("[Teardown]", lines, 1, keyword);
                         break;
                 }
@@ -155,6 +155,39 @@ public class OutputMatcher {
                     return  loopIndex;
                 }
                 return 0;
+            }
+
+            // FOR statement support (RobotFramework 3.X)
+            if (outputElement instanceof Keyword && ((Keyword) outputElement).getType() == KeywordType.FOR) {
+                Keyword keyword = (Keyword) outputElement;
+                List<String> lineArgs = line.asLineArgs();
+                if (lineArgs.get(0).equalsIgnoreCase("FOR")) {
+                    List<Keyword> iterations = keyword.getKwOrForOrIf().stream().filter(o -> o instanceof Keyword).map(o -> (Keyword) o).collect(Collectors.toList());
+
+                    // Try to find failing iteration OR use the latest
+                    Optional<Keyword> failedIteration = iterations.stream().filter(elem -> elem.getStatus().getStatus() == BodyItemStatusValue.FAIL).findFirst();
+                    Keyword iteration = failedIteration.orElseGet(() -> iterations.stream().reduce((first, second) -> second).orElse(null));
+                    if (iteration != null && !iteration.getKwOrForOrIf().isEmpty()) {
+                        line.status = iteration.getStatus().getStatus();
+                        line.keyword = keyword;
+                        kwOrForOrIf.addAll(0, iteration.getKwOrForOrIf());
+                    } else {
+                        // Failure in For loop declaration
+                        line.status = keyword.getStatus().getStatus();
+                        line.keyword = keyword;
+                    }
+
+                    // Look for 'END' and match lines inside 'FOR' with last successful/failing iteration
+                    int loopIndex = 1;
+                    while (!logicalLines.get(logicalLineIndex + loopIndex).asLineArgs().get(0).equalsIgnoreCase("END")) {
+                        if (iteration != null) {
+                            tryToMatchLogicalLineToOutputKeyword(element, logicalLines, kwOrForOrIf, logicalLineIndex + loopIndex);
+                        }
+                        loopIndex++;
+                    }
+                    return  loopIndex;
+                }
+
             }
 
             Keyword keyword = (Keyword) outputElement;

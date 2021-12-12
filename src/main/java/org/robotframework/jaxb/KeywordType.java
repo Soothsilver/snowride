@@ -9,6 +9,7 @@
 package org.robotframework.jaxb;
 
 import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -33,8 +34,20 @@ public enum KeywordType {
 
     SETUP,
     TEARDOWN,
+
+    // Artificial types (not from RobotFramework)
     TEST_SETUP,
-    TEST_TEARDOWN;
+    TEST_TEARDOWN,
+
+    // RobotFramework 3.X
+    @XmlEnumValue("for")
+    FOR,
+    @XmlEnumValue("foritem")
+    FORITEM,
+    @XmlEnumValue("setup")
+    SETUP_RF3,
+    @XmlEnumValue("teardown")
+    TEARDOWN_RF3;
 
     public String value() {
         return name();

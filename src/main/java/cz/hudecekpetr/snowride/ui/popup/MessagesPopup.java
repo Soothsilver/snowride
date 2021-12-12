@@ -9,10 +9,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.robotframework.jaxb.ForIteration;
-import org.robotframework.jaxb.ForIterationVariable;
-import org.robotframework.jaxb.Keyword;
-import org.robotframework.jaxb.Message;
+import org.robotframework.jaxb.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -102,6 +99,11 @@ public class MessagesPopup extends SnowPopup {
     }
 
     public void setKeyword(Keyword keyword) {
+        if (keyword.getType() == KeywordType.FOR && !keyword.getKwOrForOrIf().isEmpty()) {
+            rf3ForIterations(keyword.getKwOrForOrIf().stream().filter(o -> o instanceof Keyword).map(o -> (Keyword) o).collect(Collectors.toList()));
+            return;
+        }
+
         clear();
         List<Message> messages = keyword.getMessages();
         if (!messages.isEmpty()) {
@@ -113,6 +115,40 @@ public class MessagesPopup extends SnowPopup {
                 setMessages(messages, "Output messages (source: " + failingKeyword.getFullName(keyword) + ")");
             }
         }
+    }
+
+    // RobotFramework 3.X
+    public void rf3ForIterations(List<Keyword> keywords) {
+        clear();
+        title.setText("FOR iterations");
+
+        int totalLength = 0;
+        int maxWidth = 0;
+        for (int i = 0; i < keywords.size(); i++) {
+            Keyword iteration = keywords.get(i);
+            String iterationInfo = "[FOR_ITERATION_" + i + "]";
+            String text = iterationInfo + " " + iteration.getName();
+            textArea.appendText(text + System.lineSeparator() + System.lineSeparator());
+            String color = "lightgray";
+            switch (iteration.getStatus().getStatus()) {
+                case NOT_RUN:
+                case SKIP:
+                    color = "#dddddd";
+                    break;
+                case FAIL:
+                    color = "#ce3e01";
+                    break;
+                case PASS:
+                    color = "#97bd61";
+                    break;
+            }
+            textArea.setStyle(totalLength, totalLength + iterationInfo.length(), "-fx-font-weight: bold; -fx-fill: " + color + ";");
+            totalLength += text.length() + 2;
+            if (text.length() > maxWidth) {
+                maxWidth = text.length();
+            }
+        }
+        setPaneWidth(maxWidth);
     }
 
     public void setMessages(List<Message> messages) {
