@@ -16,6 +16,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +27,8 @@ import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.*;
 import static cz.hudecekpetr.snowride.ui.grid.YellowHighlight.lastPositionSelectText;
 
 public class Cell implements IHasQuickDocumentation {
+    private static final List<String> CONDITIONAL_KEYWORDS = new ArrayList<>(Arrays.asList(": FOR", ":FOR", "FOR", "END", "IF", "ELSE IF", "ELSE"));
+
     // Permanent fields:
     public final String contents;
     public String postTrivia;
@@ -99,9 +103,6 @@ public class Cell implements IHasQuickDocumentation {
         if (semantics.cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
             style += "-fx-text-fill: darkmagenta; ";
             style += "-fx-font-weight: bold; ";
-        } else if (semantics.cellIndex == 1 && contents.equals(": FOR") || contents.equals(":FOR") || contents.equals("FOR") || contents.equals("END")) {
-            style += "-fx-text-fill: darkmagenta; ";
-            style += "-fx-font-weight: bold; ";
         } else if (semantics.cellIndex == 1 && contents.equals("\\")) {
             style += "-fx-font-style: italic; -fx-background-color: darkgray; ";
         } else if (semantics.isComment) {
@@ -119,6 +120,9 @@ public class Cell implements IHasQuickDocumentation {
                     style += "-fx-text-fill: dodgerblue; ";
                 }
             }
+        } else if (semantics.cellIndex == 1 && CONDITIONAL_KEYWORDS.stream().anyMatch(contents::matches)) {
+            style += "-fx-text-fill: darkmagenta; ";
+            style += "-fx-font-weight: bold; ";
         } else if (semantics.isVariable) {
             style += "-fx-text-fill: green; ";
         } else if (containsAnyVariable(contents)) {
