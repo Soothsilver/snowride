@@ -2,9 +2,9 @@ package cz.hudecekpetr.snowride.tree.highelements;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
+import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.parser.GateParser;
@@ -20,14 +20,14 @@ import cz.hudecekpetr.snowride.semantics.resources.KeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.LibraryKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.ResourceFileKeywordSource;
 import cz.hudecekpetr.snowride.semantics.resources.TestCaseSettingOptionLibrarySource;
-import cz.hudecekpetr.snowride.tree.sections.IScenarioSection;
-import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.RobotFile;
-import cz.hudecekpetr.snowride.tree.sections.RobotSection;
-import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.tree.Tag;
 import cz.hudecekpetr.snowride.tree.TagKind;
+import cz.hudecekpetr.snowride.tree.sections.IScenarioSection;
+import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
+import cz.hudecekpetr.snowride.tree.sections.RobotSection;
+import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -41,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement implements ISuite {
@@ -170,8 +169,6 @@ public abstract class Suite extends HighElement implements ISuite {
                 this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
             this.reparseResources();
-            addOrUpdateTreeNodes(parsed.getHighElements(), treeNode, children);
-
             children.removeIf(he -> he instanceof Scenario);
             children.addAll(parsed.getHighElements());
             for (HighElement child : children) {
@@ -179,6 +176,8 @@ public abstract class Suite extends HighElement implements ISuite {
                     child.parent = this;
                 }
             }
+
+            addOrUpdateTreeNodes(this, treeNode, false);
         }
     }
 
@@ -266,35 +265,45 @@ public abstract class Suite extends HighElement implements ISuite {
         children.add(indexOld, newSuite);
 
         TreeItem<HighElement> oldTreeNode = treeNode.getChildren().get(indexTreeOld);
-        addOrUpdateTreeNodes(newSuite.children, oldTreeNode, oldTreeNode.getValue().children);
-        MainForm.INSTANCE.reloadCurrentThing();
+        addOrUpdateTreeNodes(newSuite, oldTreeNode, true);
         oldTreeNode.setValue(newSuite);
         newSuite.treeNode = oldTreeNode;
+        MainForm.INSTANCE.reloadCurrentThing();
     }
 
-    private void addOrUpdateTreeNodes(List<HighElement> newHighElements, TreeItem<HighElement> treeNode, ObservableList<HighElement> children) {
-        if (newHighElements.stream().anyMatch(highElement -> !(highElement instanceof Scenario))) {
-            throw new RuntimeException("Only scenarios were expected!");
-        }
+    private void addOrUpdateTreeNodes(Suite suite, TreeItem<HighElement> treeNode, boolean recursivelly) {
 
         // TreeNode - delete removed nodes
-        List<HighElement> removedNodes = children.stream()
-                .filter(highElement -> highElement instanceof Scenario)
-                .filter(currentElement -> newHighElements.stream().noneMatch(newElement -> currentElement.getInvariantName().equals(newElement.getInvariantName())))
-                .collect(Collectors.toList());
-        treeNode.getChildren().removeIf(ti -> removedNodes.contains(ti.getValue()));
+        treeNode.getChildren().removeIf(currentNode -> suite.children.stream().noneMatch(newElement -> currentNode.getValue().getInvariantName().equals(newElement.getInvariantName())));
 
         // TreeNode - add or update existing nodes
-        for (int i = 0; i < newHighElements.size(); i++) {
-            HighElement newElement = newHighElements.get(i);
+        for (int i = 0; i < suite.children.size(); i++) {
+            HighElement newElement = suite.children.get(i);
             if (i >= treeNode.getChildren().size() || !newElement.getInvariantName().equals(treeNode.getChildren().get(i).getValue().getInvariantName())) {
                 treeNode.getChildren().add(i, newElement.treeNode);
             } else {
                 TreeItem<HighElement> currentNode = treeNode.getChildren().get(i);
-                newElement.updateGraphics(currentNode.getGraphic(), currentNode.getValue());
-                newElement.outputElement = currentNode.getValue().outputElement;
+                HighElement currentElement = currentNode.getValue();
+                if (currentElement == newElement) {
+                    continue;
+                }
+                newElement.updateGraphics(currentNode.getGraphic(), currentElement);
                 currentNode.setValue(newElement);
                 newElement.treeNode = currentNode;
+                currentElement.treeNode = null;
+            }
+        }
+
+        if (recursivelly && suite instanceof FolderSuite) {
+            for (int i = 0; i < suite.children.size(); i++) {
+                HighElement newElement = suite.children.get(i);
+                if (newElement instanceof Suite) {
+                    Suite newSuite = (Suite) newElement;
+                    TreeItem<HighElement> oldTreeNode = treeNode.getChildren().get(i);
+                    addOrUpdateTreeNodes(newSuite, oldTreeNode, true);
+                } else {
+                    System.out.println("HOW???");
+                }
             }
         }
     }
@@ -431,6 +440,28 @@ public abstract class Suite extends HighElement implements ISuite {
             return vco.stream();
         } else {
             return Stream.empty();
+        }
+    }
+
+    public void sortTree() {
+        sortTree(this);
+    }
+
+    private void sortTree(HighElement element) {
+
+        // do not sort content of files
+        if (element instanceof FileSuite) {
+            return;
+        }
+
+        ObservableList<TreeItem<HighElement>> treeChildren = element.treeNode.getChildren();
+        if (!treeChildren.isEmpty()) {
+            treeChildren.forEach(child -> sortTree(child.getValue()));
+            // exclude ultimate root because we want "External resources" to be second. In fact, we depend on it.
+            if (!(element instanceof UltimateRoot)) {
+                treeChildren.sort(Comparator.comparing(child -> child.getValue().getShortNameAsOnDisk()));
+                element.children.sort(Comparator.comparing(HighElement::getShortNameAsOnDisk));
+            }
         }
     }
 }

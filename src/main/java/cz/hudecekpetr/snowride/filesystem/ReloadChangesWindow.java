@@ -123,6 +123,7 @@ public class ReloadChangesWindow extends Stage {
             Suite newElement;
             if (rl instanceof FolderSuite) {
                 newElement = mainForm.gateParser.loadDirectory(((FolderSuite) rl).directoryPath, mainForm.projectLoad, progressPerFile);
+                newElement.sortTree();
             } else if (rl instanceof FileSuite) {
                 try {
                     newElement = mainForm.gateParser.loadFile(((FileSuite) rl).file);
@@ -140,12 +141,22 @@ public class ReloadChangesWindow extends Stage {
                     ((Suite) he).analyzeSemantics();
                 }
             });
+
             if (remainingParent == null) {
                 throw new RuntimeException("The suite '" + rl.getQualifiedName() + "' appears to have no parent.");
             }
 
             // Update the tree. Potentially CPU-expensive but hopefully not too many changes were made.
             remainingParent.replaceChildWithAnotherChild(rl, newElement);
+
+            // FIXME: Variables from Suite/Resources are not available after initial 'analyzeSemantics()', as a result they are not available
+            //        in autocomplete nor for purposes of identifying 'undefined' variables. Running analysis again is MORE than suboptimal solution!
+            newElement.selfAndDescendantHighElements().forEachOrdered(he -> {
+                if (he instanceof Suite) {
+                    ((Suite) he).reparseAndRecalculateResources();
+                    ((Suite) he).analyzeSemantics();
+                }
+            });
         }
 
         // Remove the ghost high element from being loaded in the text edit and grid tab by reloading it.

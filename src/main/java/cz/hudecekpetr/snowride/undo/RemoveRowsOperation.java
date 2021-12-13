@@ -4,7 +4,6 @@ import cz.hudecekpetr.snowride.tree.LogicalLine;
 import javafx.collections.ObservableList;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Rows were removed on "reformat" after user saved changes Ctrl+S or pressed the 'Reformat' button.

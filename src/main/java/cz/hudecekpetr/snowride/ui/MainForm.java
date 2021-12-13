@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -57,7 +56,6 @@ import cz.hudecekpetr.snowride.ui.settings.SettingsWindow;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -911,7 +909,7 @@ public class MainForm {
                     }
                 });
 
-                sortTree(ultimateRoot);
+                ultimateRoot.sortTree();
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
@@ -946,25 +944,6 @@ public class MainForm {
             }
         });
 
-    }
-
-    private void sortTree(HighElement element) {
-
-        // do not sort content of files
-        if (element instanceof FileSuite) {
-            return;
-        }
-
-        ObservableList<TreeItem<HighElement>> treeChildren = element.treeNode.getChildren();
-        ObservableList<HighElement> executionChildren = element.children;
-        if (!treeChildren.isEmpty()) {
-            treeChildren.forEach(child -> sortTree(child.getValue()));
-            // exclude ultimate root because we want "External resources" to be second. In fact, we depend on it.
-            if (!(element instanceof UltimateRoot)) {
-                treeChildren.sort(Comparator.comparing(child -> child.getValue().getShortNameAsOnDisk()));
-                executionChildren.sort(Comparator.comparing(child -> child.getShortNameAsOnDisk()));
-            }
-        }
     }
 
     private File loadSnowFileAndReturnRobotsDirectory(File snowFile) {
