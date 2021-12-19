@@ -82,6 +82,7 @@ public class GridTab {
     public void loadElement(HighElement value) {
         if (value != null) {
             value.asSuite().reparseAndRecalculateResources();
+            value.asSuite().analyzeSemantics();
             upperBox2.update(value);
             upperBox.update(value);
         }

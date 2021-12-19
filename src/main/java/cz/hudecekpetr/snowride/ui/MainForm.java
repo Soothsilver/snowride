@@ -940,15 +940,6 @@ public class MainForm {
                     runTab.maybeRunNumberChanged();
                     humanInControl = true;
 
-                    // FIXME: Variables from Suite/Resources are not available after initial 'analyzeSemantics()', as a result they are not available
-                    //        in autocomplete nor for purposes of identifying 'undefined' variables. Running analysis again is MORE than suboptimal solution!
-                    ultimateRoot.selfAndDescendantHighElements().forEachOrdered(he -> {
-                        if (he instanceof Suite) {
-                            ((Suite) he).reparseAndRecalculateResources();
-                            ((Suite) he).analyzeSemantics();
-                        }
-                    });
-
                     Settings.getInstance().lastOpenedProject = path.toString();
                     Settings.getInstance().addToRecentlyOpen(path.toString());
                     refreshRecentlyOpenMenu();
