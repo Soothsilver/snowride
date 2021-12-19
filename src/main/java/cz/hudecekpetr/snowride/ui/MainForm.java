@@ -226,7 +226,7 @@ public class MainForm {
                 Underlining.update();
             }
             if (event.getCode() == KeyCode.F && event.isShortcutDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
-                textEditTab.getTbSearchBox().requestFocus();
+                textEditTab.getSearchBox().requestFocus();
                 event.consume();
             } else if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
@@ -911,6 +911,7 @@ public class MainForm {
         File loadRobotsFrom = robotDirectory;
         projectLoad.progress.set(0);
         navigationStack.clear();
+        textEditTab.clear();
         reloadElementIntoTabs(null);
         projectLoader.submit(() -> {
             try {
@@ -931,6 +932,7 @@ public class MainForm {
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
+                    textEditTab.clear();
                     reloadElementIntoTabs(null);
                     humanInControl = false;
                     projectTree.setRoot(ultimateRoot.treeNode);

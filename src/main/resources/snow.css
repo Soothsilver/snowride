@@ -1,3 +1,11 @@
+.paragraph-box .search-highlight {
+    -rtfx-background-color: yellow;
+}
+
+.paragraph-box:has-caret {
+    -fx-background-color: #f2f9fc;
+}
+
 .tree-cell {
     -fx-label-padding: 0;
     -fx-padding: 0;

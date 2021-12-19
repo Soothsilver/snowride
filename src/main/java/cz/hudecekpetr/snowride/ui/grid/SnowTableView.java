@@ -271,7 +271,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isShortcutDown()) {
             getScenario().getUndoStack().undoIfAble();
-        } else if (keyEvent.getCode() == KeyCode.Y && keyEvent.isShortcutDown()) {
+        } else if (((keyEvent.getCode() == KeyCode.Z && keyEvent.isShiftDown()) || keyEvent.getCode() == KeyCode.Y) && keyEvent.isShortcutDown()) {
             getScenario().getUndoStack().redoIfAble();
         } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isShortcutDown()) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
