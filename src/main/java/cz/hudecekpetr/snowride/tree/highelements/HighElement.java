@@ -45,6 +45,7 @@ public abstract class HighElement implements IAutocompleteOption {
      */
     public ObservableList<SnowrideError> allErrorsRecursive;
     public String contents;
+    public String pristineContents;
     public TreeItem<HighElement> treeNode;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
@@ -71,6 +72,7 @@ public abstract class HighElement implements IAutocompleteOption {
         this.shortNameProperty.addListener((observable, oldValue, newValue) -> invariantName = Extensions.toInvariant(newValue));
         this.shortNameProperty.set(shortName);
         this.contents = contents;
+        this.pristineContents = contents;
         this.children = FXCollections.observableArrayList();
         childrenRecursively.appendList(this.children);
         this.children.addListener((ListChangeListener<HighElement>) c -> {

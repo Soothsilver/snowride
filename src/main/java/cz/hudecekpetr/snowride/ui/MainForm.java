@@ -227,8 +227,8 @@ public class MainForm {
             }
             if (event.getCode() == KeyCode.F && event.isShortcutDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
                 textEditTab.getTbSearchBox().requestFocus();
-            }
-            if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
+                event.consume();
+            } else if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
                 event.consume();
             } else if (event.getCode() == KeyCode.LEFT && event.isAltDown()) {
@@ -257,7 +257,11 @@ public class MainForm {
     }
 
     public void changeOccurredTo(HighElement whatChanged, LastChangeKind how) {
-        whatChanged.unsavedChanges = how;
+        if (how == LastChangeKind.TEXT_CHANGED && whatChanged.contents.equals(whatChanged.pristineContents)) {
+            whatChanged.unsavedChanges = LastChangeKind.PRISTINE;
+        } else {
+            whatChanged.unsavedChanges = how;
+        }
         whatChanged.treeNode.setValue(null);
         whatChanged.treeNode.setValue(whatChanged);
         // TODO It's possible the user change the tag which should cause the number of tests to update

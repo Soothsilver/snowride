@@ -36,6 +36,7 @@ public class FileSuite extends Suite implements ISuite {
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             FilesystemWatcher.getInstance().ignoreNextChangeOf(file.toPath());
             FileUtils.write(file, contents, "utf-8");
+            pristineContents = contents;
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 child.unsavedChanges = LastChangeKind.PRISTINE;

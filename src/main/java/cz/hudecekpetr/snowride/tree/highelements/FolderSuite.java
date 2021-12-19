@@ -52,6 +52,7 @@ public class FolderSuite extends Suite implements ISuite {
             FilesystemWatcher.getInstance().ignoreNextChangeOf(directoryPath.toPath());
             FilesystemWatcher.getInstance().ignoreNextChangeOf(initFile.toPath());
             FileUtils.write(initFile, contents, "utf-8");
+            pristineContents = contents;
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 if (child instanceof Scenario) {
