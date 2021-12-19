@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui;
 
+import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import org.robotframework.jaxb.OutputElement;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.beans.property.BooleanProperty;
@@ -50,12 +51,14 @@ public class NavigationStack {
         updatePossibilities();
         return navigationStack.get(displayingWhat);
     }
+
     public HighElement navigateBackwards() {
         currentOutputElementStackIndex--;
         displayingWhat--;
         updatePossibilities();
         return navigationStack.get(displayingWhat);
     }
+
     public BooleanProperty canNavigateBack = new SimpleBooleanProperty();
     public BooleanProperty canNavigateForwards = new SimpleBooleanProperty();
 
@@ -100,5 +103,25 @@ public class NavigationStack {
             clear();
         }
 
+    }
+
+    public void updateElement(HighElement currentElement, HighElement newElement) {
+        for (int i = 0; i < navigationStack.size(); i++) {
+            if (navigationStack.get(i).equals(currentElement)) {
+                navigationStack.remove(currentElement);
+                navigationStack.add(i, newElement);
+            }
+        }
+    }
+
+    public void removeElements(Suite suite) {
+        navigationStack.removeIf(currentElement -> {
+            boolean noneMatch = suite.children.stream().noneMatch(newElement -> currentElement.getInvariantName().equals(newElement.getInvariantName()));
+            if (noneMatch) {
+                currentOutputElementStackIndex--;
+                displayingWhat--;
+            }
+            return noneMatch;
+        });
     }
 }

@@ -271,10 +271,11 @@ public abstract class Suite extends HighElement implements ISuite {
         MainForm.INSTANCE.reloadCurrentThing();
     }
 
-    private void addOrUpdateTreeNodes(Suite suite, TreeItem<HighElement> treeNode, boolean recursivelly) {
+    private void addOrUpdateTreeNodes(Suite suite, TreeItem<HighElement> treeNode, boolean recursively) {
 
         // TreeNode - delete removed nodes
         treeNode.getChildren().removeIf(currentNode -> suite.children.stream().noneMatch(newElement -> currentNode.getValue().getInvariantName().equals(newElement.getInvariantName())));
+        MainForm.INSTANCE.navigationStack.removeElements(suite);
 
         // TreeNode - add or update existing nodes
         for (int i = 0; i < suite.children.size(); i++) {
@@ -291,11 +292,12 @@ public abstract class Suite extends HighElement implements ISuite {
                 newElement.outputElement = currentElement.outputElement;
                 currentNode.setValue(newElement);
                 newElement.treeNode = currentNode;
+                MainForm.INSTANCE.navigationStack.updateElement(currentElement, newElement);
                 currentElement.treeNode = null;
             }
         }
 
-        if (recursivelly && suite instanceof FolderSuite) {
+        if (recursively && suite instanceof FolderSuite) {
             for (int i = 0; i < suite.children.size(); i++) {
                 HighElement newElement = suite.children.get(i);
                 if (newElement instanceof Suite) {
