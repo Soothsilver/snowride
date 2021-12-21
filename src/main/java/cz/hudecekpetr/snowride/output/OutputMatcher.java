@@ -108,7 +108,7 @@ public class OutputMatcher {
                 int ifBranchIndex = 0;
                 for (IfBranch ifBranch : ifElement.getBranches()) {
                     LogicalLine ifBranchLine = logicalLines.get(logicalLineIndex + ifBranchIndex);
-                    if (ifBranchLine.asLineArgs().get(0).equalsIgnoreCase(toInvariant(ifBranch.getType().value()))) {
+                    if (ifBranchLine.startsWith(toInvariant(ifBranch.getType().value()))) {
                         ifBranchLine.status = ifBranch.getStatus().getStatus();
                         kwOrForOrIf.addAll(0, ifBranch.getKwOrForOrIf());
                         ifBranchIndex++;
@@ -124,8 +124,7 @@ public class OutputMatcher {
             // FOR statement support
             if (outputElement instanceof For) {
                 For loop = (For) outputElement;
-                List<String> lineArgs = line.asLineArgs();
-                if (lineArgs.get(0).equalsIgnoreCase("FOR")) {
+                if (line.startsWith("FOR")) {
                     List<ForIteration> iterations = loop.getElements().stream()
                             .filter(elem -> elem instanceof ForIteration)
                             .map(sc -> (ForIteration) sc)
@@ -146,7 +145,7 @@ public class OutputMatcher {
 
                     // Look for 'END' and match lines inside 'FOR' with last successful/failing iteration
                     int loopIndex = 1;
-                    while (!logicalLines.get(logicalLineIndex + loopIndex).asLineArgs().get(0).equalsIgnoreCase("END")) {
+                    while (!logicalLines.get(logicalLineIndex + loopIndex).startsWith("END")) {
                         if (iteration != null) {
                             tryToMatchLogicalLineToOutputKeyword(element, logicalLines, kwOrForOrIf, logicalLineIndex + loopIndex);
                         }
@@ -160,8 +159,7 @@ public class OutputMatcher {
             // FOR statement support (RobotFramework 3.X)
             if (outputElement instanceof Keyword && ((Keyword) outputElement).getType() == KeywordType.FOR) {
                 Keyword keyword = (Keyword) outputElement;
-                List<String> lineArgs = line.asLineArgs();
-                if (lineArgs.get(0).equalsIgnoreCase("FOR")) {
+                if (line.startsWith("FOR", ":FOR", ": FOR")) {
                     List<Keyword> iterations = keyword.getKwOrForOrIf().stream().filter(o -> o instanceof Keyword).map(o -> (Keyword) o).collect(Collectors.toList());
 
                     // Try to find failing iteration OR use the latest
@@ -179,7 +177,7 @@ public class OutputMatcher {
 
                     // Look for 'END' and match lines inside 'FOR' with last successful/failing iteration
                     int loopIndex = 1;
-                    while (!logicalLines.get(logicalLineIndex + loopIndex).asLineArgs().get(0).equalsIgnoreCase("END")) {
+                    while (!logicalLines.get(logicalLineIndex + loopIndex).startsWith("END")) {
                         if (iteration != null) {
                             tryToMatchLogicalLineToOutputKeyword(element, logicalLines, kwOrForOrIf, logicalLineIndex + loopIndex);
                         }

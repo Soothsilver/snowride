@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -362,13 +363,14 @@ public class LogicalLine {
         }
     }
 
-    public List<String> asLineArgs() {
-        return cells.subList(1, cells.size()).stream()
+    public boolean startsWith(String... anotherStrings) {
+        List<String> lineArgs = cells.subList(1, cells.size()).stream()
 //                .map(cell -> toInvariant(cell.contents).replaceAll("\\s*=\\s*$", ""))
                 .map(cell -> toInvariant(cell.contents))
                 .filter(StringUtils::isNotBlank)
                 .filter(s -> !s.startsWith("#"))  // filter out comments
                 .collect(Collectors.toList());
+        return Arrays.stream(anotherStrings).anyMatch(s -> lineArgs.get(0).equalsIgnoreCase(s));
     }
 
     public boolean matchesKeyword(Keyword keyword) {
