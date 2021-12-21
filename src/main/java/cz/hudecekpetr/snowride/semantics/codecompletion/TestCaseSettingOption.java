@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.semantics.externallibraries.ExternalKeyword;
@@ -13,6 +12,7 @@ import javafx.scene.image.Image;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TestCaseSettingOption implements IAutocompleteOption, IKnownKeyword {
 
@@ -102,7 +102,7 @@ public class TestCaseSettingOption implements IAutocompleteOption, IKnownKeyword
                     "If there is a timeout, the keyword running is stopped at the expiration of the timeout and the test case fails. However, keywords executed as test teardown are not interrupted if a test timeout occurs, because they are normally engaged in important clean-up activities. If necessary, it is possible to interrupt also these keywords with user keyword timeouts.\n" +
                     "\n", 1, 0, -1)
     );
-    public static List<TestCaseSettingOption> allOptions = Streams.concat(testCaseTableOptions.stream(), settingsTableOptions.stream()).collect(Collectors.toList());
+    public static List<TestCaseSettingOption> allOptions = Stream.concat(testCaseTableOptions.stream(), settingsTableOptions.stream()).collect(Collectors.toList());
     private String setting;
     private String documentation;
     private int indexOfKeywordArgument;

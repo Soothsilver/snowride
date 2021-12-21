@@ -1,7 +1,7 @@
 package cz.hudecekpetr.snowride.filesystem;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import cz.hudecekpetr.snowride.Extensions;
 import javafx.application.Platform;
 
@@ -32,7 +32,7 @@ public class FilesystemWatcher {
      * within Snowride, we use this as an indicator, when a file changes, about where the change originated from. A smarter
      * idea would be to load the file and compare the contents but that's more difficult to implement.
      */
-    private Cache<Path, Path> recentlyChangedFiles = CacheBuilder.newBuilder()
+    private Cache<Path, Path> recentlyChangedFiles = Caffeine.newBuilder()
             .expireAfterWrite(5, TimeUnit.SECONDS)
             .build();
 

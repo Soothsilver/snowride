@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.tree;
 
-import com.google.common.collect.Streams;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.Underlining;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
@@ -184,14 +183,14 @@ public class Cell implements IHasQuickDocumentation {
         partOfLine.recalculateSemantics();
         Stream<IAutocompleteOption> options = Stream.empty();
         if (semantics.isKeyword) {
-            options = Streams.concat(options,
+            options = Stream.concat(options,
                     semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
             if (whatWrittenSoFar.getSource() == null) {
-                options = Streams.concat(options,
+                options = Stream.concat(options,
                         semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
                                 .map(kw -> new LibraryAutocompleteOption(kw.getSourceName())).distinct());
             } else {
-                options = Streams.concat(options,
+                options = Stream.concat(options,
                         semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
                                 .filter(kw -> Extensions.toInvariant(kw.getSourceName()).equals(Extensions.toInvariant(whatWrittenSoFar.getSource())))
                                 .map(QualifiedCompletionOption::new));
@@ -200,12 +199,12 @@ public class Cell implements IHasQuickDocumentation {
         String gherkinPrefix = GherkinKeywords.getPrefixWithSpaceIfAny(whatWrittenSoFar.getKeyword());
         if (gherkinPrefix != null) {
             List<IAutocompleteOption> asList = options.collect(Collectors.toList());
-            options = Streams.concat(asList.stream().map(co -> new GherkinEnhancedOption(gherkinPrefix, co)), asList.stream());
+            options = Stream.concat(asList.stream().map(co -> new GherkinEnhancedOption(gherkinPrefix, co)), asList.stream());
         }
-        options = Streams.concat(options, GherkinKeywords.all.stream());
+        options = Stream.concat(options, GherkinKeywords.all.stream());
         if (Settings.getInstance().cbAutocompleteVariables) {
             if (semantics.cellIndex >= 1 && semantics.variablesList != null && snowTableKind != SnowTableKind.VARIABLES) {
-                options = Streams.concat(options, semantics.variablesList.stream());
+                options = Stream.concat(options, semantics.variablesList.stream());
             }
         }
         return options;

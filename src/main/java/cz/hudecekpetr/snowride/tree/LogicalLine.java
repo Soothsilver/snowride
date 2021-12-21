@@ -233,9 +233,11 @@ public class LogicalLine {
                 cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
                 cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
                 Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(cell.contents));
-                for (IKnownKeyword homonym : homonyms) {
-                    if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
-                        cellSemantics.thisHereKeyword = homonym;
+                if (homonyms != null) {
+                    for (IKnownKeyword homonym : homonyms) {
+                        if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                            cellSemantics.thisHereKeyword = homonym;
+                        }
                     }
                 }
                 if (cellSemantics.thisHereKeyword == null) {

@@ -1,17 +1,17 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
-import com.google.common.collect.Lists;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import javafx.scene.image.Image;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class UltimateRoot extends Suite {
 
     public UltimateRoot(FolderSuite rootDirectory, ExternalResourcesElement externalResourcesElement) {
-        super("Ultimate root element", null, Lists.newArrayList(rootDirectory, externalResourcesElement));
+        super("Ultimate root element", null, Arrays.asList(rootDirectory, externalResourcesElement));
         this.imageView.setImage(Images.internet);
         rootDirectory.parent = this;
         externalResourcesElement.parent = this;

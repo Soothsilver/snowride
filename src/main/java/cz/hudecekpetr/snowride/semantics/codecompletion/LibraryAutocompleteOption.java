@@ -1,9 +1,10 @@
 package cz.hudecekpetr.snowride.semantics.codecompletion;
 
-import com.google.common.base.Objects;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
+
+import java.util.Objects;
 
 public class LibraryAutocompleteOption implements IAutocompleteOption {
 
@@ -38,17 +39,18 @@ public class LibraryAutocompleteOption implements IAutocompleteOption {
         return false;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LibraryAutocompleteOption that = (LibraryAutocompleteOption) o;
-        return Objects.equal(libraryName, that.libraryName);
+        return Objects.equals(libraryName, that.libraryName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(libraryName);
+        return Objects.hash(libraryName);
     }
 
     @Override

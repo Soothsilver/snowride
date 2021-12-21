@@ -1,7 +1,5 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
@@ -36,11 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement implements ISuite {
@@ -57,8 +51,7 @@ public abstract class Suite extends HighElement implements ISuite {
     private Set<KeywordSource> importedResourcesRecursively = new HashSet<>();
     private List<IKnownKeyword> importedKeywordsRecursively = new ArrayList<>();
     private List<VariableCompletionOption> importedVariablesRecursively = new ArrayList<>();
-    private Multimap<String, IKnownKeyword> importedKeywordsRecursivelyByInvariantName =
-            MultimapBuilder.hashKeys().arrayListValues().build();
+    private Map<String, List<IKnownKeyword>> importedKeywordsRecursivelyByInvariantName = new HashMap<>();
     public boolean childTestsAreTemplates = false;
     /**
      * What to use as line separators. By default, we use LF only, unless the file as loaded has CRLF.
@@ -131,7 +124,7 @@ public abstract class Suite extends HighElement implements ISuite {
         });
         importedKeywordsRecursively.sort(Comparator.comparingInt(IKnownKeyword::getCompletionPriority));
         importedKeywordsRecursivelyByInvariantName.clear();
-        importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.put(keyword.getInvariantName(), keyword));
+        importedKeywordsRecursively.forEach(keyword -> importedKeywordsRecursivelyByInvariantName.computeIfAbsent(keyword.getInvariantName(), key -> new LinkedList<>()).add(keyword));
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllVariables).forEachOrdered(vco -> importedVariablesRecursively.add(vco));
         importedResourcesRecursively.stream().flatMap(KeywordSource::getAllVariables)
                 .map(VariableCompletionOption::getAutocompleteText)
@@ -156,7 +149,7 @@ public abstract class Suite extends HighElement implements ISuite {
         return importedKeywordsRecursively;
     }
 
-    public Multimap<String, IKnownKeyword> getKeywordsPermissibleInSuiteByInvariantName() {
+    public Map<String, List<IKnownKeyword>> getKeywordsPermissibleInSuiteByInvariantName() {
         return importedKeywordsRecursivelyByInvariantName;
     }
 
