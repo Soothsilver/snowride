@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils;
 import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
 import cz.hudecekpetr.snowride.semantics.findusages.Usage;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Scenario extends HighElement {
 
@@ -245,6 +247,7 @@ public class Scenario extends HighElement {
         }
         thisScenarioVariables.addAll(parent.getVariablesList());
         variables.addAll(parent.variables);
+        variables.addAll(argCells.stream().map(RobotFrameworkVariableUtils::getVariableName).collect(Collectors.toList()));
         this.semanticsArguments = argCells;
         if (argCells.size() > 0) {
             this.semanticsDocumentation = "*Args:* " + String.join(", ", argCells) + "\n" + (semanticsDocumentation != null ? semanticsDocumentation : "");
