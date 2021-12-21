@@ -27,6 +27,7 @@ import static org.fxmisc.wellbehaved.event.EventPattern.keyPressed;
 
 public class SnowCodeArea extends CodeArea {
     private final TextField searchBox;
+    private boolean textLoaded = false;
 
     public SnowCodeArea(TextField searchBox) {
         super();
@@ -109,6 +110,10 @@ public class SnowCodeArea extends CodeArea {
             } else {
                 replaceText(value.contents);
             }
+        }
+        if (!textLoaded) {
+            textLoaded = true;
+            getUndoManager().forgetHistory();
         }
         if (lastLoadedScenario != null) {
             String text = getText();
