@@ -1,7 +1,5 @@
 package cz.hudecekpetr.snowride.filesystem;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import cz.hudecekpetr.snowride.Extensions;
 import javafx.application.Platform;
 
@@ -13,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -26,16 +23,6 @@ public class FilesystemWatcher {
     private static FilesystemWatcher watcher;
     private WatchService watchService;
 
-    /**
-     * Maintains a list of ABSOLUTE PATHS of files that were recently changed from within Snowride, including directories.
-     * Because it is kind-of unlikely that a file will change on the disk in the same 5 seconds that the user changed it
-     * within Snowride, we use this as an indicator, when a file changes, about where the change originated from. A smarter
-     * idea would be to load the file and compare the contents but that's more difficult to implement.
-     */
-    private Cache<Path, Path> recentlyChangedFiles = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
-            .build();
-
     public static FilesystemWatcher getInstance() {
         if (watcher == null) {
             watcher = new FilesystemWatcher();
@@ -47,7 +34,6 @@ public class FilesystemWatcher {
         createTheWatchService();
     }
 
-    @SuppressWarnings("RedundantIfStatement")
     private boolean shouldIgnoreFilesystemChangesToFile(File filename, boolean isNormalFile, WatchEvent.Kind<?> kind) {
         if (isNormalFile && !Extensions.hasLegalExtension(filename)) {
             // This is not a file we would load anyway. It could be a Python file or an XML file, but we don't reload
@@ -59,11 +45,8 @@ public class FilesystemWatcher {
             // This is just propagation of changes further down the directory tree. No need to react to this.
             return true;
         }
-        if (recentlyChangedFiles.getIfPresent(filename.toPath()) != null) {
-            // It was Snowride who changed the file.
-            return true;
-        }
-        return false;
+
+        return FilesystemWatcherUtils.INSTANCE.shouldIgnoreFilesystemChangesToFile(filename, kind);
     }
 
     @SuppressWarnings("unchecked")
@@ -145,13 +128,5 @@ public class FilesystemWatcher {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Call this just before you change/create/delete a file from within Snowride. You then have 5 seconds to make the change.
-     * Use <b>absolute path</b>.
-     */
-    public void ignoreNextChangeOf(Path path) {
-        recentlyChangedFiles.put(path, path);
     }
 }

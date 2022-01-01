@@ -20,7 +20,7 @@ import java.util.List;
 
 public class FolderSuite extends Suite implements ISuite {
     public File directoryPath;
-    private File initFile;
+    public File initFile;
 
     public FolderSuite(File directoryPath, File initFile, String name, String contents, List<HighElement> children) {
         super(name, contents, children);
@@ -49,8 +49,6 @@ public class FolderSuite extends Suite implements ISuite {
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.getShortName());
-            FilesystemWatcher.getInstance().ignoreNextChangeOf(directoryPath.toPath());
-            FilesystemWatcher.getInstance().ignoreNextChangeOf(initFile.toPath());
             FileUtils.write(initFile, contents, "utf-8");
             pristineContents = contents;
             this.unsavedChanges = LastChangeKind.PRISTINE;
@@ -68,7 +66,6 @@ public class FolderSuite extends Suite implements ISuite {
         try {
             if (initFile == null) {
                 initFile = directoryPath.toPath().resolve("__init__.robot").toAbsolutePath().toFile();
-                FilesystemWatcher.getInstance().ignoreNextChangeOf(initFile.toPath());
                 if (!initFile.createNewFile()) {
                     throw new RuntimeException("Could not create __init__.robot");
                 }
@@ -83,7 +80,6 @@ public class FolderSuite extends Suite implements ISuite {
 
     @Override
     public void deleteSelf(MainForm mainForm) {
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
         if (this.directoryPath.delete()) {
             this.parent.dissociateSelfFromChild(this);
         } else {
@@ -92,7 +88,6 @@ public class FolderSuite extends Suite implements ISuite {
                     " Delete it recursively?", deleteType, new ButtonType("No")).showAndWait().orElse(ButtonType.NO)
                     == deleteType) {
                 try {
-                    FilesystemWatcher.getInstance().ignoreNextChangeOf(this.directoryPath.toPath());
                     FileUtils.deleteDirectory(this.directoryPath);
                     this.children.clear();
                     this.treeNode.getChildren().clear();
@@ -108,8 +103,6 @@ public class FolderSuite extends Suite implements ISuite {
     public void renameSelfTo(String newName, MainForm mainForm) {
         File oldFile = this.directoryPath;
         File newFile = this.directoryPath.getParentFile().toPath().resolve(newName).toFile();
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(oldFile.toPath());
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (this.directoryPath.renameTo(newFile)) {
             this.shortNameAsOnDisk = newName;
             this.shortNameProperty.set(Extensions.toPrettyName(newName));

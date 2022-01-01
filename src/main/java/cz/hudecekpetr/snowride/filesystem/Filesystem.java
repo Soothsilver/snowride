@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * Handles "Create new file" and "Create new folder" items in the treeview context menu.
  */
 public class Filesystem {
-    private MainForm mainForm;
+    private final MainForm mainForm;
 
     public Filesystem(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -21,9 +21,7 @@ public class Filesystem {
 
     public void createNewFolderInTree(FolderSuite parentFolder, String newFolder) {
         Path createWhat = parentFolder.directoryPath.toPath().resolve(newFolder);
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(createWhat);
         File asFile = createWhat.toAbsolutePath().toFile();
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(asFile.toPath());
         if (!asFile.mkdir()) {
             throw new RuntimeException("Failed to create the folder.");
         }
@@ -36,7 +34,6 @@ public class Filesystem {
 
     public void createNewRobotFile(FolderSuite parentFolder, String newFileWithoutExtension) throws IOException {
         Path createWhat = parentFolder.directoryPath.toPath().resolve(newFileWithoutExtension + ".robot");
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(createWhat);
         File asFile = createWhat.toAbsolutePath().toFile();
         if (!asFile.createNewFile()) {
             throw new RuntimeException("File already exists.");

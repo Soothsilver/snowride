@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
 import cz.hudecekpetr.snowride.output.OutputParser;
+import cz.hudecekpetr.snowride.search.FullTextSearchScene;
 import cz.hudecekpetr.snowride.ui.popup.DocumentationPopup;
 import cz.hudecekpetr.snowride.ui.popup.MessagesPopup;
 import javafx.beans.value.ChangeListener;
@@ -86,7 +87,7 @@ public class MainForm {
     public static MessagesPopup messagesPopup = new MessagesPopup();
     private final SerializingTab serializingTab;
     private final TabPane tabs;
-    private final Tab tabTextEdit;
+    public final Tab tabTextEdit;
     private final TextEditTab textEditTab;
     private final NotificationPane notificationPane;
     private final ToolBar toolBar;
@@ -225,8 +226,14 @@ public class MainForm {
                 Underlining.ctrlDown = true;
                 Underlining.update();
             }
-            if (event.getCode() == KeyCode.F && event.isShortcutDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
-                textEditTab.getSearchBox().requestFocus();
+            if (event.getCode() == KeyCode.F && event.isShortcutDown() && event.isShiftDown()) {
+                if (getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
+                    FullTextSearchScene.INSTANCE.setSearchPhrase(SnowCodeAreaProvider.INSTANCE.getCodeArea().getSelectedText());
+                }
+                FullTextSearchScene.INSTANCE.show();
+                event.consume();
+            } else if (event.getCode() == KeyCode.F && event.isShortcutDown() && getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
+                SnowCodeAreaSearchBox.INSTANCE.requestFocus();
                 event.consume();
             } else if (event.getCode() == KeyCode.F5 || event.getCode() == KeyCode.F8) {
                 runTab.clickRun(null);
@@ -911,7 +918,7 @@ public class MainForm {
         File loadRobotsFrom = robotDirectory;
         projectLoad.progress.set(0);
         navigationStack.clear();
-        textEditTab.clear();
+        SnowCodeAreaProvider.INSTANCE.clear();
         reloadElementIntoTabs(null);
         projectLoader.submit(() -> {
             try {
@@ -932,7 +939,7 @@ public class MainForm {
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
-                    textEditTab.clear();
+                    SnowCodeAreaProvider.INSTANCE.clear();
                     reloadElementIntoTabs(null);
                     humanInControl = false;
                     projectTree.setRoot(ultimateRoot.treeNode);

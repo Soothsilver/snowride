@@ -34,7 +34,6 @@ public class FileSuite extends Suite implements ISuite {
             System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
-            FilesystemWatcher.getInstance().ignoreNextChangeOf(file.toPath());
             FileUtils.write(file, contents, "utf-8");
             pristineContents = contents;
             this.unsavedChanges = LastChangeKind.PRISTINE;
@@ -48,7 +47,6 @@ public class FileSuite extends Suite implements ISuite {
 
     @Override
     public void deleteSelf(MainForm mainForm) {
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(this.file.toPath());
         if (this.file.delete()) {
             this.parent.dissociateSelfFromChild(this);
         } else {
@@ -65,8 +63,6 @@ public class FileSuite extends Suite implements ISuite {
         File selfsParent = getParentAsFolder().directoryPath;
         File currentFile = this.file;
         File newFile = selfsParent.toPath().resolve(newName + ".robot").toFile();
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(currentFile.toPath());
-        FilesystemWatcher.getInstance().ignoreNextChangeOf(newFile.toPath());
         if (currentFile.renameTo(newFile)) {
             this.shortNameProperty.set(Extensions.toPrettyName(newName));
             this.shortNameAsOnDisk = newName;

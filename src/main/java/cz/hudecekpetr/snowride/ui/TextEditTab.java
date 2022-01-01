@@ -12,39 +12,23 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TextEditTab {
 
-    private Map<HighElement, VirtualizedScrollPane<CodeArea>> codeAreaMap = new ConcurrentHashMap<>();
-    private VirtualizedScrollPane<CodeArea> nonEditableCodeAreaPane;
-    private SnowCodeArea codeArea;
     private final Node warningPane;
     private VBox editorPane;
     private final MainForm mainForm;
     private Tab tabTextEdit;
     private HighElement lastLoaded;
-    private final TextField searchBox = new TextField();
     private Scenario lastLoadedScenario;
     private boolean cleanLastLoadedScenario = true;
+    private final SnowCodeAreaProvider codeAreaProvider = SnowCodeAreaProvider.INSTANCE;
+    private boolean switchingSuite;
 
     public TextEditTab(MainForm mainForm) {
         this.mainForm = mainForm;
-
-        SnowCodeArea nonEditableCodeArea = new SnowCodeArea(searchBox);
-        nonEditableCodeAreaPane = new VirtualizedScrollPane<>(nonEditableCodeArea);
-        nonEditableCodeArea.setParagraphGraphicFactory(LineNumberFactory.get(nonEditableCodeArea));
-        VBox.setVgrow(nonEditableCodeAreaPane, Priority.ALWAYS);
-        nonEditableCodeArea.setEditable(false);
-
         // The warning pane is a remnant of an old solution where, if you tried to edit the text of a scenario,
         // it showed this warning pane. Now, it will programmatically select the suite that contains that scenario
         // instead. But in some edge cases, the warning pane can still be displayed.
@@ -57,13 +41,6 @@ public class TextEditTab {
         VBox outer1 = new VBox(outer2);
         outer1.setAlignment(Pos.CENTER);
         warningPane = outer1;
-    }
-
-    /**
-     * Gets the Ctrl+F text field where you type what you want to search for.
-     */
-    public TextField getSearchBox() {
-        return searchBox;
     }
 
     public Tab createTab() {
@@ -88,34 +65,7 @@ public class TextEditTab {
             }
         });
 
-        // Search field
-        searchBox.setPromptText("Ctrl+F to search...");
-        searchBox.textProperty().addListener((observableValue, oldValue, newValue) -> codeArea.searchBoxChanged(newValue));
-        searchBox.focusedProperty().addListener((observable, oldValue, isFocused) -> {
-            if (!oldValue && isFocused && StringUtils.isNotBlank(codeArea.getSelectedText())) {
-                searchBox.setText(codeArea.getSelectedText());
-            }
-            if (isFocused) {
-                String searchText = searchBox.getText();
-                if (!StringUtils.isEmpty(searchText) && codeArea.getText() != null) {
-                    codeArea.highlightAllOccurrences(searchText);
-                }
-            }
-        });
-        searchBox.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                codeArea.searchNext();
-                event.consume();
-            } else if (event.getCode() == KeyCode.ESCAPE) {
-                String text = codeArea.getText();
-                if (text != null) {
-                    codeArea.clearStyle(0, text.length());
-                }
-                codeArea.requestFocus();
-            }
-        });
-
-        HBox hBox = new HBox(2, searchBox, bReformat, bApply, lblInfo);
+        HBox hBox = new HBox(2, SnowCodeAreaSearchBox.INSTANCE, bReformat, bApply, lblInfo);
         hBox.setPadding(new Insets(2));
         hBox.setAlignment(Pos.CENTER_LEFT);
         VBox textVBox = new VBox(hBox);
@@ -147,6 +97,13 @@ public class TextEditTab {
             asSuite.optimizeStructure();
             asSuite.contents = asSuite.serialize();
         }
+
+        // Decide if we are loading HighElement from the same suite or some other suite (used for navigation purposes between "Grid" and "Text" edit)
+        switchingSuite = lastLoaded != value && (lastLoaded == null || !lastLoaded.children.contains(value)) && (value == null || !value.children.contains(lastLoaded));
+
+        if (lastLoaded != null) {
+            lastLoaded.applyText();
+        }
         lastLoaded = value;
 
         if (cleanLastLoadedScenario) {
@@ -158,14 +115,12 @@ public class TextEditTab {
             lastLoadedScenario = (Scenario) value;
             tabTextEdit.setContent(warningPane);
             return;
-        } else if (value instanceof Suite && value.contents != null) {
-            if (!codeAreaMap.containsKey(value)) {
-                switchCodeArea((Suite) value);
-            }
-            switchCodeArea(codeAreaMap.get(value));
-            codeArea.loadElement(value, lastLoadedScenario);
         } else {
-            switchCodeArea(nonEditableCodeAreaPane);
+            if (value instanceof Suite && value.contents != null) {
+                switchCodeArea((Suite) value);
+            } else {
+                switchCodeArea(null);
+            }
         }
         tabTextEdit.setContent(editorPane);
     }
@@ -176,39 +131,21 @@ public class TextEditTab {
             mainForm.keepTabSelection = true;
             mainForm.selectProgrammatically(lastLoaded.parent);
         }
-        if (oldValue == tabTextEdit) {
-            HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-            whatChanged.applyText();
-            if (lastLoadedScenario != null) {
-                mainForm.selectChildOfFocusedElementIfAvailable(lastLoadedScenario);
-            }
+        if (oldValue == tabTextEdit && !switchingSuite) {
+            codeAreaProvider.getCodeArea().selectProgrammaticallyCurrentlyEditedScenario();
         }
+        switchingSuite = false;
     }
 
-    public void clear() {
-        codeAreaMap.clear();
-    }
+    private void switchCodeArea(Suite suite) {
+        VirtualizedScrollPane<SnowCodeArea> scrollPane;
+        if (suite != null) {
+            scrollPane = codeAreaProvider.getTextEditCodeArea(suite);
+            scrollPane.getContent().moveCaretToCurrentlyEditedScenario(lastLoadedScenario);
+        } else {
+            scrollPane = codeAreaProvider.getNonEditableCodeAreaPane();
+        }
 
-    private void switchCodeArea(Suite value) {
-        SnowCodeArea codeArea = new SnowCodeArea(searchBox);
-        codeArea.overrideDefaultKeybindings(value.newlineStyle);
-        codeArea.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!mainForm.switchingTextEditContents) {
-                HighElement whatChanged = mainForm.getProjectTree().getFocusModel().getFocusedItem().getValue();
-                whatChanged.areTextChangesUnapplied = true;
-                whatChanged.contents = ((Suite) whatChanged).newlineStyle.convertToStyle(newValue);
-                mainForm.changeOccurredTo(whatChanged, LastChangeKind.TEXT_CHANGED);
-            }
-        });
-        VirtualizedScrollPane<CodeArea> pane = new VirtualizedScrollPane<>(codeArea);
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        VBox.setVgrow(pane, Priority.ALWAYS);
-
-        codeAreaMap.put(value, pane);
-    }
-
-    private void switchCodeArea(VirtualizedScrollPane<CodeArea> scrollPane) {
-        codeArea = (SnowCodeArea) scrollPane.getContent();
         if (editorPane.getChildren().size() > 1) {
             editorPane.getChildren().remove(1);
         }

@@ -3,6 +3,7 @@ package cz.hudecekpetr.snowride.filesystem;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.fx.CenterToParentUtility;
 import cz.hudecekpetr.snowride.generalpurpose.Holder;
+import cz.hudecekpetr.snowride.search.FullTextSearchScene;
 import cz.hudecekpetr.snowride.settings.ReloadOnChangeStrategy;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite;
@@ -97,6 +98,7 @@ public class ReloadChangesWindow extends Stage {
      * On the JavaFX thread, reloads changes from disk.
      */
     private void reloadAll() {
+        FullTextSearchScene.INSTANCE.setSearchPhrase("");
         MainForm mainForm = MainForm.INSTANCE;
         closeSelf();
         Set<Suite> reloadRequired = new HashSet<>();

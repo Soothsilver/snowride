@@ -209,21 +209,21 @@ public abstract class Suite extends HighElement implements ISuite {
         if (this.fileParsed != null) {
             List<Setting> settings = this.fileParsed.findOrCreateSettingsSection().createSettings();
             for (Setting setting : settings) {
-                if (setting.key.toLowerCase().equals("force tags")) {
+                if (setting.key.equalsIgnoreCase("force tags")) {
                     for (String val : setting.values) {
                         if (!StringUtils.isBlank(val)) {
                             forceTagsCumulative.add(new Tag(val, TagKind.FORCED, this));
                         }
                     }
                 }
-                if (setting.key.toLowerCase().equals("default tags")) {
+                if (setting.key.equalsIgnoreCase("default tags")) {
                     for (String val : setting.values) {
                         if (!StringUtils.isBlank(val)) {
                             defaultTags.add(new Tag(val, TagKind.DEFAULT, this));
                         }
                     }
                 }
-                if (setting.key.toLowerCase().equals("test template")) {
+                if (setting.key.equalsIgnoreCase("test template")) {
                     childTestsAreTemplates = true;
                 }
             }
