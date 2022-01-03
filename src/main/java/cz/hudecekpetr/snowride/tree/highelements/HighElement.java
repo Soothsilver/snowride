@@ -47,6 +47,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public String contents;
     public String pristineContents;
     public TreeItem<HighElement> treeNode;
+    public HBox treeNodeGraphic;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
     public Suite parent;
@@ -59,16 +60,16 @@ public abstract class HighElement implements IAutocompleteOption {
     protected abstract boolean isResourceOnly();
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
-        HBox graphic = new HBox();
+        treeNodeGraphic = new HBox();
         imageView = new ImageView(Images.fileIcon);
         checkbox = new CheckBox();
         checkbox.setVisible(false);
         checkbox.managedProperty().bind(checkbox.visibleProperty());
         checkbox.selectedProperty().addListener((observable, oldValue, newValue) -> MainForm.INSTANCE.runTab.maybeRunNumberChanged());
-        graphic.getChildren().add(imageView);
-        graphic.getChildren().add(checkbox);
-        graphic.setAlignment(Pos.CENTER);
-        treeNode = new TreeItem<>(this, graphic);
+        treeNodeGraphic.getChildren().add(imageView);
+        treeNodeGraphic.getChildren().add(checkbox);
+        treeNodeGraphic.setAlignment(Pos.CENTER);
+        treeNode = new TreeItem<>(this, treeNodeGraphic);
         this.shortNameProperty.addListener((observable, oldValue, newValue) -> invariantName = Extensions.toInvariant(newValue));
         this.shortNameProperty.set(shortName);
         this.contents = contents;

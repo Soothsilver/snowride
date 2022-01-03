@@ -37,23 +37,20 @@ import java.util.Optional;
 
 public class OutputParser {
 
-    public static final HashMap<HighElement, Node> suites = new HashMap<>();
-
     public static void cleanup() {
         if (Settings.getInstance().disableOutputParsing) {
             return;
         }
         // cleanup
-        MainForm.INSTANCE.getRootElement().childrenRecursively.forEach(highElement -> highElement.outputElement = null);
+        MainForm.INSTANCE.getRootElement().childrenRecursively.forEach(highElement -> {
+            highElement.outputElement = null;
+            // cleanup changed icons of Suites
+            highElement.treeNode.setGraphic(highElement.treeNodeGraphic);
+        });
         MainForm.INSTANCE.navigationStack.clearOutputElementStack();
 
         // update line number cells style
         MainForm.INSTANCE.gridTab.updateTablesLineNumberCellsStyle();
-
-        // cleanup changed icons of Suites
-        suites.forEach((highElement, node) -> {
-            highElement.treeNode.setGraphic(node);
-        });
     }
 
     public static void parseOutput(File outputXml) {
@@ -211,9 +208,7 @@ public class OutputParser {
     }
 
     private static void changeGraphicsOfSuiteElement(HighElement highElement) {
-        Node currentGraphic = highElement.treeNode.getGraphic();
         highElement.treeNode.setGraphic(new ImageView(Images.error));
-        suites.put(highElement, currentGraphic);
     }
 
     private static LogicalLine findLineStartingWith(ObservableList<LogicalLine> lines, String toMatch, int cellIndex) {

@@ -34,8 +34,8 @@ public class FileSuite extends Suite implements ISuite {
             System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
-            FileUtils.write(file, contents, "utf-8");
             pristineContents = contents;
+            FileUtils.write(file, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 child.unsavedChanges = LastChangeKind.PRISTINE;

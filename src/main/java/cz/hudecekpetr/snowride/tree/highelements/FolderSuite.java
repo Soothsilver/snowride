@@ -49,8 +49,8 @@ public class FolderSuite extends Suite implements ISuite {
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
             System.out.println("SaveAll: [initfile] " + this.getShortName());
-            FileUtils.write(initFile, contents, "utf-8");
             pristineContents = contents;
+            FileUtils.write(initFile, contents, "utf-8");
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 if (child instanceof Scenario) {

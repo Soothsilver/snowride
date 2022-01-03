@@ -17,8 +17,7 @@ import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 
 class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
-    private val newlineStyle: NewlineStyle = if (highElement is Suite) highElement.newlineStyle else NewlineStyle.LF
-    private val separator = if (newlineStyle == NewlineStyle.CRLF) "\r\n" else "\n"
+    private val separator = "\n"
 
     init {
         reload()
