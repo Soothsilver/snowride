@@ -1,5 +1,6 @@
 F5, F8: Run tests
 Ctrl+N, Ctrl+F: Search suites/tests/keywords
+Ctrl+Shift+F: Full-Text search
 Ctrl+S: Save all
 Ctrl+Left, Alt+Left: Navigate back
 Ctrl+Right, Alt+Right: Navigate forwards

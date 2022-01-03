@@ -27,6 +27,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.NotificationPane;
 
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
@@ -228,7 +229,10 @@ public class MainForm {
             }
             if (event.getCode() == KeyCode.F && event.isShortcutDown() && event.isShiftDown()) {
                 if (getTabs().getSelectionModel().getSelectedItem() == tabTextEdit) {
-                    FullTextSearchScene.INSTANCE.setSearchPhrase(SnowCodeAreaProvider.INSTANCE.getCodeArea().getSelectedText());
+                    String selectedText = SnowCodeAreaProvider.INSTANCE.getCodeArea().getSelectedText();
+                    if (StringUtils.isNotBlank(selectedText)) {
+                        FullTextSearchScene.INSTANCE.setSearchPhrase(selectedText);
+                    }
                 }
                 FullTextSearchScene.INSTANCE.show();
                 event.consume();
@@ -350,6 +354,7 @@ public class MainForm {
             if (newValue != null) {
                 if (humanInControl) {
                     navigationStack.standardEnter(newValue.getValue());
+                    textEditTab.manuallySelected = true;
                 }
                 reloadElementIntoTabs(newValue.getValue());
             }

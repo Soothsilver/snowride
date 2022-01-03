@@ -3,8 +3,9 @@ package cz.hudecekpetr.snowride.search
 import cz.hudecekpetr.snowride.tree.highelements.FileSuite
 import cz.hudecekpetr.snowride.tree.highelements.FolderSuite
 import cz.hudecekpetr.snowride.tree.highelements.Suite
-import cz.hudecekpetr.snowride.ui.SnowCodeAreaProvider
+import cz.hudecekpetr.snowride.ui.Images
 import cz.hudecekpetr.snowride.ui.MainForm
+import cz.hudecekpetr.snowride.ui.SnowCodeAreaProvider
 import javafx.animation.PauseTransition
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
@@ -133,7 +134,8 @@ object FullTextSearchScene {
 
         stage.apply {
             scene = Scene(fulltextSearchPane, 820.0, 1000.0)
-            title = "Find in Files"
+            title = "Snowride - Find in Files"
+            icons.add(Images.internet)
 
             addEventFilter(KeyEvent.KEY_PRESSED) { event ->
                 if (event.code == KeyCode.ESCAPE) {

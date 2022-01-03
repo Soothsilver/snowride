@@ -23,9 +23,8 @@ public class TextEditTab {
     private Tab tabTextEdit;
     private HighElement lastLoaded;
     private Scenario lastLoadedScenario;
-    private boolean cleanLastLoadedScenario = true;
     private final SnowCodeAreaProvider codeAreaProvider = SnowCodeAreaProvider.INSTANCE;
-    private boolean switchingSuite;
+    public boolean manuallySelected;
 
     public TextEditTab(MainForm mainForm) {
         this.mainForm = mainForm;
@@ -98,18 +97,10 @@ public class TextEditTab {
             asSuite.contents = asSuite.serialize();
         }
 
-        // Decide if we are loading HighElement from the same suite or some other suite (used for navigation purposes between "Grid" and "Text" edit)
-        switchingSuite = lastLoaded != value && (lastLoaded == null || !lastLoaded.children.contains(value)) && (value == null || !value.children.contains(lastLoaded));
-
         if (lastLoaded != null) {
             lastLoaded.applyText();
         }
         lastLoaded = value;
-
-        if (cleanLastLoadedScenario) {
-            lastLoadedScenario = null;
-        }
-        cleanLastLoadedScenario = true;
 
         if (value instanceof Scenario) {
             lastLoadedScenario = (Scenario) value;
@@ -127,21 +118,24 @@ public class TextEditTab {
 
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (newValue == tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
-            cleanLastLoadedScenario = false;
             mainForm.keepTabSelection = true;
             mainForm.selectProgrammatically(lastLoaded.parent);
         }
-        if (oldValue == tabTextEdit && !switchingSuite) {
+        if (oldValue == tabTextEdit && !manuallySelected) {
             codeAreaProvider.getCodeArea().selectProgrammaticallyCurrentlyEditedScenario();
         }
-        switchingSuite = false;
+        manuallySelected = false;
     }
 
     private void switchCodeArea(Suite suite) {
         VirtualizedScrollPane<SnowCodeArea> scrollPane;
         if (suite != null) {
             scrollPane = codeAreaProvider.getTextEditCodeArea(suite);
-            scrollPane.getContent().moveCaretToCurrentlyEditedScenario(lastLoadedScenario);
+            if (suite.children.contains(lastLoadedScenario)) {
+                scrollPane.getContent().moveCaretToCurrentlyEditedScenario(lastLoadedScenario);
+            } else {
+                scrollPane.getContent().moveCaretToCurrentlyEditedScenario(null);
+            }
         } else {
             scrollPane = codeAreaProvider.getNonEditableCodeAreaPane();
         }
