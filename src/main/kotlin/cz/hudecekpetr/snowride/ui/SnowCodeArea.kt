@@ -83,7 +83,10 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
             InputMap.consume(EventPattern.anyOf(EventPattern.keyPressed(KeyCode.TAB, KeyCombination.SHORTCUT_ANY, KeyCombination.SHIFT_ANY)))
         )
         setOnKeyPressed { event: KeyEvent ->
-            if (event.code == KeyCode.F3) {
+            if (event.code == KeyCode.F3 && event.isShiftDown) {
+                SnowCodeAreaSearchBox.searchNext(reversed = true)
+                event.consume()
+            } else if (event.code == KeyCode.F3) {
                 SnowCodeAreaSearchBox.searchNext()
                 event.consume()
             } else if (event.code == KeyCode.ESCAPE) {

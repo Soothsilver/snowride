@@ -25,7 +25,10 @@ object SnowCodeAreaSearchBox : TextField() {
             }
         }
         onKeyPressed = EventHandler { event: KeyEvent ->
-            if (event.code == KeyCode.ENTER) {
+            if (event.code == KeyCode.F3 && event.isShiftDown) {
+                searchNext(reversed = true)
+                event.consume()
+            } else if (event.code in listOf(KeyCode.ENTER, KeyCode.F3)) {
                 searchNext()
                 event.consume()
             } else if (event.code == KeyCode.ESCAPE) {
@@ -41,15 +44,24 @@ object SnowCodeAreaSearchBox : TextField() {
     /**
      * Selects the next instance of the searched text in the main editor.
      */
-    fun searchNext() {
+    fun searchNext(reversed: Boolean = false) {
         val searchPhrase = this.text
         codeArea.apply {
             if (searchPhrase == null) {
                 return
             }
-            val nextIndex = text.indexOf(searchPhrase, anchor + 1, ignoreCase = true)
+            val nextIndex = if (reversed) {
+                text.substring(0, anchor - 1).lastIndexOf(searchPhrase, ignoreCase = true)
+            } else {
+                text.indexOf(searchPhrase, anchor + 1, ignoreCase = true)
+            }
+
             if (nextIndex == -1) {
-                val fromStartIndex = text.indexOf(searchPhrase, ignoreCase = true)
+                val fromStartIndex = if (reversed) {
+                    text.lastIndexOf(searchPhrase, ignoreCase = true)
+                } else {
+                    text.indexOf(searchPhrase, ignoreCase = true)
+                }
                 if (fromStartIndex != -1) {
                     selectRange(fromStartIndex, fromStartIndex + searchPhrase.length)
                     requestFollowCaret()
