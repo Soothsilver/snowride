@@ -231,6 +231,15 @@ public class RunTab {
         VBox.setVgrow(splitterOutput, Priority.ALWAYS);
         tabRun = new Tab("Run", vboxTabRun);
         tabRun.setClosable(false);
+
+        // save "Run" settings on any change
+        tbArguments.textProperty().addListener(this::rememberRunPageSettingsOnChange);
+        tbScript.textProperty().addListener(this::rememberRunPageSettingsOnChange);
+        tbWithoutTags.textProperty().addListener(this::rememberRunPageSettingsOnChange);
+        tbWithTags.textProperty().addListener(this::rememberRunPageSettingsOnChange);
+        cbWithoutTags.selectedProperty().addListener(this::rememberRunPageSettingsOnChange);
+        cbWithTags.selectedProperty().addListener(this::rememberRunPageSettingsOnChange);
+
         return tabRun;
     }
 
@@ -353,7 +362,6 @@ public class RunTab {
             run.clear();
             updateResultsPanel();
             lblKeyword.setText("");
-            rememberRunPageSettings();
             planRobots();
 
             String[] runner;
@@ -538,13 +546,21 @@ public class RunTab {
         // Don't plant yet. We don't have checkboxes yet.
     }
 
+    private void rememberRunPageSettingsOnChange(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+        rememberRunPageSettings();
+    }
+
+    private void rememberRunPageSettingsOnChange(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+        rememberRunPageSettings();
+    }
+
     private void rememberRunPageSettings() {
         Settings.getInstance().runArguments = tbArguments.getText();
         Settings.getInstance().runScript = tbScript.getText();
-        Settings.getInstance().cbWithoutTags = cbWithoutTags.isSelected();
-        Settings.getInstance().cbWithTags = cbWithTags.isSelected();
         Settings.getInstance().tbWithoutTags = tbWithoutTags.getText();
         Settings.getInstance().tbWithTags = tbWithTags.getText();
+        Settings.getInstance().cbWithoutTags = cbWithoutTags.isSelected();
+        Settings.getInstance().cbWithTags = cbWithTags.isSelected();
         Settings.getInstance().saveAllSettings();
     }
 
