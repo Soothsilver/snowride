@@ -2,12 +2,14 @@ package cz.hudecekpetr.snowride.settings;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
+import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -128,10 +130,9 @@ public class Settings {
 
     public void saveAllSettings() {
         XStream xStream = new XStream(new PureJavaReflectionProvider(), new StaxDriver());
-        String data = xStream.toXML(this);
         File settingsFile = getFile();
         try {
-            FileUtils.write(settingsFile, data, "utf-8");
+            xStream.marshal(this, new PrettyPrintWriter(new OutputStreamWriter(new FileOutputStream(settingsFile))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
