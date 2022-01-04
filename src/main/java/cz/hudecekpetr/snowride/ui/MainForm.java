@@ -749,6 +749,8 @@ public class MainForm {
         bLoadSnow.setOnAction(actionEvent1 -> loadSnow());
         openSnowFileDialog = new FileChooser();
         openSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
+        saveSnowFileDialog = new FileChooser();
+        saveSnowFileDialog.getExtensionFilters().add(new FileChooser.ExtensionFilter("Snow project files", "*.snow"));
 
         MenuItem bLoadOutputFile = new MenuItem("Load output.xml file...", loadIcon(Images.xml));
         bLoadOutputFile.setOnAction(actionEvent1 -> loadOutput());
