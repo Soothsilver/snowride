@@ -10,16 +10,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class SnowFile {
-    public static void loadSnowFile(java.io.File snowFile) {
+    public static void loadSnowFile(File snowFile) {
 
         try {
             Properties properties = new Properties();
             properties.load(new FileInputStream(snowFile));
-            String directory = properties.getProperty("Directory");
-            String additionalPaths = properties.getProperty("AdditionalPaths");
-            String runnerScript = properties.getProperty("RunnerScript");
+            String directory = toAbsolutePaths(snowFile, properties.getProperty("Directory"));
+            String additionalPaths = toAbsolutePaths(snowFile, properties.getProperty("AdditionalPaths"));
+            String runnerScript = toAbsolutePaths(snowFile, properties.getProperty("RunnerScript"));
             String runArguments = properties.getProperty("RunnerArguments");
             String cbWithoutTags = properties.getProperty("CheckboxRunWithoutTags");
             String cbWithTags = properties.getProperty("CheckboxRunWithTags");
@@ -72,6 +73,20 @@ public class SnowFile {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private static String toAbsolutePaths(File snowFile, String inputPaths) throws IOException {
+        return Arrays.stream(inputPaths.split(";")).map(path -> {
+            File file = new File(path);
+            if (!file.isAbsolute()) {
+                file = new File(snowFile.getParentFile(), path);
+            }
+            try {
+                return file.getCanonicalPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.joining(";"));
     }
 
     public static void saveInto(File saveWhere) {
