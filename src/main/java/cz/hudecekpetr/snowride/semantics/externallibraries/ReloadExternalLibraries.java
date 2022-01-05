@@ -72,7 +72,7 @@ public class ReloadExternalLibraries {
         });
     }
 
-    private static void libdocLibrary(String libraryHumanName, String libraryFullName) {
+    private static boolean libdocLibrary(String libraryHumanName, String libraryFullName) {
         try {
             File targetFile = File.createTempFile("pythonlibrary", ".xml", getPythonXmlFilesFolder().toFile());
             Process libdoc = Runtime.getRuntime().exec(new String[]{"python", "-m", "robot.libdoc",
@@ -82,12 +82,13 @@ public class ReloadExternalLibraries {
                 InputStream xmlStream = new FileInputStream(targetFile);
                 ExternalLibrary library = ExternalLibrary.loadFromInputStream(xmlStream, LibraryKind.PYTHON);
                 ExternalLibrary.knownExternalLibraries.put(library.getName(), library);
-            } else {
-                System.out.println("The file '" + libraryHumanName + "' could not be libdoc'd because libdoc returned a nonzero exit status. Maybe it's not a Robot Framework Python library file or you don't have libdoc.");
+                return true;
             }
+            System.out.println("The file '" + libraryHumanName + "' could not be libdoc'd because libdoc returned a nonzero exit status. Maybe it's not a Robot Framework Python library file or you don't have libdoc.");
         } catch (Exception anyException) {
             System.out.println("The file '" + libraryHumanName + "' could not be libdoc'd because of an exception. Maybe it's not a Robot Framework Python library file or you don't have libdoc." + Extensions.toStringWithTrace(anyException));
         }
+        return false;
     }
 
     public static void considerLoadingFromSystemPythonpath(String libraryName) {
@@ -97,8 +98,9 @@ public class ReloadExternalLibraries {
                 return;
             }
             systemPythonpathAttemptedFor.add(libraryName);
-            libdocLibrary(libraryName, libraryName);
-            Platform.runLater(() -> MainForm.INSTANCE.reloadCurrentThing());
+            if (libdocLibrary(libraryName, libraryName)) {
+                Platform.runLater(() -> MainForm.INSTANCE.reloadCurrentThing());
+            }
         });
     }
 }
