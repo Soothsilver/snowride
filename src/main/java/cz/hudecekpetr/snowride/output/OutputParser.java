@@ -45,7 +45,9 @@ public class OutputParser {
         MainForm.INSTANCE.getRootElement().childrenRecursively.forEach(highElement -> {
             highElement.outputElement = null;
             // cleanup changed icons of Suites
-            highElement.treeNode.setGraphic(highElement.treeNodeGraphic);
+            if (highElement instanceof Suite) {
+                highElement.treeNode.setGraphic(highElement.treeNodeGraphic);
+            }
         });
         MainForm.INSTANCE.navigationStack.clearOutputElementStack();
 
