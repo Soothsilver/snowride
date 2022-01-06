@@ -76,6 +76,9 @@ public class SnowFile {
     }
 
     private static String toAbsolutePaths(File snowFile, String inputPaths) throws IOException {
+        if (inputPaths == null) {
+            return null;
+        }
         return Arrays.stream(inputPaths.split(";")).map(path -> {
             File file = new File(path);
             if (!file.isAbsolute()) {
