@@ -1,9 +1,7 @@
 package cz.hudecekpetr.snowride.ui
 
-import cz.hudecekpetr.snowride.NewlineStyle
 import cz.hudecekpetr.snowride.tree.highelements.HighElement
 import cz.hudecekpetr.snowride.tree.highelements.Scenario
-import cz.hudecekpetr.snowride.tree.highelements.Suite
 import javafx.application.Platform
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
@@ -23,6 +21,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
         reload()
         undoManager.forgetHistory()
         redefineKeyBehaviour()
+        style = "-fx-font-family: \"JetBrains Mono\""
     }
 
     fun reload() {

@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tooltip;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -28,6 +29,10 @@ public class SnowrideApplication extends Application {
             Settings.getInstance().lastOpenedProject = args[0];
         }
         GarbageCollectorCaller.maybeStart();
+
+        // load the JetBrainsMono font
+        Font.loadFont(SnowrideApplication.class.getResource("/JetBrainsMono/JetBrainsMono-Regular.ttf").toExternalForm(), 10);
+
         launch(args);
     }
 
