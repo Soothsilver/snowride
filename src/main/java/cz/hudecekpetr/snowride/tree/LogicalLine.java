@@ -301,12 +301,14 @@ public class LogicalLine {
         QualifiedKeyword qualifiedKeyword = QualifiedKeyword.fromDottedString(cellContents);
         if (qualifiedKeyword.getSource() != null) {
             Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(qualifiedKeyword.getKeyword()));
-            for (IKnownKeyword homonym : homonyms) {
-                if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
-                    String sourceName = homonym.getSourceName();
-                    if (!StringUtils.isEmpty(sourceName) && toInvariant(sourceName).equals(toInvariant(qualifiedKeyword.getSource()))) {
-                        cellSemantics.thisHereKeyword = homonym;
-                        break;
+            if (homonyms != null) {
+                for (IKnownKeyword homonym : homonyms) {
+                    if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                        String sourceName = homonym.getSourceName();
+                        if (!StringUtils.isEmpty(sourceName) && toInvariant(sourceName).equals(toInvariant(qualifiedKeyword.getSource()))) {
+                            cellSemantics.thisHereKeyword = homonym;
+                            break;
+                        }
                     }
                 }
             }
