@@ -836,6 +836,9 @@ public class MainForm {
     }
 
     private void loadSnow() {
+        if (getProjectTree().getRoot() != null && getRootDirectoryElement() != null) {
+            openSnowFileDialog.setInitialDirectory(this.getRootDirectoryElement().directoryPath);
+        }
         File loadFromWhere = openSnowFileDialog.showOpenDialog(this.stage);
         if (loadFromWhere != null) {
             loadProjectFromFolderOrSnowFile(loadFromWhere.getAbsoluteFile());
@@ -843,6 +846,9 @@ public class MainForm {
     }
 
     private void loadOutput() {
+        if (getProjectTree().getRoot() != null && getRootDirectoryElement() != null) {
+            openOutputFileDialog.setInitialDirectory(this.getRootDirectoryElement().directoryPath);
+        }
         File loadFromWhere = openOutputFileDialog.showOpenDialog(this.stage);
         if (loadFromWhere != null) {
             OutputParser.parseOutput(loadFromWhere.getAbsoluteFile());
