@@ -25,12 +25,13 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
     }
 
     fun reload() {
-        if (highElement != null && text != highElement.contents) {
-            val indexOfDifference = StringUtils.indexOfDifference(text, highElement.contents)
+        val contents = highElement?.contents?.replace("\r\n", "\n")
+        if (contents != null && text != contents) {
+            val indexOfDifference = StringUtils.indexOfDifference(text, contents)
             if (indexOfDifference > 0) {
-                replaceText(indexOfDifference, text.length, highElement.contents.substring(indexOfDifference))
+                replaceText(indexOfDifference, text.length, contents.substring(indexOfDifference))
             } else {
-                replaceText(highElement.contents)
+                replaceText(contents)
                 displaceCaret(0)
             }
         }
@@ -41,15 +42,9 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
             val index = text.indexOf(scenario.shortName)
             if (index > 0) {
                 Platform.runLater {
-                    // FIXME: this is tricky. Trying to ensure "whole" Scenario (test case) will be visible.
-                    //        Uninformatively changing caret location and calling "requestFollowCaret()" twice immediately doesn't do the trick.
-                    displaceCaret(text.length)
+                    requestFocus()
+                    displaceCaret(index)
                     requestFollowCaret()
-                    Platform.runLater {
-                        requestFocus()
-                        displaceCaret(index)
-                        requestFollowCaret()
-                    }
                 }
             }
         } else {
@@ -58,7 +53,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
         }
     }
 
-    fun selectProgrammaticallyCurrentlyEditedScenario() {
+    fun getCurrentlyEditedScenario(): HighElement?  {
         var total = 0
         text.lines()
             .map {
@@ -71,9 +66,10 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
             .lastOrNull { line -> line.matches("^\\w.*".toRegex()) }
             ?.let { line ->
                 highElement?.children?.find { it.shortName == line }?.let {
-                    MainForm.INSTANCE.selectProgrammatically(it)
+                    return it
                 }
             }
+        return highElement;
     }
 
     private fun redefineKeyBehaviour() {

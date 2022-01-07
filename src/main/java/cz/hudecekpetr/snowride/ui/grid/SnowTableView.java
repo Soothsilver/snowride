@@ -285,6 +285,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
                 coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
                 cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+                YellowHighlight.lastPositionSelectText = "";
             }
             if (coordinates.size() > 0) {
                 getScenario().getUndoStack().iJustDid(new MassOperation(coordinates));

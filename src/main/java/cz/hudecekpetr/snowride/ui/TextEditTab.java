@@ -24,6 +24,7 @@ public class TextEditTab {
     private HighElement lastLoaded;
     private Scenario lastLoadedScenario;
     private final SnowCodeAreaProvider codeAreaProvider = SnowCodeAreaProvider.INSTANCE;
+    private boolean disableMovingCaret;
     public boolean manuallySelected;
 
     public TextEditTab(MainForm mainForm) {
@@ -97,9 +98,6 @@ public class TextEditTab {
             asSuite.contents = asSuite.serialize();
         }
 
-        if (lastLoaded != null) {
-            lastLoaded.applyText();
-        }
         lastLoaded = value;
 
         if (value instanceof Scenario) {
@@ -117,12 +115,30 @@ public class TextEditTab {
     }
 
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
-        if (newValue == tabTextEdit && lastLoaded != null && lastLoaded instanceof Scenario) {
-            mainForm.keepTabSelection = true;
-            mainForm.selectProgrammatically(lastLoaded.parent);
+        if (oldValue == tabTextEdit) {
+            lastLoaded.applyText();
         }
-        if (oldValue == tabTextEdit && !manuallySelected) {
-            codeAreaProvider.getCodeArea().selectProgrammaticallyCurrentlyEditedScenario();
+        if (newValue == tabTextEdit && lastLoaded != null) {
+            if (lastLoaded instanceof Scenario) {
+                mainForm.keepTabSelection = true;
+                mainForm.selectProgrammatically(lastLoaded.parent);
+            } else {
+                // switching to "Text edit" for Suite - ensure caret is not moved to 'lastLoadedScenario'
+                disableMovingCaret = true;
+                loadElement(lastLoaded);
+                disableMovingCaret = false;
+            }
+        }
+
+        if (newValue == MainForm.INSTANCE.gridTab.getTabGrid()) {
+            if (!manuallySelected) {
+                HighElement currentlyEditedScenario = codeAreaProvider.getCodeArea().getCurrentlyEditedScenario();
+                if (currentlyEditedScenario == lastLoaded) {
+                    MainForm.INSTANCE.gridTab.loadElement(lastLoaded);
+                } else {
+                    MainForm.INSTANCE.selectProgrammatically(currentlyEditedScenario);
+                }
+            }
         }
         manuallySelected = false;
     }
@@ -131,7 +147,7 @@ public class TextEditTab {
         VirtualizedScrollPane<SnowCodeArea> scrollPane;
         if (suite != null) {
             scrollPane = codeAreaProvider.getTextEditCodeArea(suite);
-            if (suite.children.contains(lastLoadedScenario)) {
+            if (!disableMovingCaret && suite.children.contains(lastLoadedScenario)) {
                 scrollPane.getContent().moveCaretToCurrentlyEditedScenario(lastLoadedScenario);
             } else {
                 scrollPane.getContent().moveCaretToCurrentlyEditedScenario(null);

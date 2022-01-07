@@ -184,21 +184,11 @@ public class MainForm {
         stage.heightProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.maximizedProperty().addListener((observable, oldValue, newValue) -> mainWindowCoordinatesChanged());
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/Snowflake3.png")));
-        stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (newValue == true) {
-                    ReloadChangesWindow.considerActivating();
-                }
+        stage.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                ReloadChangesWindow.considerActivating();
             }
         });
-    }
-
-    public void selectChildOfFocusedElementIfAvailable(HighElement element) {
-        if (humanInControl) {
-            keepTabSelection = true;
-            getFocusedElement().children.stream().filter(child -> child.getInvariantName().equals(element.getInvariantName())).findFirst().ifPresent(this::selectProgrammatically);
-        }
     }
 
     public HighElement getFocusedElement() {
