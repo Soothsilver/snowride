@@ -117,6 +117,15 @@ public class TextEditTab {
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
             lastLoaded.applyText();
+            if (!manuallySelected) {
+                HighElement currentlyEditedScenario = codeAreaProvider.getCodeArea().getCurrentlyEditedScenario();
+                if (currentlyEditedScenario == lastLoaded) {
+                    mainForm.gridTab.loadElement(lastLoaded);
+                } else {
+                    mainForm.keepTabSelection = true;
+                    mainForm.selectProgrammatically(currentlyEditedScenario);
+                }
+            }
         }
         if (newValue == tabTextEdit && lastLoaded != null) {
             if (lastLoaded instanceof Scenario) {
@@ -130,16 +139,6 @@ public class TextEditTab {
             }
         }
 
-        if (newValue == MainForm.INSTANCE.gridTab.getTabGrid()) {
-            if (!manuallySelected) {
-                HighElement currentlyEditedScenario = codeAreaProvider.getCodeArea().getCurrentlyEditedScenario();
-                if (currentlyEditedScenario == lastLoaded) {
-                    MainForm.INSTANCE.gridTab.loadElement(lastLoaded);
-                } else {
-                    MainForm.INSTANCE.selectProgrammatically(currentlyEditedScenario);
-                }
-            }
-        }
         manuallySelected = false;
     }
 
