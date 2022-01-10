@@ -4,13 +4,15 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement
 import cz.hudecekpetr.snowride.tree.highelements.Scenario
 import javafx.application.Platform
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCombination
+import javafx.scene.input.KeyCombination.SHIFT_ANY
+import javafx.scene.input.KeyCombination.SHORTCUT_ANY
 import javafx.scene.input.KeyEvent
 import org.apache.commons.lang3.StringUtils
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.MultiChangeBuilder
 import org.fxmisc.richtext.model.TwoDimensional
 import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.EventPattern.keyPressed
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 
@@ -20,7 +22,18 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
     init {
         reload()
         undoManager.forgetHistory()
-        redefineKeyBehaviour()
+
+        Nodes.addInputMap(
+            this,
+            InputMap.consume(
+                EventPattern.anyOf(
+                    keyPressed(KeyCode.TAB, SHORTCUT_ANY, SHIFT_ANY),
+                    keyPressed(KeyCode.Y, SHORTCUT_ANY)
+                )
+            )
+        )
+
+        keyBindings()
         style = "-fx-font-family: \"JetBrains Mono\""
     }
 
@@ -53,7 +66,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
         }
     }
 
-    fun getCurrentlyEditedScenario(): HighElement?  {
+    fun getCurrentlyEditedScenario(): HighElement? {
         var total = 0
         text.lines()
             .map {
@@ -72,11 +85,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
         return highElement;
     }
 
-    private fun redefineKeyBehaviour() {
-        Nodes.addInputMap(
-            this,
-            InputMap.consume(EventPattern.anyOf(EventPattern.keyPressed(KeyCode.TAB, KeyCombination.SHORTCUT_ANY, KeyCombination.SHIFT_ANY)))
-        )
+    private fun keyBindings() {
         setOnKeyPressed { event: KeyEvent ->
             if (event.code == KeyCode.F3 && event.isShiftDown) {
                 SnowCodeAreaSearchBox.searchNext(reversed = true)
@@ -89,6 +98,53 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
                 if (text != null) {
                     clearStyle(0, text.length)
                 }
+                event.consume()
+            } else if (event.code == KeyCode.Y && event.isControlDown) {
+                // Delete current line or selected lines
+                if (selectedText.isBlank()) {
+                    val line = line(caretPosition)
+                    line.delete()
+                } else {
+                    val allLines = selectedLines().reversed()
+                    allLines.forEach { it.delete() }
+                }
+                event.consume()
+            } else if (event.code == KeyCode.D && event.isControlDown) {
+                // Duplicate current line or selected text
+                if (selectedText.isBlank()) {
+                    val line = line(caretPosition)
+                    replaceText(line.to, line.to, separator + line.text)
+                } else {
+                    replaceText(caretPosition, caretPosition, selectedText)
+                }
+                event.consume()
+            } else if (event.code == KeyCode.SLASH && event.isControlDown) {
+                // Comment/Uncomment current line or selected lines
+                if (selectedText.isBlank()) {
+                    val line = line(caretPosition)
+                    if (line.isCommented) {
+                        line.unComment()
+                    } else {
+                        line.comment()
+                    }
+                } else {
+                    var startIndex = selection.start
+                    var endIndex = selection.end
+
+                    val allLines = selectedLines().reversed()
+
+                    if (allLines.any { !it.isCommented }) {
+                        allLines.forEach { it.comment() }
+                        startIndex += 1
+                        endIndex += allLines.size
+                    } else {
+                        allLines.forEach { it.unComment() }
+                        startIndex -= 1
+                        endIndex -= allLines.size
+                    }
+                    selectRange(startIndex, endIndex)
+                }
+                event.consume()
             } else if (event.code == KeyCode.TAB) {
                 fun tryToRemoveSpacesFromBeginningOfLine(multiChange: MultiChangeBuilder<Collection<String>, String, Collection<String>>, index: Int): Int {
                     val pos = offsetToPosition(index, TwoDimensional.Bias.Backward)
@@ -105,8 +161,10 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
                 if (event.isShiftDown) {
                     if (selectedText.isBlank()) {
                         val removedChars = tryToRemoveSpacesFromBeginningOfLine(multiChange, caretPosition)
-                        multiChange.commit()
-                        displaceCaret(caretPosition - removedChars)
+                        if (removedChars > 0) {
+                            multiChange.commit()
+                            displaceCaret(caretPosition - removedChars)
+                        }
                     } else {
                         var doCommit = false
                         val selectionStart = selection.start
@@ -147,5 +205,41 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
                 }
             }
         }
+    }
+
+    data class Line(val text: String, val from: Int, val to: Int) {
+        val isCommented = text.trim().startsWith("#")
+    }
+
+    private fun Line.unComment() {
+        replaceText(from, to + 1, text.replaceFirst("#", "") + separator)
+    }
+
+    private fun Line.comment() {
+        val commentIndex = text.length - text.trimStart().length
+        replaceText(from, to + 1, text.substring(0, commentIndex) + "#" + text.substring(commentIndex) + separator)
+    }
+
+    private fun Line.delete() {
+        replaceText(from, to + separator.length, "")
+    }
+
+    private fun selectedLines(): List<Line> {
+        val startIndex = selection.start
+        val firstLine = line(startIndex)
+        var currentIndex = startIndex
+        val otherLines = selectedText.split(separator).map {
+            currentIndex += it.length + separator.length
+            line(currentIndex)
+        }.dropLast(1)
+        return listOf(firstLine).plus(otherLines)
+    }
+
+    private fun line(index: Int): Line {
+        val textBefore = text.substring(0, index).substringAfterLast(separator)
+        val textAfter = text.substring(index).substringBefore(separator)
+        val from = index - textBefore.length
+        val to = index + textAfter.length
+        return Line(textBefore + textAfter, from, to)
     }
 }

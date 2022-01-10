@@ -303,8 +303,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             keyEvent.consume();
         } else if (
                 ((keyEvent.getCode() == KeyCode.SLASH || keyEvent.getCode() == KeyCode.DIVIDE) && keyEvent.isShortcutDown()) ||
-                        ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isShortcutDown()) ||
-                        ((keyEvent.getCode() == KeyCode.NUMPAD4 || keyEvent.getCode() == KeyCode.DIGIT4) && keyEvent.isShortcutDown())
+                        ((keyEvent.getCode() == KeyCode.NUMPAD3 || keyEvent.getCode() == KeyCode.DIGIT3) && keyEvent.isShortcutDown())
         ) {
             commentOutOrUncomment();
         } else if ((keyEvent.getCode() == KeyCode.Q && keyEvent.isShortcutDown()) || keyEvent.getCode() == KeyCode.F1) {

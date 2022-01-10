@@ -1,3 +1,4 @@
+# Global:
 F5, F8: Run tests
 Ctrl+N, Ctrl+F: Search suites/tests/keywords
 Ctrl+Shift+F: Full-Text search
@@ -6,12 +7,27 @@ Ctrl+Left, Alt+Left: Navigate back
 Ctrl+Right, Alt+Right: Navigate forwards
 Ctrl+Alt+Shift+Up: Navigate to previous selected test
 Ctrl+Alt+Shift+Down: Navigate to next selected test
+
+# Grid Edit:
 Ctrl+I: Insert row above selected cell
 Ctrl+A: Append row below selected cell
 Ctrl+D: Delete content from selected rows
-Ctrl+/, Ctrl+3: Comment line out (Ctrl+3 doesn't always work)
-Ctrl+Shift+/, Ctrl+4: Uncomment line (Ctrl+4 doesn't always work)
+Ctrl+/, Ctrl+3: Comment/Uncomment line out (Ctrl+3 doesn't always work)
 F1, Ctrl+Q: Show quick documentation for selected cell
 F4, Ctrl+W: Show "messages / arguments / FOR iterations" on passing/failing for selected line
 Ctrl+Z: Undo (you must have a table focused)
-Ctrl+Y: Redo
+Ctrl+Shift+Z, Ctrl+Y: Redo
+
+# Text Edit:
+Ctrl+F: Search
+Ctrl+L: Reformat
+Ctrl+D: Duplicate line or selected text
+Ctrl+Y: Delete line(s)
+Ctrl+/: Comment/Uncomment line(s)
+TAB: inserts 4x spaces "    " (when multiple lines are selected, inserts spaces at the beginning of each line)
+Shift+TAB: removes 4x spaces "    " from the beginning of line(s)
+F3: Search next
+Shift+F3: Search previous
+ESCAPE: clear search highlighting
+Ctrl+Z: Undo
+Ctrl+Shift+Z: Redo
