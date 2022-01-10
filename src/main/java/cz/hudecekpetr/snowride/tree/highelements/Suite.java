@@ -302,6 +302,7 @@ public abstract class Suite extends HighElement implements ISuite {
                 newElement.outputElement = currentElement.outputElement;
                 currentNode.setValue(newElement);
                 newElement.treeNode = currentNode;
+                newElement.treeNodeGraphic = currentNode.getGraphic();
                 MainForm.INSTANCE.navigationStack.updateElement(currentElement, newElement);
                 currentElement.treeNode = null;
             }

@@ -395,15 +395,20 @@ public class MainForm {
                 if (direction == KeyCode.DOWN) {
                     navigateToNextSelectedScenario.set(true);
                     return false;
-                } else if (previousSelectedScenario.get() != null) {
-                    selectProgrammatically(previousSelectedScenario.get());
-                    return true;
+                } else {
+                    Scenario scenario = previousSelectedScenario.get();
+                    if (scenario != null) {
+                        navigationStack.standardEnter(scenario);
+                        selectProgrammatically(scenario);
+                        return true;
+                    }
                 }
             }
             if (element instanceof Scenario) {
                 Scenario scenario = (Scenario) element;
                 if (scenario.isTestCase() && scenario.checkbox.isSelected()) {
                     if (navigateToNextSelectedScenario.get()) {
+                        navigationStack.standardEnter(scenario);
                         selectProgrammatically(scenario);
                         return true;
                     }

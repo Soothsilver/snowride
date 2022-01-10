@@ -47,7 +47,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public String contents;
     public String pristineContents;
     public TreeItem<HighElement> treeNode;
-    public HBox treeNodeGraphic;
+    public Node treeNodeGraphic;
     public LastChangeKind unsavedChanges = LastChangeKind.PRISTINE;
     public boolean areTextChangesUnapplied = false;
     public Suite parent;
@@ -60,7 +60,8 @@ public abstract class HighElement implements IAutocompleteOption {
     protected abstract boolean isResourceOnly();
 
     public HighElement(String shortName, String contents, List<HighElement> children) {
-        treeNodeGraphic = new HBox();
+        HBox treeNodeGraphic = new HBox();
+        this.treeNodeGraphic = treeNodeGraphic;
         imageView = new ImageView(Images.fileIcon);
         checkbox = new CheckBox();
         checkbox.setVisible(false);

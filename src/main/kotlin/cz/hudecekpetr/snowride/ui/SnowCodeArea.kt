@@ -52,7 +52,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
 
     fun moveCaretToCurrentlyEditedScenario(scenario: Scenario?) {
         if (scenario != null) {
-            val index = text.indexOf(scenario.shortName)
+            val index = text.indexOf("\n${scenario.shortName}") + 1
             if (index > 0) {
                 Platform.runLater {
                     requestFocus()

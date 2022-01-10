@@ -120,7 +120,7 @@ public class TextEditTab {
         if (oldValue == tabTextEdit) {
             lastLoaded.applyText();
             for (HighElement child : lastLoaded.children) {
-                if (!child.contents.equals(child.pristineContents)) {
+                if (child.contents != null && !child.contents.equals(child.pristineContents)) {
                     child.unsavedChanges = STRUCTURE_CHANGED;
                 }
             }
