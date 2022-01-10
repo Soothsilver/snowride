@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
+import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
@@ -35,6 +36,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.validation.Severity;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Suite extends HighElement implements ISuite {
@@ -79,6 +81,11 @@ public abstract class Suite extends HighElement implements ISuite {
 
     public List<ImportedResource> getImportedResources() {
         return importedResources;
+    }
+
+    public void updateContents() {
+        optimizeStructure();
+        contents = serialize();
     }
 
     public String serialize() {
@@ -162,11 +169,21 @@ public abstract class Suite extends HighElement implements ISuite {
                 this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
             }
             this.reparseResources();
-            children.removeIf(he -> he instanceof Scenario);
+            List<HighElement> scenarios = children.stream().filter(highElement -> highElement instanceof Scenario).collect(Collectors.toList());
+            children.removeAll(scenarios);
             children.addAll(parsed.getHighElements());
             for (HighElement child : children) {
                 if (child instanceof Scenario) {
                     child.parent = this;
+                    if (this.unsavedChanges == LastChangeKind.PRISTINE) {
+                        child.pristineContents = child.contents;
+                    } else {
+                        child.pristineContents = scenarios.stream()
+                                .filter(highElement -> highElement.getInvariantName().equals(child.getInvariantName()))
+                                .map(e -> e.pristineContents)
+                                .findFirst()
+                                .orElseGet(() -> child.contents);
+                    }
                 }
             }
 

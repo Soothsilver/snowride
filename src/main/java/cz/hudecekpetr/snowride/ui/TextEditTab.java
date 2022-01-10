@@ -15,6 +15,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
+import static cz.hudecekpetr.snowride.filesystem.LastChangeKind.STRUCTURE_CHANGED;
+
 public class TextEditTab {
 
     private final Node warningPane;
@@ -92,10 +94,8 @@ public class TextEditTab {
     }
 
     public void loadElement(HighElement value) {
-        if (value instanceof Suite && value.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            Suite asSuite = (Suite) value;
-            asSuite.optimizeStructure();
-            asSuite.contents = asSuite.serialize();
+        if (value instanceof Suite && value.unsavedChanges == STRUCTURE_CHANGED) {
+            ((Suite) value).updateContents();
         }
 
         lastLoaded = value;
@@ -103,6 +103,8 @@ public class TextEditTab {
         if (value instanceof Scenario) {
             lastLoadedScenario = (Scenario) value;
             tabTextEdit.setContent(warningPane);
+            // Eagerly initialize codeArea for Suite! to ensure user can 'undo' ANY changes in the Text edit
+            codeAreaProvider.getTextEditCodeArea(lastLoadedScenario.parent);
             return;
         } else {
             if (value instanceof Suite && value.contents != null) {
@@ -117,6 +119,11 @@ public class TextEditTab {
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
         if (oldValue == tabTextEdit) {
             lastLoaded.applyText();
+            for (HighElement child : lastLoaded.children) {
+                if (!child.contents.equals(child.pristineContents)) {
+                    child.unsavedChanges = STRUCTURE_CHANGED;
+                }
+            }
             if (!manuallySelected) {
                 HighElement currentlyEditedScenario = codeAreaProvider.getCodeArea().getCurrentlyEditedScenario();
                 if (currentlyEditedScenario == lastLoaded) {

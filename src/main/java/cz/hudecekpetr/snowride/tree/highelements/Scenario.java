@@ -51,6 +51,7 @@ public class Scenario extends HighElement {
             this.lines.get(i).lineNumber = new PositionInListProperty<>(this.lines.get(i), this.lines);
             this.lines.get(i).setBelongsToHighElement(this);
         }
+        contents = serialize().trim();
     }
 
     public List<String> getSemanticsArguments() {
@@ -113,6 +114,7 @@ public class Scenario extends HighElement {
 
     @Override
     public void markAsStructurallyChanged(MainForm mainForm) {
+        contents = serialize().trim();
         mainForm.changeOccurredTo(this, LastChangeKind.STRUCTURE_CHANGED);
         this.parent.markAsStructurallyChanged(mainForm);
     }
@@ -153,6 +155,12 @@ public class Scenario extends HighElement {
         sb.append(nameCell.postTrivia);
         sb.append("\n");
         lines.forEach(ll -> ll.serializeInto(sb));
+    }
+
+    public String serialize() {
+        StringBuilder sb = new StringBuilder();
+        serializeInto(sb);
+        return sb.toString();
     }
 
     public boolean isTestCase() {

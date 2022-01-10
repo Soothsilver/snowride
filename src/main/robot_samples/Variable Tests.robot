@@ -24,6 +24,7 @@ Variable highliting
     Log    Value of variable 'suite_variable_02' is @{suite_variable_02}
     Log    Value of variable 'suite_variable_02' is &{suite_variable_02}
     Log    Environment variables should not be highlighted: %{suite_variable_02}
+    Log    Very long line for Full-Text search testing purposes. Environment variables should not be highlighted: %{suite_variable_02}
     Log    ${test-undefinedVariable}
 
 *** Keywords ***

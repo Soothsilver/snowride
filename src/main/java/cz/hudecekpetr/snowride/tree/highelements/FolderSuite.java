@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
 import cz.hudecekpetr.snowride.Extensions;
-import cz.hudecekpetr.snowride.filesystem.FilesystemWatcher;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.tree.Cell;
@@ -40,8 +39,7 @@ public class FolderSuite extends Suite implements ISuite {
         if (unsavedChanges == LastChangeKind.TEXT_CHANGED) {
             this.applyText();
         } else if (unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            optimizeStructure();
-            this.contents = serialize();
+            updateContents();
         }
         // Save folders and suites below
         for (HighElement child : children) {

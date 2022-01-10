@@ -29,8 +29,7 @@ public class FileSuite extends Suite implements ISuite {
             this.applyText();
             System.out.println("SaveAll: " + this.getShortName());
         } else if (this.unsavedChanges == LastChangeKind.STRUCTURE_CHANGED) {
-            this.optimizeStructure();
-            this.contents = serialize();
+            this.updateContents();
             System.out.println("SaveAll structurally: " + this.getShortName());
         }
         if (this.unsavedChanges != LastChangeKind.PRISTINE) {
@@ -39,6 +38,7 @@ public class FileSuite extends Suite implements ISuite {
             this.unsavedChanges = LastChangeKind.PRISTINE;
             for (HighElement child : children) {
                 child.unsavedChanges = LastChangeKind.PRISTINE;
+                child.pristineContents = child.contents;
                 child.refreshToString();
             }
             refreshToString();

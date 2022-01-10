@@ -19,8 +19,6 @@ import cz.hudecekpetr.snowride.output.OutputParser;
 import cz.hudecekpetr.snowride.search.FullTextSearchScene;
 import cz.hudecekpetr.snowride.ui.popup.DocumentationPopup;
 import cz.hudecekpetr.snowride.ui.popup.MessagesPopup;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
@@ -78,6 +76,8 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import static cz.hudecekpetr.snowride.filesystem.LastChangeKind.*;
 
 
 public class MainForm {
@@ -258,8 +258,20 @@ public class MainForm {
     }
 
     public void changeOccurredTo(HighElement whatChanged, LastChangeKind how) {
-        if (how == LastChangeKind.TEXT_CHANGED && whatChanged.contents.equals(whatChanged.pristineContents)) {
-            whatChanged.unsavedChanges = LastChangeKind.PRISTINE;
+        if (how == TEXT_CHANGED && whatChanged.contents.equals(whatChanged.pristineContents)) {
+            whatChanged.unsavedChanges = PRISTINE;
+            whatChanged.children.forEach(highElement -> highElement.unsavedChanges = PRISTINE);
+        } else if (how == STRUCTURE_CHANGED && whatChanged instanceof Scenario && whatChanged.contents.equals(whatChanged.pristineContents)) {
+            whatChanged.parent.updateContents();
+            whatChanged.unsavedChanges = PRISTINE;
+        } else if (how == STRUCTURE_CHANGED && whatChanged instanceof Suite && whatChanged.children.stream().allMatch(highElement -> highElement.unsavedChanges == PRISTINE)) {
+            // Ensure changes done for Suite in Grid Edit are "applied" first
+            ((Suite) whatChanged).updateContents();
+            if (whatChanged.contents.equals(whatChanged.pristineContents)) {
+                whatChanged.unsavedChanges = PRISTINE;
+            } else {
+                whatChanged.unsavedChanges = how;
+            }
         } else {
             whatChanged.unsavedChanges = how;
         }
@@ -267,7 +279,8 @@ public class MainForm {
         whatChanged.treeNode.setValue(whatChanged);
         // TODO It's possible the user change the tag which should cause the number of tests to update
         // but for performance reasons we choose not to update the number here.
-        canSave.set(true);
+        boolean canActuallySave = getRootElement().childrenRecursively.stream().anyMatch(e -> e.unsavedChanges != PRISTINE);
+        canSave.set(canActuallySave);
     }
 
     private void mainWindowCoordinatesChanged() {
@@ -433,7 +446,7 @@ public class MainForm {
                 String name = TextFieldForm.askForText("New test case", "Test case name:", "Create new test case", "");
                 if (name != null) {
                     ((FileSuite) element).createNewChild(name, true, MainForm.this);
-                    changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
+                    changeOccurredTo(element, STRUCTURE_CHANGED);
                 }
             });
             menu.add(new_test_case);
@@ -453,7 +466,7 @@ public class MainForm {
                 String name = TextFieldForm.askForText("New user keyword", "Keyword name:", "Create new user keyword", "");
                 if (name != null) {
                     ((ISuite) element).createNewChild(name, false, MainForm.this);
-                    changeOccurredTo(element, LastChangeKind.STRUCTURE_CHANGED);
+                    changeOccurredTo(element, STRUCTURE_CHANGED);
                 }
             });
             menu.add(new_user_keyword);
@@ -506,7 +519,7 @@ public class MainForm {
                     if (name != null) {
                         Scenario newCopy = element.parent.createNewChild(name, asScenario.isTestCase(), MainForm.this, element);
                         DeepCopy.copyOldIntoNew(asScenario, newCopy);
-                        changeOccurredTo(element.parent, LastChangeKind.STRUCTURE_CHANGED);
+                        changeOccurredTo(element.parent, STRUCTURE_CHANGED);
                     }
                 });
                 menu.add(copy);
@@ -939,6 +952,12 @@ public class MainForm {
                 });
 
                 ultimateRoot.sortTree();
+
+                // Ensure immediate children of "UltimateRoot" are expanded after loading
+                ultimateRoot.treeNode.getChildren().stream()
+                        .filter(e -> !e.getValue().getShortName().equals("External resources"))
+                        .forEach(e -> e.setExpanded(true));
+
                 Platform.runLater(() -> {
                     projectLoad.progress.set(1);
                     navigationStack.clear();
