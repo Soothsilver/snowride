@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.List;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -60,24 +61,7 @@ public class FilesystemWatcher {
                     while (true) {
                         WatchKey key;
                         key = watchService.take();
-                        for (WatchEvent<?> event : key.pollEvents()) {
-                            WatchEvent.Kind<?> kind = event.kind();
-                            if (kind == OVERFLOW) {
-                                continue;
-                            }
-                            WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                            Path filename = ev.context();
-                            Path changedDirectory = (Path) key.watchable();
-                            Path absolutePathToChangedFile = changedDirectory.resolve(filename);
-                            File asFile = absolutePathToChangedFile.toFile();
-                            boolean isNormalFile = asFile.isFile();
-                            if (!shouldIgnoreFilesystemChangesToFile(asFile, isNormalFile, kind)) {
-                                boolean isInitRobot = asFile.getName().contains("__init__");
-                                Path reloadWhat = whatToReload(absolutePathToChangedFile, changedDirectory, kind, isNormalFile, isInitRobot);
-                                // We're not in Java FX thread here, so:
-                                Platform.runLater(() -> ReloadChangesWindow.requireFileReload(reloadWhat));
-                            }
-                        }
+                        FilesystemWatcherUtils.INSTANCE.waitToReceiveAllEvents(key.pollEvents(), (Path) key.watchable(), this);
                         key.reset();
                     }
                 } catch (InterruptedException e) {
@@ -90,6 +74,26 @@ public class FilesystemWatcher {
             thread.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void processWatchEvents(List<WatchEvent<?>> events, Path changedDirectory) {
+        for (WatchEvent<?> event : events) {
+            WatchEvent.Kind<?> kind = event.kind();
+            if (kind == OVERFLOW) {
+                continue;
+            }
+            WatchEvent<Path> ev = (WatchEvent<Path>) event;
+            Path filename = ev.context();
+            Path absolutePathToChangedFile = changedDirectory.resolve(filename);
+            File asFile = absolutePathToChangedFile.toFile();
+            boolean isNormalFile = asFile.isFile();
+            if (!shouldIgnoreFilesystemChangesToFile(asFile, isNormalFile, kind)) {
+                boolean isInitRobot = asFile.getName().contains("__init__");
+                Path reloadWhat = whatToReload(absolutePathToChangedFile, changedDirectory, kind, isNormalFile, isInitRobot);
+                // We're not in Java FX thread here, so:
+                Platform.runLater(() -> ReloadChangesWindow.requireFileReload(reloadWhat));
+            }
         }
     }
 
