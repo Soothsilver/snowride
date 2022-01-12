@@ -145,7 +145,7 @@ public class Cell implements IHasQuickDocumentation {
             if (containsVariable(contents, partOfLine.getBelongsToHighElement().variables)) {
                 style += "-fx-text-fill: green; ";
             } else {
-                style += "-fx-text-fill: darkkhaki; ";
+                style += "-fx-text-fill: #ff861a; ";
             }
         }
         style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";

@@ -303,15 +303,24 @@ public class MainForm {
         projectTree.setShowRoot(false);
         projectTree.setSkin(new ProjectTreeViewSkin(projectTree));
         projectTree.setOnKeyPressed(event -> {
-            // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts
-            // to hard-move children.
+            // Do not permit moving with CTRL+UP and CTRL+DOWN, because we're using these shortcuts to hard-move children.
             if (event.getCode() == KeyCode.UP && event.isShortcutDown()) {
                 event.consume();
             }
             if (event.getCode() == KeyCode.DOWN && event.isShortcutDown()) {
                 event.consume();
             }
+
+            // for more convenient navigation in projectTree (using only right arrow key)
+            if (event.getCode() == KeyCode.RIGHT && !event.isShortcutDown() && !event.isAltDown() && !event.isShortcutDown()) {
+                TreeItem<HighElement> selectedItem = projectTree.getSelectionModel().getSelectedItem();
+                if (selectedItem != null && selectedItem.getValue() instanceof Scenario) {
+                    projectTree.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false));
+                    event.consume();
+                }
+            }
         });
+
         projectTree.setOnKeyReleased(event -> {
             TreeItem<HighElement> focusedItem = projectTree.getFocusModel().getFocusedItem();
             if (focusedItem != null) {
