@@ -1,3 +1,79 @@
+<h4>3.0</h4>
+<ul>
+    <li>New major feature "In editor error reporting"
+        <ul>
+            <li>For this feature to work "robot-framework test execution listener" needs to receive path to output.xml file</li>
+            <li>Output.xml file is parsed and failing/passing 'keywords' are shown in the "Assisted grid editing" view
+                <ul>
+                    <li>Using F4 / ctrl+W on selected line will show "messages / arguments / FOR iterations" reported by robot-framework during test execution</li>
+                    <li>added button to open output.xml file</li>
+                </ul>
+            </li>
+            <li>Supporting RF 4.x and RF 3.x</li>
+        </ul>
+    </li>
+    <li>Text editor enhancements
+        <ul>
+            <li>Using dedicated instance of RichTextFX CodeArea (for every test case files, test suite initialization files and resource files)</li>
+            <li>All changes can be undone in Text editor, no matter where they were done</li>
+            <li>Highlight all occurrences of search phrase</li>
+            <li>Using JetBrains Mono Font (https://github.com/JetBrains/JetBrainsMono)</li>
+            <li>New useful shortcuts
+                <ul>
+                    <li>Ctrl+D: Duplicate line(s) or selected text</li>
+                    <li>Ctrl+Y: Delete line(s)</li>
+                    <li>Ctrl+/: Comment/Uncomment line(s)</li>
+                    <li>TAB: inserts 4x spaces "    " (when multiple lines are selected, inserts spaces at the beginning of each line)</li>
+                    <li>Shift+TAB: removes 4x spaces "    " from the beginning of line(s)</li>
+                    <li>F3: Search next</li>
+                    <li>Shift+F3: Search previous</li>
+                </ul>
+            </li>
+            <li>Switching between 'Grid' and 'Text' edit will navigate/select currently edited test case/keyword</li>
+        </ul>
+    </li>
+    <li>Recognize Suite contents did not change (for example after undo)
+        <ul>
+            <li>Works in both 'Text' and 'Grid' editor mode</li>
+        </ul>
+    </li>
+    <li>Improved "reloading" of test case files, test suite initialization files and resource files
+        <ul>
+            <li>This includes changes done in 'Text edit' inside Snowride as well as 'reloading' changes done outside Snowride</li>
+            <li>Nodes in Project Tree are not replaced, but updated
+                <ul>
+                    <li>Checked test cases will remain checked</li>
+                    <li>Expanded nodes will not be collapsed</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li>Improved variable highlighting
+        <ul>
+            <li>Cells containing same variable should always be highlighted even when variable is used inside a string template</li>
+            <li>Undefined variables are shown in different color</li>
+        </ul>
+    </li>
+    <li>Support for relative paths inside .snow files</li>
+    <li>RF 4.x builtIns IF/ELSE IF/ELSE</li>
+    <li>Updated 'TestRunnerAgent.py' with Python 3</li>
+    <li>Using "python -m robot" to execute tests when "Script" is not provided</li>
+    <li>Fixed freezing issues when opening log/report files on Linux</li>
+    <li>Snowride settings file is saved to ~/.snowride (when not on windows)</li>
+    <li>Probably couple of other smaller fixes or enhancements I forgot to mention.</li>
+</ul>
+<h4>2.8</h4>
+<ul>
+    <li>Added support for RF 4.x SKIP status</li>
+    <li>Support multi-selection adding/deleting cells</li>
+    <li>Support for insert/delete cell</li>
+    <li>Undo/redo support
+        <ul>
+            <li>Insert/delete cell</li>
+            <li>Reformat after "Save all"</li>
+        </ul>
+    </li>
+</ul>
 <h4>2.7</h4>
 <ul>
     <li>#81 Fixed loading of external resources (path problems).</li>

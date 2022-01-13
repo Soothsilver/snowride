@@ -21,7 +21,7 @@ Ctrl+Shift+Z, Ctrl+Y: Redo
 # Text Edit:
 Ctrl+F: Search
 Ctrl+L: Reformat
-Ctrl+D: Duplicate line or selected text
+Ctrl+D: Duplicate line(s) or selected text
 Ctrl+Y: Delete line(s)
 Ctrl+/: Comment/Uncomment line(s)
 TAB: inserts 4x spaces "    " (when multiple lines are selected, inserts spaces at the beginning of each line)
