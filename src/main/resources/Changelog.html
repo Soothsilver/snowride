@@ -48,6 +48,12 @@
             </li>
         </ul>
     </li>
+    <li>File watcher enhancements (watching for changes done outside Snowride)
+        <ul>
+            <li>Comparing pristine contents (contents originally loaded / saved by Snowride) with current content of file, when watch event is received.</li>
+            <li>Workaround for platform specific implementation of WatchService where modification of file causes to generate not only ENTRY_MODIFY event, but also both ENTRY_CREATE and ENTRY_DELETE</li>
+        </ul>
+    </li>
     <li>Improved variable highlighting
         <ul>
             <li>Cells containing same variable should always be highlighted even when variable is used inside a string template</li>
