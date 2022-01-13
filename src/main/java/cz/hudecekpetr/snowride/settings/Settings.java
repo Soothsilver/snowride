@@ -103,13 +103,14 @@ public class Settings {
     }
 
     public void addToRecentlyOpen(String path) {
-        if (lastOpenedProjects.size() > 0 && lastOpenedProjects.get(lastOpenedProjects.size() - 1).equals(path)) {
+        if (lastOpenedProjects.size() > 0 && lastOpenedProjects.get(0).equals(path)) {
             // reloading the last one doesn't do anything
             return;
         }
-        lastOpenedProjects.add(path);
+        lastOpenedProjects.removeIf(projectPath -> projectPath.equals(path));
+        lastOpenedProjects.add(0, path);
         if (lastOpenedProjects.size() > 4) {
-            lastOpenedProjects.remove(0);
+            lastOpenedProjects.remove(lastOpenedProjects.size() - 1);
         }
     }
 
