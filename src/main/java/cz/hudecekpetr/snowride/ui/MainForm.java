@@ -941,6 +941,7 @@ public class MainForm {
         if (abort) {
             return;
         }
+        canSave.setValue(false);
         File robotDirectory = path;
         if (path.isFile() && path.getName().toLowerCase().endsWith(".snow")) {
             robotDirectory = loadSnowFileAndReturnRobotsDirectory(path);
