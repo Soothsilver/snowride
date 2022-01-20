@@ -112,7 +112,7 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     @Override
     public void commitEdit(Cell newValue) {
-        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
+        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents, this.getItem().postTrivia, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
         super.commitEdit(newValue);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
             ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
@@ -178,6 +178,12 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 textField.selectRange(0, 0);
                 textField.selectRange(oldAnchor, oldCaret);
             });
+            textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                // prevent issues with uncommitted changes when switching from 'Grid editor' when editing cell
+                if (!newValue && isEditing()) {
+                    cancelEdit();
+                }
+            });
         }
         return textField;
     }
@@ -185,13 +191,21 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     @Override
     public void cancelEdit() {
         // Actually, we'd prefer a commit, thank you very much.
-        Cell newCell = constructNewCell();
-        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newCell.contents, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
-        getItem().partOfLine.getCellAsStringProperty(cellIndex, MainForm.INSTANCE).set(newCell);
-        if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
-            ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
+        Integer lineNumber = this.getItem().partOfLine.lineNumber.getValue();
+        int columnIndex = this.getItem().partOfLine.cells.indexOf(this.getItem());
+        if (lineNumber < 0 || columnIndex < 0) {
+            // cancel for a line / column which is no longer available
+            return;
         }
-        snowTableView.considerAddingVirtualRowsAndColumns();
+        if (!textField.getText().equals(this.getItem().contents)) {
+            Cell newCell = constructNewCell();
+            snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newCell.contents, this.getItem().postTrivia, lineNumber, columnIndex));
+            getItem().partOfLine.getCellAsStringProperty(cellIndex, MainForm.INSTANCE).set(newCell);
+            if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
+                ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
+            }
+            snowTableView.considerAddingVirtualRowsAndColumns();
+        }
         trueCancelEdit();
     }
 

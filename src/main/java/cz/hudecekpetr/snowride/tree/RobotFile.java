@@ -63,7 +63,7 @@ public class RobotFile {
     public void analyzeSemantics(Suite suite) {
         KeyValuePairSection settings = this.findSettingsSection();
         if (settings != null) {
-            for (LogicalLine s : settings.pairs) {
+            for (LogicalLine s : settings.getPairs()) {
                 if (s.cells.size() >= 1 && s.cells.get(0).contents.equalsIgnoreCase("Documentation")) {
                     List<String> docCells = new ArrayList<>();
                     for (int i = 1; i < s.cells.size(); i++) {

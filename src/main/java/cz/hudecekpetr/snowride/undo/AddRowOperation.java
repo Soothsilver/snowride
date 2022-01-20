@@ -1,31 +1,41 @@
 package cz.hudecekpetr.snowride.undo;
 
 import cz.hudecekpetr.snowride.tree.LogicalLine;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.tree.highelements.Scenario;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
 import javafx.collections.ObservableList;
 
 import java.util.function.Supplier;
 
 /**
- * The user added a new row using Ctrl+I or Ctrl+A.
+ * New line was added.
+ *  - by user (using Ctrl+I or Ctrl+A)
+ *  - automatically when adding documentation using documentation text area
  */
 public class AddRowOperation extends UndoableOperation {
     private final int rowIndex;
-    private final Supplier<LogicalLine> lineCreator;
+    private HighElement element;
 
-    public AddRowOperation(ObservableList<LogicalLine> allLines, int rowIndex, Supplier<LogicalLine> lineCreator) {
+    public AddRowOperation(ObservableList<LogicalLine> allLines, int rowIndex, HighElement element) {
         super(allLines);
         this.rowIndex = rowIndex;
-        this.lineCreator = lineCreator;
+        this.element = element;
     }
 
     @Override
     public void redo() {
-        allLines.add(rowIndex, lineCreator.get());
+        allLines.add(rowIndex, LogicalLine.createEmptyLine((element instanceof Scenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS), element, allLines));
     }
 
     @Override
     public void undo() {
         allLines.remove(rowIndex);
+    }
+
+    @Override
+    public void updateHighElement(HighElement highElement) {
+        element = highElement;
     }
 
     @Override

@@ -129,8 +129,8 @@ public class GridTab {
         if (fsuite.fileParsed == null) {
             fsuite.fileParsed = new RobotFile();
         }
-        tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().pairs);
-        tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().pairs);
+        tableSettings.loadLines(fsuite, fsuite.fileParsed.findOrCreateSettingsSection().getPairs());
+        tableVariables.loadLines(fsuite, fsuite.fileParsed.findOrCreateVariablesSection().getPairs());
 
         tabGrid.setContent(suiteView);
     }
@@ -144,5 +144,11 @@ public class GridTab {
         tabGrid.setContent(lblParseError);
     }
 
-
+    public void requestFocus() {
+        if (tabGrid.getContent().equals(spreadsheetView)) {
+            spreadsheetViewTable.requestFocus();
+        } else {
+            tableSettings.requestFocus();
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package cz.hudecekpetr.snowride.undo;
 
 import cz.hudecekpetr.snowride.tree.LogicalLine;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.collections.ObservableList;
 
 /**
@@ -27,4 +28,6 @@ public abstract class UndoableOperation {
      * performed the action for the first time.
      */
     public abstract void undo();
+
+    public abstract void updateHighElement(HighElement highElement);
 }

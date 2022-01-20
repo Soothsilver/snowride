@@ -17,6 +17,8 @@ import cz.hudecekpetr.snowride.tree.TagKind;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.undo.ReparseOperation;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
 
 public class Scenario extends HighElement {
 
-    private final ObservableList<LogicalLine> lines;
+    private ObservableList<LogicalLine> lines;
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
     public HashSet<Tag> actualTags = new HashSet<>();
     public boolean semanticsIsTemplateTestCase;
@@ -52,6 +54,7 @@ public class Scenario extends HighElement {
             this.lines.get(i).setBelongsToHighElement(this);
         }
         contents = serialize().trim();
+        pristineContents = contents;
     }
 
     public List<String> getSemanticsArguments() {
@@ -154,7 +157,8 @@ public class Scenario extends HighElement {
         sb.append(nameCell.contents);
         sb.append(nameCell.postTrivia);
         sb.append("\n");
-        lines.forEach(ll -> ll.serializeInto(sb));
+        lines.filtered(line -> !line.isFullyVirtual()).forEach(ll -> ll.serializeInto(sb));
+        sb.append("\n");
     }
 
     public String serialize() {
@@ -318,5 +322,30 @@ public class Scenario extends HighElement {
     @Override
     public List<? extends IAutocompleteOption> getVariablesList() {
         return thisScenarioVariables;
+    }
+
+    public void basedOn(Scenario previous) {
+        if (parent.unsavedChanges != LastChangeKind.PRISTINE) {
+            pristineContents = previous.pristineContents;
+        }
+        undoStack = previous.undoStack;
+        unsavedChanges = pristineContents.equals(contents) ? LastChangeKind.PRISTINE : LastChangeKind.STRUCTURE_CHANGED;
+        List<LogicalLine> currentLines = new ArrayList<>(lines.filtered(logicalLine -> !logicalLine.isFullyVirtual()));
+        List<LogicalLine> previousLines = new ArrayList<>(previous.lines);
+
+        // match number of virtual rows
+        int virtualLines = lines.filtered(LogicalLine::isFullyVirtual).size();
+        int previousVirtualLines = previous.lines.filtered(LogicalLine::isFullyVirtual).size();
+        for (int i = 0; i <= previousVirtualLines - virtualLines; i++) {
+            currentLines.add(LogicalLine.createEmptyLine(SnowTableKind.SCENARIO, this, previous.lines));
+        }
+
+        lines = previous.lines;
+        lines.clear();
+        lines.addAll(currentLines);
+        if (!contents.equals(previous.contents)) {
+            undoStack.iJustDid(new ReparseOperation(lines, previousLines, currentLines));
+        }
+        undoStack.updateHighElement(this);
     }
 }

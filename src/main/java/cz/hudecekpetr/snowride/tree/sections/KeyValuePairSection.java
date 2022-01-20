@@ -5,6 +5,8 @@ import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.semantics.Setting;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
+import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.undo.ReparseOperation;
 import cz.hudecekpetr.snowride.undo.UndoStack;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class KeyValuePairSection extends RobotSection {
-    public final ObservableList<LogicalLine> pairs;
+    private ObservableList<LogicalLine> pairs;
     public boolean artificiallyCreated = false;
 
     public KeyValuePairSection(SectionHeader header, List<LogicalLine> pairs) {
@@ -34,10 +36,8 @@ public class KeyValuePairSection extends RobotSection {
             }
         }
         header.serializeInto(sb);
-        for (LogicalLine line : pairs) {
-            line.serializeInto(sb);
-        }
-
+        pairs.filtered(line -> !line.isFullyVirtual()).forEach(ll -> ll.serializeInto(sb));
+        sb.append("\n");
     }
 
     @Override
@@ -66,5 +66,38 @@ public class KeyValuePairSection extends RobotSection {
             }
         }
         return settings;
+    }
+
+    public ObservableList<LogicalLine> getPairs() {
+        return pairs;
+    }
+
+    public void basedOn(HighElement highElement, KeyValuePairSection previous) {
+
+        List<LogicalLine> currentLines = new ArrayList<>(pairs.filtered(logicalLine -> !logicalLine.isFullyVirtual()));
+        List<LogicalLine> previousLines = new ArrayList<>(previous.pairs);
+
+        // match number of virtual rows
+        int virtualLines = pairs.filtered(LogicalLine::isFullyVirtual).size();
+        int previousVirtualLines = previous.pairs.filtered(LogicalLine::isFullyVirtual).size();
+        if (previousVirtualLines - virtualLines > 0) {
+            for (int i = 0; i <= previousVirtualLines - virtualLines; i++) {
+                SnowTableKind belongsWhere = previous.pairs.stream().findFirst().get().belongsWhere;
+                currentLines.add(LogicalLine.createEmptyLine(belongsWhere, highElement, previous.pairs));
+            }
+        }
+        StringBuilder contents = new StringBuilder();
+        StringBuilder previousContents = new StringBuilder();
+        pairs.filtered(line -> !line.isFullyVirtual()).forEach(ll -> ll.serializeInto(contents));
+        previous.pairs.filtered(line -> !line.isFullyVirtual()).forEach(ll -> ll.serializeInto(previousContents));
+
+        pairs = previous.pairs;
+        pairs.clear();
+        pairs.addAll(currentLines);
+
+
+        if (!contents.toString().equals(previousContents.toString())) {
+            highElement.getUndoStack().iJustDid(new ReparseOperation(pairs, previousLines, currentLines));
+        }
     }
 }

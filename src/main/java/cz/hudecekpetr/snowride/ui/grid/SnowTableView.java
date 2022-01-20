@@ -269,10 +269,12 @@ public class SnowTableView extends TableView<LogicalLine> {
         } else if (keyEvent.getCode() == KeyCode.D && keyEvent.isShortcutDown()) {
             deleteSelectedRows();
             keyEvent.consume();
-        } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isShortcutDown()) {
-            getScenario().getUndoStack().undoIfAble();
         } else if (((keyEvent.getCode() == KeyCode.Z && keyEvent.isShiftDown()) || keyEvent.getCode() == KeyCode.Y) && keyEvent.isShortcutDown()) {
             getScenario().getUndoStack().redoIfAble();
+            keyEvent.consume();
+        } else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isShortcutDown()) {
+            getScenario().getUndoStack().undoIfAble();
+            keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.SPACE && keyEvent.isShortcutDown()) {
             TablePosition<LogicalLine, ?> focusedCell = getFocusedTablePosition();
             this.triggerAutocompletionNext = true;
@@ -283,7 +285,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             List<ChangeTextOperation> coordinates = new ArrayList<>();
             for (TablePosition tablePosition : this.getSelectionModel().getSelectedCells()) {
                 SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
-                coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
+                coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", cell.getValue().postTrivia, tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
                 cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
                 YellowHighlight.lastPositionSelectText = "";
             }
@@ -345,7 +347,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             for (int i = 0; i < line.cells.size(); i++) {
                 SimpleObjectProperty<Cell> cellAsStringProperty = line.getCellAsStringProperty(i, mainForm);
                 Cell current = cellAsStringProperty.get();
-                operations.add(new ChangeTextOperation(getItems(), current.contents, "", row, i));
+                operations.add(new ChangeTextOperation(getItems(), current.contents, "", current.postTrivia, row, i));
                 cellAsStringProperty.set(new Cell("", current.postTrivia, current.partOfLine));
             }
         }
@@ -361,7 +363,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
         }
         this.getSelectionModel().clearAndSelect(whatFocused + 1, getVisibleLeafColumn(column));
-        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused + 1, this::createNewLine));
+        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused + 1, scenario));
     }
 
     private void insertRowBefore() {
@@ -372,7 +374,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             column = this.getSelectionModel().getSelectedCells().get(0).getColumn();
         }
         this.getSelectionModel().clearAndSelect(whatFocused, getVisibleLeafColumn(column));
-        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, this::createNewLine));
+        this.getScenario().getUndoStack().iJustDid(new AddRowOperation(getItems(), whatFocused, scenario));
     }
 
     private void insertSelectedCells() {
@@ -397,7 +399,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 SimpleObjectProperty<Cell> currentCellAsString = line.getCellAsStringProperty(i, mainForm);
                 Cell currentCellCopy = currentCellAsString.get().copy();
                 operations.add(new ChangeTextOperation(
-                        getItems(), rightCellAsString.get().contents, currentCellCopy.contents, row, i + 1));
+                        getItems(), rightCellAsString.get().contents, currentCellCopy.contents, rightCellAsString.get().postTrivia, row, i + 1));
 
                 rightCellAsString.set(currentCellCopy);
             }
@@ -407,7 +409,7 @@ public class SnowTableView extends TableView<LogicalLine> {
             Cell previousCell = previousCellAsString.get();
             Cell newCell = new Cell("", "    ", line);
             operations.add(new ChangeTextOperation(
-                    getItems(), previousCell.contents, newCell.contents, row, columnIndex));
+                    getItems(), previousCell.contents, newCell.contents, previousCell.postTrivia, row, columnIndex));
 
             previousCellAsString.set(newCell);
         }
@@ -438,7 +440,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 if (i == cellCount) {
                     Cell newCell = new Cell("", "    ", line);
                     operations.add(new ChangeTextOperation(
-                            getItems(), leftCell.contents, newCell.contents, row, i - 1));
+                            getItems(), leftCell.contents, newCell.contents, leftCell.postTrivia, row, i - 1));
 
                     leftCellAsString.set(newCell);
 
@@ -446,7 +448,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                     SimpleObjectProperty<Cell> currentCellAsString = line.getCellAsStringProperty(i, mainForm);
                     Cell currentCellCopy = currentCellAsString.get().copy();
                     operations.add(new ChangeTextOperation(
-                            getItems(), leftCell.contents, currentCellCopy.contents, row, i - 1));
+                            getItems(), leftCell.contents, currentCellCopy.contents, leftCell.postTrivia, row, i - 1));
 
                     leftCellAsString.set(currentCellCopy);
                 }
@@ -498,7 +500,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 int x = atColumn + xi;
                 int y = atRow;
                 SimpleObjectProperty<Cell> replacedCell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
-                operations.add(new ChangeTextOperation(getItems(), replacedCell.getValue().contents, cellSplit[xi].trim(), y, tableXToLogicalX(x)));
+                operations.add(new ChangeTextOperation(getItems(), replacedCell.getValue().contents, cellSplit[xi].trim(), replacedCell.getValue().postTrivia, y, tableXToLogicalX(x)));
                 replacedCell.set(new Cell(cellSplit[xi].trim(), "    ", getItems().get(y)));
             }
             atRow++;
@@ -544,7 +546,7 @@ public class SnowTableView extends TableView<LogicalLine> {
                 SimpleObjectProperty<Cell> cell = getItems().get(y).getCellAsStringProperty(snowTableKind == SnowTableKind.SCENARIO ? x : x - 1, mainForm);
                 clipboardContents.append(cell.getValue().contents);
                 if (alsoCut) {
-                    coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", y, tableXToLogicalX(x)));
+                    coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", cell.getValue().postTrivia, y, tableXToLogicalX(x)));
                     cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
 
                 }
@@ -564,12 +566,7 @@ public class SnowTableView extends TableView<LogicalLine> {
     }
 
     public LogicalLine createNewLine() {
-        LogicalLine newLine = new LogicalLine();
-        newLine.setBelongsToHighElement(scenario);
-        newLine.lineNumber = new PositionInListProperty<>(newLine, this.getItems());
-        newLine.belongsWhere = snowTableKind;
-        newLine.recalcStyles();
-        return newLine;
+        return LogicalLine.createEmptyLine(snowTableKind, scenario, this.getItems());
     }
 
     private TableColumn<LogicalLine, Cell> createColumn(int cellIndex) {

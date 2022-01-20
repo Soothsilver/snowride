@@ -4,7 +4,6 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.NewlineStyle;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
-import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.parser.GateParser;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
@@ -28,6 +27,7 @@ import cz.hudecekpetr.snowride.tree.sections.KeyValuePairSection;
 import cz.hudecekpetr.snowride.tree.sections.RobotSection;
 import cz.hudecekpetr.snowride.tree.sections.SectionKind;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.ui.SnowCodeAreaProvider;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
@@ -160,37 +160,6 @@ public abstract class Suite extends HighElement implements ISuite {
         return importedKeywordsRecursivelyByInvariantName;
     }
 
-    public void reparse() {
-        if (contents != null) {
-            RobotFile parsed = GateParser.parse(contents, this);
-            fileParsed = parsed;
-            selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
-            for (Exception exception : parsed.errors) {
-                this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
-            }
-            this.reparseResources();
-            List<HighElement> scenarios = children.stream().filter(highElement -> highElement instanceof Scenario).collect(Collectors.toList());
-            children.removeAll(scenarios);
-            children.addAll(parsed.getHighElements());
-            for (HighElement child : children) {
-                if (child instanceof Scenario) {
-                    child.parent = this;
-                    if (this.unsavedChanges == LastChangeKind.PRISTINE) {
-                        child.pristineContents = child.contents;
-                    } else {
-                        child.pristineContents = scenarios.stream()
-                                .filter(highElement -> highElement.getInvariantName().equals(child.getInvariantName()))
-                                .map(e -> e.pristineContents)
-                                .findFirst()
-                                .orElseGet(() -> child.contents);
-                    }
-                }
-            }
-
-            addOrUpdateTreeNodes(this, treeNode, false);
-        }
-    }
-
     public void analyzeSemantics() {
         if (this.fileParsed != null) {
             this.fileParsed.analyzeSemantics(this);
@@ -265,12 +234,48 @@ public abstract class Suite extends HighElement implements ISuite {
         return this;
     }
 
+    /**
+     * Re-parsing happens after "applying" changes done in 'Text edit'
+     */
+    public void reparse() {
+        if (contents != null) {
+            RobotFile parsed = GateParser.parse(contents, this);
+            updateSettingsAndVariableSections(this, parsed, fileParsed);
+            fileParsed = parsed;
+            selfErrors.removeIf(snowrideError -> snowrideError.type.getValue() == ErrorKind.PARSE_ERROR);
+            for (Exception exception : parsed.errors) {
+                this.selfErrors.add(new SnowrideError(this, ErrorKind.PARSE_ERROR, Severity.ERROR, ExceptionUtils.getMessage(exception)));
+            }
+            this.reparseResources();
+            List<HighElement> scenarios = children.stream().filter(highElement -> highElement instanceof Scenario).collect(Collectors.toList());
+            children.removeAll(scenarios);
+            children.addAll(parsed.getHighElements());
 
+            for (HighElement child : children) {
+                if (child instanceof Scenario) {
+                    child.parent = this;
+                    scenarios.stream()
+                            .filter(highElement -> highElement.getInvariantName().equals(child.getInvariantName()))
+                            .findFirst()
+                            .ifPresent(previous -> ((Scenario) child).basedOn((Scenario) previous));
+                }
+            }
+
+            addOrUpdateTreeNodes(this, treeNode, false);
+        }
+    }
+
+    /**
+     * Replacing is necessary when changes are done from outside Snowride
+     *
+     * @param oldElement
+     * @param newSuite
+     */
     public void replaceChildWithAnotherChild(HighElement oldElement, Suite newSuite) {
         int indexOld = children.indexOf(oldElement);
         int indexTreeOld = treeNode.getChildren().indexOf(oldElement.treeNode);
 
-        children.remove(oldElement);
+        children.remove(indexOld);
         newSuite.parent = this;
         children.add(indexOld, newSuite);
 
@@ -281,22 +286,34 @@ public abstract class Suite extends HighElement implements ISuite {
         MainForm.INSTANCE.reloadCurrentThing();
     }
 
-    private void addOrUpdateTreeNodes(Suite suite, TreeItem<HighElement> treeNode, boolean recursively) {
+    private void addOrUpdateTreeNodes(Suite suite, TreeItem<HighElement> treeNode, boolean replace) {
 
         // TreeNode - delete removed nodes
         treeNode.getChildren().removeIf(currentNode -> suite.children.stream().noneMatch(newElement -> currentNode.getValue().getInvariantName().equals(newElement.getInvariantName())));
         MainForm.INSTANCE.navigationStack.removeElements(suite);
 
+        if (replace) {
+            Suite old = (Suite) treeNode.getValue();
+            SnowCodeAreaProvider.INSTANCE.replaceHighElement(suite, old);
+            suite.undoStack = old.undoStack;
+            updateSettingsAndVariableSections(suite, suite.fileParsed, old.fileParsed);
+            suite.undoStack.updateHighElement(suite);
+        }
+
         // TreeNode - add or update existing nodes
+        List<TreeItem<HighElement>> oldChildren =new ArrayList<>(treeNode.getChildren());
+        treeNode.getChildren().clear();
         for (int i = 0; i < suite.children.size(); i++) {
             HighElement newElement = suite.children.get(i);
-            if (i >= treeNode.getChildren().size() || !newElement.getInvariantName().equals(treeNode.getChildren().get(i).getValue().getInvariantName())) {
-                treeNode.getChildren().add(i, newElement.treeNode);
-            } else {
-                TreeItem<HighElement> currentNode = treeNode.getChildren().get(i);
+            Optional<TreeItem<HighElement>> previous = oldChildren.stream().filter(treeItem -> treeItem.getValue().getInvariantName().equals(newElement.getInvariantName())).findFirst();
+            if (previous.isPresent()) {
+                TreeItem<HighElement> currentNode = previous.get();
                 HighElement currentElement = currentNode.getValue();
                 if (currentElement == newElement) {
                     continue;
+                }
+                if (replace && newElement instanceof Scenario && currentElement instanceof Scenario) {
+                    ((Scenario) newElement).basedOn((Scenario) currentElement);
                 }
                 newElement.updateGraphics(currentNode.getGraphic(), currentElement);
                 newElement.outputElement = currentElement.outputElement;
@@ -306,9 +323,10 @@ public abstract class Suite extends HighElement implements ISuite {
                 MainForm.INSTANCE.navigationStack.updateElement(currentElement, newElement);
                 currentElement.treeNode = null;
             }
+            treeNode.getChildren().add(newElement.treeNode);
         }
 
-        if (recursively && suite instanceof FolderSuite) {
+        if (replace && suite instanceof FolderSuite) {
             for (int i = 0; i < suite.children.size(); i++) {
                 HighElement newElement = suite.children.get(i);
                 if (newElement instanceof Suite) {
@@ -319,6 +337,13 @@ public abstract class Suite extends HighElement implements ISuite {
                     System.out.println("HOW???");
                 }
             }
+        }
+    }
+
+    private void updateSettingsAndVariableSections(HighElement highElement, RobotFile current, RobotFile previous) {
+        if (previous != null && !current.serialize(NewlineStyle.LF).equals(previous.serialize(NewlineStyle.LF))) {
+            current.findOrCreateSettingsSection().basedOn(highElement, previous.findOrCreateSettingsSection());
+            current.findOrCreateVariablesSection().basedOn(highElement, previous.findOrCreateVariablesSection());
         }
     }
 
@@ -371,7 +396,7 @@ public abstract class Suite extends HighElement implements ISuite {
     public void analyzeCodeInSelf() {
         reparseAndRecalculateResources();
         if (fileParsed != null) {
-            fileParsed.findOrCreateSettingsSection().pairs.forEach(LogicalLine::recalculateSemantics);
+            fileParsed.findOrCreateSettingsSection().getPairs().forEach(LogicalLine::recalculateSemantics);
         }
     }
 
@@ -379,7 +404,7 @@ public abstract class Suite extends HighElement implements ISuite {
      * Returns the "Force tags" line in this suite's Settings table. If there is no such line, returns null.
      */
     public LogicalLine findLineWithTags() {
-        for (LogicalLine pair : fileParsed.findOrCreateSettingsSection().pairs) {
+        for (LogicalLine pair : fileParsed.findOrCreateSettingsSection().getPairs()) {
             if (pair.getCellAsStringProperty(0, MainForm.INSTANCE).getValue().contents.equalsIgnoreCase("Force tags")) {
                 return pair;
             }
@@ -436,7 +461,7 @@ public abstract class Suite extends HighElement implements ISuite {
         // Variables table:
         List<VariableCompletionOption> vco = new ArrayList<>();
         if (fileParsed != null) {
-            fileParsed.findOrCreateVariablesSection().pairs.forEach(pair -> {
+            fileParsed.findOrCreateVariablesSection().getPairs().forEach(pair -> {
                 if (pair.cells.size() > 0) {
                     String name = pair.cells.get(0).contents;
                     if (name.length() >= 3) {

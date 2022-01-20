@@ -40,10 +40,13 @@ object SnowCodeAreaProvider {
     private fun createCodeArea(suite: Suite): VirtualizedScrollPane<SnowCodeArea> {
         val codeArea = SnowCodeArea(suite)
         codeArea.textProperty().addListener { _, _, newValue ->
-            if (!MainForm.INSTANCE.switchingTextEditContents) {
-                suite.areTextChangesUnapplied = true
-                suite.contents = suite.newlineStyle.convertToStyle(newValue)
-                MainForm.INSTANCE.changeOccurredTo(suite, LastChangeKind.TEXT_CHANGED)
+            if (!MainForm.INSTANCE.switchingTextEditContents && !codeArea.reloading) {
+                val element = codeArea.highElement
+                if (element is Suite) {
+                    element.areTextChangesUnapplied = true
+                    element.contents = element.newlineStyle.convertToStyle(newValue)
+                    MainForm.INSTANCE.changeOccurredTo(element, LastChangeKind.TEXT_CHANGED)
+                }
             }
         }
         val pane = VirtualizedScrollPane(codeArea)
@@ -55,5 +58,18 @@ object SnowCodeAreaProvider {
     fun clear() {
         textEditCodeAreaMap.clear()
         previewCodeAreaMap.clear()
+    }
+
+    fun replaceHighElement(new: Suite, old: HighElement) {
+        textEditCodeAreaMap.replaceHighElement(old, new)
+        previewCodeAreaMap.replaceHighElement(old, new)
+    }
+
+    private fun MutableMap<HighElement, VirtualizedScrollPane<SnowCodeArea>>.replaceHighElement(old: HighElement, new: Suite) {
+        textEditCodeAreaMap[old]?.let { scrollPane ->
+            scrollPane.content.highElement = new
+            remove(old)
+            put(new, scrollPane)
+        }
     }
 }

@@ -178,7 +178,7 @@ public class OutputParser {
                                 break;
                         }
 
-                        LogicalLine line = findLineStartingWith(section.pairs, toMatch, 0);
+                        LogicalLine line = findLineStartingWith(section.getPairs(), toMatch, 0);
                         if (line == null) {
                             findAndAttachFailingTestSetupTeardownToSuite(outputSuite, keyword);
                         } else {

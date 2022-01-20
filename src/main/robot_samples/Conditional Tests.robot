@@ -33,7 +33,6 @@ If (ELSE IF) Test
     END
     Log    Test Finished...
 
-
 If (ELSE) Test
     ${random}=    Set Variable    4
     IF    ${random} == 5
@@ -47,7 +46,6 @@ If (ELSE) Test
     Log To Console    Too low.
     END
     Log    Test Finished...
-
 
 For (error in FOR statement) Test
     FOR    ${Idx}    IN RANGE    0    $5

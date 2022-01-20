@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.ui
 
 import cz.hudecekpetr.snowride.tree.highelements.HighElement
-import cz.hudecekpetr.snowride.tree.highelements.Scenario
 import javafx.application.Platform
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination.SHIFT_ANY
@@ -16,8 +15,9 @@ import org.fxmisc.wellbehaved.event.EventPattern.keyPressed
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 
-class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
+class SnowCodeArea(var highElement: HighElement?) : CodeArea() {
     private val separator = "\n"
+    var reloading = false
 
     init {
         reload()
@@ -40,6 +40,7 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
     fun reload() {
         val contents = highElement?.contents?.replace("\r\n", "\n")
         if (contents != null && text != contents) {
+            reloading = true
             val indexOfDifference = StringUtils.indexOfDifference(text, contents)
             if (indexOfDifference > 0) {
                 replaceText(indexOfDifference, text.length, contents.substring(indexOfDifference))
@@ -47,21 +48,20 @@ class SnowCodeArea(private val highElement: HighElement?) : CodeArea() {
                 replaceText(contents)
                 displaceCaret(0)
             }
+            reloading = false
         }
     }
 
-    fun moveCaretToCurrentlyEditedScenario(scenario: Scenario?) {
-        if (scenario != null) {
-            val index = text.indexOf("\n${scenario.shortName}") + 1
-            if (index > 0) {
-                Platform.runLater {
-                    requestFocus()
-                    displaceCaret(index)
-                    requestFollowCaret()
-                }
-            }
+    fun moveCaretToCurrentlyEditedScenario(scenarioName: String?) {
+        val index = if (scenarioName != null) {
+            text.indexOf("\n${scenarioName}") + 1
         } else {
-            displaceCaret(0)
+            0
+        }
+
+        Platform.runLater {
+            requestFocus()
+            displaceCaret(index)
             requestFollowCaret()
         }
     }

@@ -1,6 +1,5 @@
 package cz.hudecekpetr.snowride.ui.upperbox;
 
-import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.tree.Cell;
 import cz.hudecekpetr.snowride.tree.LogicalLine;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
@@ -10,6 +9,11 @@ import cz.hudecekpetr.snowride.ui.Images;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.ui.about.AboutDialogBase;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import cz.hudecekpetr.snowride.undo.AddRowOperation;
+import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
+import cz.hudecekpetr.snowride.undo.MassOperation;
+import cz.hudecekpetr.snowride.undo.UndoableOperation;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,6 +27,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class DocumentationEditWindow extends AboutDialogBase {
@@ -55,41 +61,50 @@ public class DocumentationEditWindow extends AboutDialogBase {
     }
 
     private void clickOK(LogicalLine line, HighElement element, TextArea documentationArea) {
-        LogicalLine editedLine = line;
         int docStartsAt = element instanceof Scenario ? 2 : 1;
-        if (editedLine == null) {
-            ObservableList<LogicalLine> allLogicalLines;
-            if (element instanceof Scenario) {
-                allLogicalLines = ((Scenario) element).getLines();
-            } else {
-                allLogicalLines = ((Suite) element).fileParsed.findOrCreateSettingsSection().pairs;
-            }
-            LogicalLine newLine = new LogicalLine();
-            newLine.setBelongsToHighElement(element);
-            newLine.lineNumber = new PositionInListProperty<>(newLine, allLogicalLines);
-            newLine.belongsWhere = (element instanceof Scenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS);
-            newLine.recalcStyles();
-            allLogicalLines.add(0, newLine);
-            newLine.getCellAsStringProperty(docStartsAt - 1, MainForm.INSTANCE).set(new Cell(element instanceof Scenario ? "[Documentation]" : "Documentation", "    ", newLine));
-            editedLine = newLine;
+
+        List<UndoableOperation> operations = new LinkedList<>();
+        ObservableList<LogicalLine> lines = element instanceof Scenario ? ((Scenario) element).getLines()
+                : ((Suite) element).fileParsed.findOrCreateSettingsSection().getPairs();
+
+        if (line == null || !lines.contains(line)) {
+            line = LogicalLine.createEmptyLine((element instanceof Scenario ? SnowTableKind.SCENARIO : SnowTableKind.SETTINGS), element, lines);
+            lines.add(0, line);
+            String contents = element instanceof Scenario ? "[Documentation]" : "Documentation";
+            line.getCellAsStringProperty(docStartsAt - 1, MainForm.INSTANCE).set(new Cell(contents, "    ", line));
+            operations.add(new AddRowOperation(lines, 0, element));
+            operations.add(new ChangeTextOperation(lines, "", contents, "    ", 0, docStartsAt - 1));
         }
-        String[] lines = StringUtils.splitByWholeSeparatorPreserveAllTokens(documentationArea.getText().trim(), "\n");
+
+        String[] documentationAreaLines = StringUtils.splitByWholeSeparatorPreserveAllTokens(documentationArea.getText().trim(), "\n");
         String ellipsisSeparator = element instanceof Scenario ? "\n    ...    " : "\n...    ";
-        // Erase existing documentation:
-        for (int i = docStartsAt; i < editedLine.cells.size(); i++) {
-            editedLine.getCellAsStringProperty(i, MainForm.INSTANCE).set(new Cell("", "    ", editedLine));
+        int lineIndex = lines.indexOf(line);
+
+        // Erase existing documentation
+        for (int i = docStartsAt; i < line.cells.size(); i++) {
+            SimpleObjectProperty<Cell> cell = line.getCellAsStringProperty(i, MainForm.INSTANCE);
+            operations.add(new ChangeTextOperation(lines, cell.getValue().contents, "", "    ", lineIndex, i));
+            cell.set(new Cell("", "    ", line));
         }
-        // Add new one
-        for (int i = 0; i < lines.length; i++) {
-            String elSeparatorFinally = ellipsisSeparator;
-            if (i == lines.length - 1) {
-                elSeparatorFinally = "";
-            }
-            editedLine.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE).set(new Cell(lines[i].trim(), elSeparatorFinally, editedLine));
+
+        // Add new documentation
+        for (int i = 0; i < documentationAreaLines.length; i++) {
+            String postTrivia = (i == documentationAreaLines.length - 1) ? "" : ellipsisSeparator;
+            SimpleObjectProperty<Cell> cell = line.getCellAsStringProperty(docStartsAt + i, MainForm.INSTANCE);
+            String contents = documentationAreaLines[i].trim();
+            operations.add(new ChangeTextOperation(lines, "", contents, postTrivia, lineIndex, docStartsAt + i));
+            cell.set(new Cell(contents, postTrivia, line));
         }
+
+        // undoStack
+        if (!operations.isEmpty()) {
+            element.getUndoStack().iJustDid(new MassOperation(operations));
+        }
+
         element.markAsStructurallyChanged(MainForm.INSTANCE);
         MainForm.INSTANCE.gridTab.upperBox.updateSelf();
         MainForm.INSTANCE.gridTab.upperBox2.updateSelf();
         close();
+        MainForm.INSTANCE.gridTab.requestFocus();
     }
 }

@@ -1,9 +1,13 @@
 package cz.hudecekpetr.snowride.undo;
 
 import cz.hudecekpetr.snowride.tree.LogicalLine;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.collections.ObservableList;
 
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Rows were removed on "reformat" after user saved changes Ctrl+S or pressed the 'Reformat' button.
@@ -18,12 +22,17 @@ public class RemoveRowsOperation extends UndoableOperation {
 
     @Override
     public void redo() {
-        allLines.removeAll(indexes.values());
+        indexes.keySet().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList()).forEach(index -> allLines.remove(index.intValue()));
     }
 
     @Override
     public void undo() {
         indexes.forEach(allLines::add);
+    }
+
+    @Override
+    public void updateHighElement(HighElement highElement) {
+        indexes.values().forEach(logicalLine -> logicalLine.setBelongsToHighElement(highElement));
     }
 
     @Override

@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation     Extremly simple Suite
+Documentation     Extremely simple Suite
 ...    of test to testing basic functionality.
 
 *** Test Cases ***

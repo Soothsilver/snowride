@@ -9,6 +9,10 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.undo.AddRowOperation;
+import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
+import cz.hudecekpetr.snowride.undo.MassOperation;
+import cz.hudecekpetr.snowride.undo.UndoableOperation;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -24,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class UpperBox extends VBox {
@@ -82,8 +87,13 @@ public class UpperBox extends VBox {
                 if (line == null) {
                     line = table.createNewLine();
                     table.getItems().add(0, line);
-                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("[Tags]", "    ", line));
-                    line.getCellAsStringProperty(2, MainForm.INSTANCE).set(new Cell("", "    ", line));
+                    String postTrivia = "    ";
+                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("[Tags]", postTrivia, line));
+                    line.getCellAsStringProperty(2, MainForm.INSTANCE).set(new Cell("", postTrivia, line));
+                    List<UndoableOperation> operations = new LinkedList<>();
+                    operations.add(new AddRowOperation(table.getItems(), 0, forElement));
+                    operations.add(new ChangeTextOperation(table.getItems(), "", "[Tags]", postTrivia, 0, 1));
+                    forElement.getUndoStack().iJustDid(new MassOperation(operations));
                 }
                 table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
                 table.requestFocus();
@@ -93,8 +103,13 @@ public class UpperBox extends VBox {
                 if (line == null) {
                     line = table.createNewLine();
                     table.getItems().add(0, line);
-                    line.getCellAsStringProperty(0, MainForm.INSTANCE).set(new Cell("Force Tags", "    ", line));
-                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("", "    ", line));
+                    String postTrivia = "    ";
+                    line.getCellAsStringProperty(0, MainForm.INSTANCE).set(new Cell("Force Tags", postTrivia, line));
+                    line.getCellAsStringProperty(1, MainForm.INSTANCE).set(new Cell("", postTrivia, line));
+                    List<UndoableOperation> operations = new LinkedList<>();
+                    operations.add(new AddRowOperation(table.getItems(), 0, forElement));
+                    operations.add(new ChangeTextOperation(table.getItems(), "", "Force Tags", postTrivia, 0, 0));
+                    forElement.getUndoStack().iJustDid(new MassOperation(operations));
                 }
                 table.getSelectionModel().clearAndSelect(line.lineNumber.intValue(), table.getVisibleLeafColumn(2));
                 table.requestFocus();

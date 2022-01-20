@@ -1,5 +1,7 @@
 package cz.hudecekpetr.snowride.undo;
 
+import cz.hudecekpetr.snowride.Extensions;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -30,11 +32,14 @@ public class UndoStack {
     private void updatePossibilities() {
         canUndo.set(iAmBeforeOperation > 0);
         canRedo.set(iAmBeforeOperation < theStack.size());
-        System.out.println(toString() + ": " + getTheStack());
     }
 
     private BooleanProperty canUndo = new SimpleBooleanProperty();
     private BooleanProperty canRedo = new SimpleBooleanProperty();
+
+    public boolean isEmpty() {
+        return theStack.isEmpty();
+    }
 
     public void clear() {
         theStack.clear();
@@ -46,6 +51,11 @@ public class UndoStack {
      * Call this just after you make a change to the high element to allow the user to undo that action.
      */
     public void iJustDid(UndoableOperation operation) {
+        if (operation instanceof ChangeTextOperation) {
+            if (((ChangeTextOperation) operation).ignore()) {
+                return;
+            }
+        }
         // Remove elements until you remove everything over our position
         while (iAmBeforeOperation < theStack.size()) {
             theStack.remove(theStack.size() - 1);
@@ -57,20 +67,27 @@ public class UndoStack {
 
     public void undoIfAble() {
         if (canUndo.getValue()) {
+            Extensions.undoRedoInProgress = true;
             iAmBeforeOperation--;
             updatePossibilities();
             UndoableOperation toUndo = theStack.get(iAmBeforeOperation);
             toUndo.undo();
+            Extensions.undoRedoInProgress = false;
         }
     }
 
     public void redoIfAble() {
         if (canRedo.getValue()) {
+            Extensions.undoRedoInProgress = true;
             UndoableOperation toRedo = theStack.get(iAmBeforeOperation);
             iAmBeforeOperation++;
             updatePossibilities();
             toRedo.redo();
+            Extensions.undoRedoInProgress = false;
         }
+    }
 
+    public void updateHighElement(HighElement belongsToHighElement) {
+        theStack.forEach(o -> o.updateHighElement(belongsToHighElement));
     }
 }

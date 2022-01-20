@@ -33,7 +33,7 @@ public class FindUsages {
                 Suite suite = ((Suite) he);
                 suite.reparseAndRecalculateResources();
                 if (suite.fileParsed != null) {
-                    ObservableList<LogicalLine> pairs = suite.fileParsed.findOrCreateSettingsSection().pairs;
+                    ObservableList<LogicalLine> pairs = suite.fileParsed.findOrCreateSettingsSection().getPairs();
                     for (LogicalLine line : pairs) {
                         findUsagesInLine(needleAsKeyword, needleAsScenario, usages, he, line);
                     }

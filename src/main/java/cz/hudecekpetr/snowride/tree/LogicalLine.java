@@ -4,6 +4,7 @@ import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.errors.ErrorKind;
 import cz.hudecekpetr.snowride.errors.SnowrideError;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
+import javafx.collections.ObservableList;
 import org.robotframework.jaxb.BodyItemStatusValue;
 import org.robotframework.jaxb.For;
 import org.robotframework.jaxb.ForIteration;
@@ -56,6 +57,15 @@ public class LogicalLine {
     public List<String> keywordArguments;
     public List<ForIteration> forIterations;
     public For forLoop;
+
+    public static LogicalLine createEmptyLine(SnowTableKind snowTableKind, HighElement highElement, ObservableList<LogicalLine> list) {
+        LogicalLine newLine = new LogicalLine();
+        newLine.setBelongsToHighElement(highElement);
+        newLine.lineNumber = new PositionInListProperty<>(newLine, list);
+        newLine.belongsWhere = snowTableKind;
+        newLine.recalcStyles();
+        return newLine;
+    }
 
     public static LogicalLine fromEmptyLine(String text) {
         LogicalLine line = new LogicalLine();
@@ -208,7 +218,7 @@ public class LogicalLine {
             }
 
             cellSemantics.argumentStatus = Cell.ArgumentStatus.UNKNOWN;
-            if (cell.contents.equals("IF") ||cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
+            if (cell.contents.equals("IF") || cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
                 ignoreEverythingFromNowOn = true;
             }
             if (currentKeyword != null && !ignoreEverythingFromNowOn) {

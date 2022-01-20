@@ -4,6 +4,8 @@ import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
+import cz.hudecekpetr.snowride.ui.grid.YellowHighlight;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -90,7 +92,7 @@ public class TextEditTab {
             mainForm.changeOccurredTo(reformattingWhat, LastChangeKind.TEXT_CHANGED);
 
         }
-        loadElement(reformattingWhat);
+        loadElement(lastLoaded);
     }
 
     public void loadElement(HighElement value) {
@@ -117,6 +119,7 @@ public class TextEditTab {
     }
 
     public void selTabChanged(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+        YellowHighlight.lastPositionSelectText = "";
         if (oldValue == tabTextEdit) {
             lastLoaded.applyText();
             for (HighElement child : lastLoaded.children) {
@@ -146,6 +149,13 @@ public class TextEditTab {
             }
         }
 
+        // Switched to 'Grid edit' - request focus of corresponding SnowTable
+        if (newValue == mainForm.gridTab.getTabGrid()) {
+            Platform.runLater(() -> {
+                mainForm.gridTab.requestFocus();
+            });
+        }
+
         manuallySelected = false;
     }
 
@@ -153,8 +163,9 @@ public class TextEditTab {
         VirtualizedScrollPane<SnowCodeArea> scrollPane;
         if (suite != null) {
             scrollPane = codeAreaProvider.getTextEditCodeArea(suite);
-            if (!disableMovingCaret && suite.children.contains(lastLoadedScenario)) {
-                scrollPane.getContent().moveCaretToCurrentlyEditedScenario(lastLoadedScenario);
+            String shortName = lastLoadedScenario != null ? lastLoadedScenario.getShortName() : "";
+            if (!disableMovingCaret && suite.children.stream().anyMatch(e -> e.getShortName().equals(shortName))) {
+                scrollPane.getContent().moveCaretToCurrentlyEditedScenario(shortName);
             } else {
                 scrollPane.getContent().moveCaretToCurrentlyEditedScenario(null);
             }

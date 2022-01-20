@@ -15,6 +15,7 @@ import java.util.function.Function;
 
 public class Extensions {
     private static ConcurrentHashMap<String, String> invariantNames = new ConcurrentHashMap<>();
+    public static boolean undoRedoInProgress = false;
 
     public static String toStringWithTrace(Exception exc) {
         return ExceptionUtils.getMessage(exc) + "\n" + ExceptionUtils.getStackTrace(exc);
@@ -95,18 +96,20 @@ public class Extensions {
     }
 
     public static void optimizeLines(ObservableList<LogicalLine> lines, UndoStack undoStack) {
+        if (undoRedoInProgress) {
+            return;
+        }
         Map<Integer, LogicalLine> indexes = new TreeMap<>();
         int lineIndex = lines.size() - 1;
-        boolean permitOne = true;
+        boolean firstNonVirtualFound = false;
         while (lineIndex >= 0) {
             LogicalLine line = lines.get(lineIndex);
             if (line.isFullyVirtual()) {
-                if (!permitOne) {
+                if (firstNonVirtualFound) {
                     indexes.put(lineIndex, lines.get(lineIndex));
                 }
-                permitOne = false;
             } else {
-                permitOne = false;
+                firstNonVirtualFound = true;
             }
             lineIndex--;
         }

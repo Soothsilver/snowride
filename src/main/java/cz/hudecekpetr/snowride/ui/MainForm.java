@@ -360,16 +360,20 @@ public class MainForm {
             }
         });
         projectTree.getFocusModel().focusedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (oldValue != null) {
-                oldValue.getValue().applyText();
-            }
-            if (newValue != null) {
-                if (humanInControl) {
-                    navigationStack.standardEnter(newValue.getValue());
-                    textEditTab.manuallySelected = true;
+            // FIXME: workaround to ensure 'cancelEdit' is called on Cell in Grid editor when focus is lost
+            boolean humanInControl = this.humanInControl;
+            Platform.runLater(() -> {
+                if (oldValue != null) {
+                    oldValue.getValue().applyText();
                 }
-                reloadElementIntoTabs(newValue.getValue());
-            }
+                if (newValue != null) {
+                    if (humanInControl) {
+                        navigationStack.standardEnter(newValue.getValue());
+                        textEditTab.manuallySelected = true;
+                    }
+                    reloadElementIntoTabs(newValue.getValue());
+                }
+            });
         });
         treeContextMenu = new ContextMenu();
         treeContextMenu.getItems().add(new MenuItem("A"));
