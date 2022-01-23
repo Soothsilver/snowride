@@ -1,12 +1,10 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
-import com.sun.javafx.scene.control.skin.PrecursorTableViewSkin;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
 import cz.hudecekpetr.snowride.fx.bindings.IntToCellBinding;
-import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.output.OutputMatcher;
 import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
@@ -16,6 +14,7 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
+import cz.hudecekpetr.snowride.ui.SnowTableArrowSelectionHelper;
 import cz.hudecekpetr.snowride.undo.AddRowOperation;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
 import cz.hudecekpetr.snowride.undo.MassOperation;
@@ -38,6 +37,8 @@ public class SnowTableView extends TableView<LogicalLine> {
     public HighElement scenario;
     private final MainForm mainForm;
 
+    private final SnowTableArrowSelectionHelper arrowSelectionHelper = new SnowTableArrowSelectionHelper();
+
     public SnowTableView(MainForm mainForm, SnowTableKind snowTableKind) {
         super();
         this.mainForm = mainForm;
@@ -55,6 +56,9 @@ public class SnowTableView extends TableView<LogicalLine> {
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
         rowColumn.setStyle("-fx-alignment: center;");
+        this.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            arrowSelectionHelper.selectionModelChange(getSelectionModel());
+        });
         this.getSelectionModel().getSelectedCells().addListener(this::cellSelectionChanged);
         this.getColumns().add(rowColumn);
         ContextMenu cmenu = new ContextMenu(new MenuItem("Something"));
@@ -191,11 +195,6 @@ public class SnowTableView extends TableView<LogicalLine> {
         }
     }
 
-    @Override
-    protected Skin<?> createDefaultSkin() {
-        return new PrecursorTableViewSkin<>(this);
-    }
-
     private void onMouseClicked(MouseEvent mouseEvent) {
         MainForm.documentationPopup.hide();
         if (lastPositionSelected != null && lastPositionSelected.getColumn() == 0) {
@@ -251,8 +250,9 @@ public class SnowTableView extends TableView<LogicalLine> {
 
     private void onKeyPressed(KeyEvent keyEvent) {
         MainForm.documentationPopup.hide();
-        if (keyEvent.getCode() == KeyCode.DIGIT3) {
-            int a = 5;
+        arrowSelectionHelper.onKeyPressed(keyEvent, getSelectionModel());
+        if (keyEvent.isConsumed()) {
+            return;
         }
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isShiftDown() && keyEvent.isShortcutDown()) {
             insertSelectedCells();
