@@ -221,6 +221,16 @@ public class LogicalLine {
             if (cell.contents.equals("IF") || cell.contents.equals("ELSE") || cell.contents.equals("ELSE IF")) {
                 ignoreEverythingFromNowOn = true;
             }
+
+            // basic loop support - recognize variables defined in for loops
+            if (cell.contents.equals("FOR") || cell.contents.equals(":FOR") || cell.contents.equals(": FOR")) {
+                String nextCellContents = cells.get(i + 1).contents;
+                if (isVariable(nextCellContents)) {
+                    getBelongsToHighElement().variables.add(getVariableName(nextCellContents));
+                }
+                ignoreEverythingFromNowOn = true;
+            }
+
             if (currentKeyword != null && !ignoreEverythingFromNowOn) {
                 int maxMandatory = currentKeyword.getNumberOfMandatoryArguments();
                 int maxOptional = currentKeyword.getNumberOfOptionalArguments() + maxMandatory;
