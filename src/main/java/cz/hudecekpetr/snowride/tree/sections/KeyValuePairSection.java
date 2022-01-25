@@ -52,7 +52,7 @@ public class KeyValuePairSection extends RobotSection {
 
     @Override
     public void reformat() {
-        optimizeStructure(null);
+        optimizeStructure(pairs.stream().map(logicalLine -> logicalLine.getBelongsToHighElement().getUndoStack()).findFirst().orElse( null));
         for (LogicalLine pair : pairs) {
             pair.reformat(header.sectionKind);
         }

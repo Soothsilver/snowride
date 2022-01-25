@@ -67,23 +67,23 @@ public class UndoStack {
 
     public void undoIfAble() {
         if (canUndo.getValue()) {
-            Extensions.undoRedoInProgress = true;
+            Extensions.doNotOptimizeLines = true;
             iAmBeforeOperation--;
             updatePossibilities();
             UndoableOperation toUndo = theStack.get(iAmBeforeOperation);
             toUndo.undo();
-            Extensions.undoRedoInProgress = false;
+            Extensions.doNotOptimizeLines = false;
         }
     }
 
     public void redoIfAble() {
         if (canRedo.getValue()) {
-            Extensions.undoRedoInProgress = true;
+            Extensions.doNotOptimizeLines = true;
             UndoableOperation toRedo = theStack.get(iAmBeforeOperation);
             iAmBeforeOperation++;
             updatePossibilities();
             toRedo.redo();
-            Extensions.undoRedoInProgress = false;
+            Extensions.doNotOptimizeLines = false;
         }
     }
 

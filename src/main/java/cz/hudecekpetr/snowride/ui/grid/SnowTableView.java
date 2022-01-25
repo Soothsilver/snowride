@@ -282,15 +282,20 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.triggerAutocompletionNext = false;
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) {
-            List<ChangeTextOperation> coordinates = new ArrayList<>();
-            for (TablePosition tablePosition : this.getSelectionModel().getSelectedCells()) {
-                SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
-                coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", cell.getValue().postTrivia, tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
-                cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
-                YellowHighlight.lastPositionSelectText = "";
-            }
-            if (coordinates.size() > 0) {
+            if (this.getSelectionModel().getSelectedCells().stream().anyMatch(tablePosition -> StringUtils.isNotBlank(tablePositionToCell(tablePosition).getValue().contents))) {
+                List<ChangeTextOperation> coordinates = new ArrayList<>();
+                // Prevent issues with removing empty lines - caused by 'applying changes' on Suite
+                Extensions.doNotOptimizeLines = true;
+                for (TablePosition tablePosition : this.getSelectionModel().getSelectedCells()) {
+                    SimpleObjectProperty<Cell> cell = tablePositionToCell(tablePosition);
+                    if (StringUtils.isNotBlank(cell.getValue().contents)) {
+                        coordinates.add(new ChangeTextOperation(getItems(), cell.getValue().contents, "", cell.getValue().postTrivia, tablePosition.getRow(), tableXToLogicalX(tablePosition.getColumn())));
+                        cell.set(new Cell("", cell.getValue().postTrivia, cell.getValue().partOfLine));
+                    }
+                    YellowHighlight.lastPositionSelectText = "";
+                }
                 getScenario().getUndoStack().iJustDid(new MassOperation(coordinates));
+                Extensions.doNotOptimizeLines = false;
             }
             keyEvent.consume();
         } else if (keyEvent.getCode() == KeyCode.C && keyEvent.isShortcutDown()) {
