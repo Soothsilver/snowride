@@ -331,8 +331,14 @@ public abstract class Suite extends HighElement implements ISuite {
                 HighElement newElement = suite.children.get(i);
                 if (newElement instanceof Suite) {
                     Suite newSuite = (Suite) newElement;
-                    TreeItem<HighElement> oldTreeNode = treeNode.getChildren().get(i);
-                    addOrUpdateTreeNodes(newSuite, oldTreeNode, true);
+                    Optional<TreeItem<HighElement>> previousTreeNode = treeNode.getChildren().stream()
+                            .filter(item -> item.getValue().getInvariantName().equals(newElement.getInvariantName()))
+                            .findFirst();
+                    if (previousTreeNode.isPresent()) {
+                        addOrUpdateTreeNodes(newSuite, previousTreeNode.get(), true);
+                    } else {
+                        treeNode.getChildren().add(newElement.treeNode);
+                    }
                 } else {
                     System.out.println("HOW???");
                 }
