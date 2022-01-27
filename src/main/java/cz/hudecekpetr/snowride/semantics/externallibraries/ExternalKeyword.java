@@ -33,7 +33,7 @@ public class ExternalKeyword implements IKnownKeyword {
         this.numberOfMandatoryArguments = (int) (parameters.stream().filter(p -> p.kind == ParameterKind.STANDARD)).count();
         this.numberOfOptionalArguments = (int) ((parameters.stream().filter(p -> p.kind == ParameterKind.NAMED)).count() + (parameters.stream().filter(p -> p.kind == ParameterKind.VARARGS)).count() * VARARGS_MEANS_INFINITE);
         if (parameters.size() > 0) {
-            this.documentation = "*Args:* " + parameters.stream().map(p -> p.text).collect(Collectors.joining(", ")) + "\n" + documentation;
+            this.documentation = "*Arguments:* \n" + parameters.stream().map(p -> p.text.trim().replaceAll("\n", " = ")).collect(Collectors.joining("\n")) + "\n\n*Documentation:*\n" + documentation;
         }
         this.library = library;
         this.indexOfNextKeyword = determineIndexOfNextKeyword();

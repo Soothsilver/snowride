@@ -68,7 +68,7 @@ public class ExternalLibrary {
             }
             // TODO performance and bullet point replacement
             doc = doc.replace(" +", " ").replaceAll("\n +\n", "\n\n").replace("\n\n", "[[DOUBLENEWLINE]]")
-                    .replaceAll("\n +-", "[[BULLET]]") .replace("\n", " ").replaceAll(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n").replace("[[BULLET]]", "\n- ");
+                    .replaceAll("\n +-", "[[BULLET]]").replaceAll(" +", " ").replace("[[DOUBLENEWLINE]]", "\n\n").replace("[[BULLET]]", "\n- ");
             List<Parameter> parameters = new ArrayList<>();
             NodeList args = kw.getElementsByTagName("arguments");
             if (args.getLength() == 1) {
