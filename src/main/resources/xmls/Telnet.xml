@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec generated="20190331 08:42:19" type="library" name="Telnet" format="ROBOT">
-<version>3.1.1</version>
-<scope>test suite</scope>
-<namedargs>yes</namedargs>
+<keywordspec name="Telnet" type="LIBRARY" format="ROBOT" scope="SUITE" generated="2022-01-27T09:08:02Z" specversion="3" source="../../../../../home/martin/.local/lib/python3.8/site-packages/robot/libraries/Telnet.py" lineno="36">
+<version>4.1.3</version>
 <doc>A test library providing communication over Telnet connections.
 
 ``Telnet`` is Robot Framework's standard library that makes it possible to
@@ -18,7 +16,6 @@ connect to Telnet servers and execute commands on the opened connections.
 - `Time string format`
 - `Boolean arguments`
 - `Importing`
-- `Shortcuts`
 - `Keywords`
 
 = Connections =
@@ -83,8 +80,6 @@ output. It is used internally by `Read Until`, `Read Until Regexp`,
 Connection Timeout defines how long is the maximum time to wait when
 opening the telnet connection. It is used internally by `Open Connection`.
 The default value is the system global default timeout.
-
-New in Robot Framework 2.9.2.
 
 == Newline ==
 
@@ -254,21 +249,63 @@ False examples:
 
 Considering string ``NONE`` false is new in Robot Framework 3.0.3 and
 considering also ``OFF`` and ``0`` false is new in Robot Framework 3.1.</doc>
-<init>
-<arguments>
-<arg>timeout=3 seconds</arg>
-<arg>newline=CRLF</arg>
-<arg>prompt=None</arg>
-<arg>prompt_is_regexp=False</arg>
-<arg>encoding=UTF-8</arg>
-<arg>encoding_errors=ignore</arg>
-<arg>default_log_level=INFO</arg>
-<arg>window_size=None</arg>
-<arg>environ_user=None</arg>
-<arg>terminal_emulation=False</arg>
-<arg>terminal_type=None</arg>
-<arg>telnetlib_log_level=TRACE</arg>
-<arg>connection_timeout=None</arg>
+<tags>
+</tags>
+<inits>
+<init name="Init" lineno="281">
+<arguments repr="timeout=3 seconds, newline=CRLF, prompt=None, prompt_is_regexp=False, encoding=UTF-8, encoding_errors=ignore, default_log_level=INFO, window_size=None, environ_user=None, terminal_emulation=False, terminal_type=None, telnetlib_log_level=TRACE, connection_timeout=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="timeout=3 seconds">
+<name>timeout</name>
+<default>3 seconds</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="newline=CRLF">
+<name>newline</name>
+<default>CRLF</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prompt=None">
+<name>prompt</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prompt_is_regexp=False">
+<name>prompt_is_regexp</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="encoding=UTF-8">
+<name>encoding</name>
+<default>UTF-8</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="encoding_errors=ignore">
+<name>encoding_errors</name>
+<default>ignore</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_log_level=INFO">
+<name>default_log_level</name>
+<default>INFO</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="window_size=None">
+<name>window_size</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="environ_user=None">
+<name>environ_user</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="terminal_emulation=False">
+<name>terminal_emulation</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="terminal_type=None">
+<name>terminal_type</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="telnetlib_log_level=TRACE">
+<name>telnetlib_log_level</name>
+<default>TRACE</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="connection_timeout=None">
+<name>connection_timeout</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Telnet library can be imported with optional configuration parameters.
 
@@ -292,11 +329,12 @@ Examples (use only one of these):
 | Library     | Telnet    | prompt=(&gt; |# )           | prompt_is_regexp=yes |                     | # set prompt as a regular expression |
 | Library     | Telnet    | terminal_emulation=True  | terminal_type=vt100  | window_size=400x100 | # use terminal emulation with defined window size and terminal type |
 | Library     | Telnet    | telnetlib_log_level=NONE |                      |                     | # disable logging messages from the underlying telnetlib |</doc>
-<tags>
-</tags>
+<shortdoc>Telnet library can be imported with optional configuration parameters.</shortdoc>
 </init>
-<kw name="Close All Connections">
-<arguments>
+</inits>
+<keywords>
+<kw name="Close All Connections" lineno="470">
+<arguments repr="">
 </arguments>
 <doc>Closes all open connections and empties the connection cache.
 
@@ -307,12 +345,14 @@ by `Close Connection`.
 
 After this keyword, new indexes returned by `Open Connection`
 keyword are reset to 1.</doc>
-<tags>
-</tags>
+<shortdoc>Closes all open connections and empties the connection cache.</shortdoc>
 </kw>
-<kw name="Close Connection">
-<arguments>
-<arg>loglevel=None</arg>
+<kw name="Close Connection" lineno="687">
+<arguments repr="loglevel=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Closes the current Telnet connection.
 
@@ -323,14 +363,21 @@ Use `Close All Connections` if you want to make sure all opened
 connections are closed.
 
 See `Logging` section for more information about log levels.</doc>
-<tags>
-</tags>
+<shortdoc>Closes the current Telnet connection.</shortdoc>
 </kw>
-<kw name="Execute Command">
-<arguments>
-<arg>command</arg>
-<arg>loglevel=None</arg>
-<arg>strip_prompt=False</arg>
+<kw name="Execute Command" lineno="1056">
+<arguments repr="command, loglevel=None, strip_prompt=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="command">
+<name>command</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_prompt=False">
+<name>strip_prompt</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Executes the given ``command`` and reads, logs, and returns everything until the prompt.
 
@@ -347,17 +394,32 @@ internally. Following two examples are thus functionally identical:
 
 See `Logging` section for more information about log levels and `Read
 Until Prompt` for more information about the ``strip_prompt`` parameter.</doc>
-<tags>
-</tags>
+<shortdoc>Executes the given ``command`` and reads, logs, and returns everything until the prompt.</shortdoc>
 </kw>
-<kw name="Login">
-<arguments>
-<arg>username</arg>
-<arg>password</arg>
-<arg>login_prompt=login: </arg>
-<arg>password_prompt=Password: </arg>
-<arg>login_timeout=1 second</arg>
-<arg>login_incorrect=Login incorrect</arg>
+<kw name="Login" lineno="705">
+<arguments repr="username, password, login_prompt=login: \, password_prompt=Password: \, login_timeout=1 second, login_incorrect=Login incorrect">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="username">
+<name>username</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="password">
+<name>password</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="login_prompt=login: \">
+<name>login_prompt</name>
+<default>login: \</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="password_prompt=Password: \">
+<name>password_prompt</name>
+<default>Password: \</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="login_timeout=1 second">
+<name>login_timeout</name>
+<default>1 second</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="login_incorrect=Login incorrect">
+<name>login_incorrect</name>
+<default>Login incorrect</default>
+</arg>
 </arguments>
 <doc>Logs in to the Telnet server with the given user information.
 
@@ -382,27 +444,73 @@ and also this keyword fails.
 
 See `Configuration` section for more information about setting
 newline, timeout, and prompt.</doc>
-<tags>
-</tags>
+<shortdoc>Logs in to the Telnet server with the given user information.</shortdoc>
 </kw>
-<kw name="Open Connection">
-<arguments>
-<arg>host</arg>
-<arg>alias=None</arg>
-<arg>port=23</arg>
-<arg>timeout=None</arg>
-<arg>newline=None</arg>
-<arg>prompt=None</arg>
-<arg>prompt_is_regexp=False</arg>
-<arg>encoding=None</arg>
-<arg>encoding_errors=None</arg>
-<arg>default_log_level=None</arg>
-<arg>window_size=None</arg>
-<arg>environ_user=None</arg>
-<arg>terminal_emulation=None</arg>
-<arg>terminal_type=None</arg>
-<arg>telnetlib_log_level=None</arg>
-<arg>connection_timeout=None</arg>
+<kw name="Open Connection" lineno="362">
+<arguments repr="host, alias=None, port=23, timeout=None, newline=None, prompt=None, prompt_is_regexp=False, encoding=None, encoding_errors=None, default_log_level=None, window_size=None, environ_user=None, terminal_emulation=None, terminal_type=None, telnetlib_log_level=None, connection_timeout=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="host">
+<name>host</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="alias=None">
+<name>alias</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="port=23">
+<name>port</name>
+<default>23</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="timeout=None">
+<name>timeout</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="newline=None">
+<name>newline</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prompt=None">
+<name>prompt</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prompt_is_regexp=False">
+<name>prompt_is_regexp</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="encoding=None">
+<name>encoding</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="encoding_errors=None">
+<name>encoding_errors</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_log_level=None">
+<name>default_log_level</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="window_size=None">
+<name>window_size</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="environ_user=None">
+<name>environ_user</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="terminal_emulation=None">
+<name>terminal_emulation</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="terminal_type=None">
+<name>terminal_type</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="telnetlib_log_level=None">
+<name>telnetlib_log_level</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="connection_timeout=None">
+<name>connection_timeout</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Opens a new Telnet connection to the given host and port.
 
@@ -419,24 +527,30 @@ switch back to them using `Switch Connection` keyword. It is possible to
 switch either using explicitly given ``alias`` or using index returned
 by this keyword. Indexing starts from 1 and is reset back to it by
 `Close All Connections` keyword.</doc>
-<tags>
-</tags>
+<shortdoc>Opens a new Telnet connection to the given host and port.</shortdoc>
 </kw>
-<kw name="Read">
-<arguments>
-<arg>loglevel=None</arg>
+<kw name="Read" lineno="875">
+<arguments repr="loglevel=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Reads everything that is currently available in the output.
 
 Read output is both returned and logged. See `Logging` section for more
 information about log levels.</doc>
-<tags>
-</tags>
+<shortdoc>Reads everything that is currently available in the output.</shortdoc>
 </kw>
-<kw name="Read Until">
-<arguments>
-<arg>expected</arg>
-<arg>loglevel=None</arg>
+<kw name="Read Until" lineno="889">
+<arguments repr="expected, loglevel=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="expected">
+<name>expected</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Reads output until ``expected`` text is encountered.
 
@@ -446,13 +560,18 @@ on the [#Configuration|configured timeout].
 
 See `Logging` section for more information about log levels. Use
 `Read Until Regexp` if more complex matching is needed.</doc>
-<tags>
-</tags>
+<shortdoc>Reads output until ``expected`` text is encountered.</shortdoc>
 </kw>
-<kw name="Read Until Prompt">
-<arguments>
-<arg>loglevel=None</arg>
-<arg>strip_prompt=False</arg>
+<kw name="Read Until Prompt" lineno="1011">
+<arguments repr="loglevel=None, strip_prompt=False">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_prompt=False">
+<name>strip_prompt</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Reads output until the prompt is encountered.
 
@@ -470,12 +589,13 @@ whole prompt, because only the part of the output that matches the
 regular expression is stripped away.
 
 See `Logging` section for more information about log levels.</doc>
-<tags>
-</tags>
+<shortdoc>Reads output until the prompt is encountered.</shortdoc>
 </kw>
-<kw name="Read Until Regexp">
-<arguments>
-<arg>*expected</arg>
+<kw name="Read Until Regexp" lineno="973">
+<arguments repr="*expected">
+<arg kind="VAR_POSITIONAL" required="false" repr="*expected">
+<name>expected</name>
+</arg>
 </arguments>
 <doc>Reads output until any of the ``expected`` regular expressions match.
 
@@ -498,12 +618,13 @@ Examples:
 | `Read Until Regexp` | (#|$) |
 | `Read Until Regexp` | first_regexp | second_regexp |
 | `Read Until Regexp` | \\d{4}-\\d{2}-\\d{2} | DEBUG |</doc>
-<tags>
-</tags>
+<shortdoc>Reads output until any of the ``expected`` regular expressions match.</shortdoc>
 </kw>
-<kw name="Set Default Log Level">
-<arguments>
-<arg>level</arg>
+<kw name="Set Default Log Level" lineno="661">
+<arguments repr="level">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="level">
+<name>level</name>
+</arg>
 </arguments>
 <doc>Sets the default log level used for `logging` in the current connection.
 
@@ -512,13 +633,18 @@ log level later.
 
 See `Configuration` section for more information about global and
 connection specific configuration.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the default log level used for `logging` in the current connection.</shortdoc>
 </kw>
-<kw name="Set Encoding">
-<arguments>
-<arg>encoding=None</arg>
-<arg>errors=None</arg>
+<kw name="Set Encoding" lineno="602">
+<arguments repr="encoding=None, errors=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="encoding=None">
+<name>encoding</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="errors=None">
+<name>errors</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Sets the encoding to use for `writing and reading` in the current connection.
 
@@ -537,12 +663,13 @@ and the error handler later. See `Set Prompt` for a similar example.
 
 If terminal emulation is used, the encoding can not be changed on an open
 connection.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the encoding to use for `writing and reading` in the current connection.</shortdoc>
 </kw>
-<kw name="Set Newline">
-<arguments>
-<arg>newline</arg>
+<kw name="Set Newline" lineno="540">
+<arguments repr="newline">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="newline">
+<name>newline</name>
+</arg>
 </arguments>
 <doc>Sets the newline used by `Write` keyword in the current connection.
 
@@ -554,13 +681,17 @@ connection.
 
 See `Configuration` section for more information about global and
 connection specific configuration.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the newline used by `Write` keyword in the current connection.</shortdoc>
 </kw>
-<kw name="Set Prompt">
-<arguments>
-<arg>prompt</arg>
-<arg>prompt_is_regexp=False</arg>
+<kw name="Set Prompt" lineno="563">
+<arguments repr="prompt, prompt_is_regexp=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="prompt">
+<name>prompt</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prompt_is_regexp=False">
+<name>prompt_is_regexp</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Sets the prompt used by `Read Until Prompt` and `Login` in the current connection.
 
@@ -582,23 +713,25 @@ test data.
 
 See `Configuration` section for more information about global and
 connection specific configuration.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the prompt used by `Read Until Prompt` and `Login` in the current connection.</shortdoc>
 </kw>
-<kw name="Set Telnetlib Log Level">
-<arguments>
-<arg>level</arg>
+<kw name="Set Telnetlib Log Level" lineno="643">
+<arguments repr="level">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="level">
+<name>level</name>
+</arg>
 </arguments>
 <doc>Sets the log level used for `logging` in the underlying ``telnetlib``.
 
 Note that ``telnetlib`` can be very noisy thus using the level ``NONE``
 can shutdown the messages generated by this library.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the log level used for `logging` in the underlying ``telnetlib``.</shortdoc>
 </kw>
-<kw name="Set Timeout">
-<arguments>
-<arg>timeout</arg>
+<kw name="Set Timeout" lineno="514">
+<arguments repr="timeout">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="timeout">
+<name>timeout</name>
+</arg>
 </arguments>
 <doc>Sets the timeout used for waiting output in the current connection.
 
@@ -616,12 +749,13 @@ Example:
 
 See `Configuration` section for more information about global and
 connection specific configuration.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the timeout used for waiting output in the current connection.</shortdoc>
 </kw>
-<kw name="Switch Connection">
-<arguments>
-<arg>index_or_alias</arg>
+<kw name="Switch Connection" lineno="434">
+<arguments repr="index_or_alias">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="index_or_alias">
+<name>index_or_alias</name>
+</arg>
 </arguments>
 <doc>Switches between active connections using an index or an alias.
 
@@ -653,13 +787,17 @@ shown below.
 | ${index} =          | `Open Connection` | myhost.net |
 | `Do Something`      |                   |            |
 | `Switch Connection` | ${index}          |            |</doc>
-<tags>
-</tags>
+<shortdoc>Switches between active connections using an index or an alias.</shortdoc>
 </kw>
-<kw name="Write">
-<arguments>
-<arg>text</arg>
-<arg>loglevel=None</arg>
+<kw name="Write" lineno="760">
+<arguments repr="text, loglevel=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="text">
+<name>text</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Writes the given text plus a newline into the connection.
 
@@ -676,23 +814,25 @@ command. To get the output, one of the `Read ...` `keywords` must be
 used. See `Writing and reading` section for more details.
 
 See `Logging` section for more information about log levels.</doc>
-<tags>
-</tags>
+<shortdoc>Writes the given text plus a newline into the connection.</shortdoc>
 </kw>
-<kw name="Write Bare">
-<arguments>
-<arg>text</arg>
+<kw name="Write Bare" lineno="790">
+<arguments repr="text">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="text">
+<name>text</name>
+</arg>
 </arguments>
 <doc>Writes the given text, and nothing else, into the connection.
 
 This keyword does not append a newline nor consume the written text.
 Use `Write` if these features are needed.</doc>
-<tags>
-</tags>
+<shortdoc>Writes the given text, and nothing else, into the connection.</shortdoc>
 </kw>
-<kw name="Write Control Character">
-<arguments>
-<arg>character</arg>
+<kw name="Write Control Character" lineno="836">
+<arguments repr="character">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="character">
+<name>character</name>
+</arg>
 </arguments>
 <doc>Writes the given control character into the connection.
 
@@ -706,16 +846,26 @@ control character.
 Example:
 | Write Control Character | BRK | # Send Break command |
 | Write Control Character | 241 | # Send No operation command |</doc>
-<tags>
-</tags>
+<shortdoc>Writes the given control character into the connection.</shortdoc>
 </kw>
-<kw name="Write Until Expected Output">
-<arguments>
-<arg>text</arg>
-<arg>expected</arg>
-<arg>timeout</arg>
-<arg>retry_interval</arg>
-<arg>loglevel=None</arg>
+<kw name="Write Until Expected Output" lineno="799">
+<arguments repr="text, expected, timeout, retry_interval, loglevel=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="text">
+<name>text</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="expected">
+<name>expected</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="timeout">
+<name>timeout</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="retry_interval">
+<name>retry_interval</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="loglevel=None">
+<name>loglevel</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Writes the given ``text`` repeatedly, until ``expected`` appears in the output.
 
@@ -738,7 +888,9 @@ The above example writes command ``ps -ef | grep myprocess\r\n`` until
 ``myprocess`` appears in the output. The command is written every 0.5
 seconds and the keyword fails if ``myprocess`` does not appear in
 the output in 5 seconds.</doc>
-<tags>
-</tags>
+<shortdoc>Writes the given ``text`` repeatedly, until ``expected`` appears in the output.</shortdoc>
 </kw>
+</keywords>
+<datatypes>
+</datatypes>
 </keywordspec>

@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec generated="20190331 08:42:08" type="library" name="Screenshot" format="ROBOT">
-<version>3.1.1</version>
-<scope>test suite</scope>
-<namedargs>yes</namedargs>
+<keywordspec name="Screenshot" type="LIBRARY" format="ROBOT" scope="SUITE" generated="2022-01-27T09:08:02Z" specversion="3" source="../../../../../home/martin/.local/lib/python3.8/site-packages/robot/libraries/Screenshot.py" lineno="51">
+<version>4.1.3</version>
 <doc>Test library for taking screenshots on the machine where tests are run.
 
 Notice that successfully taking screenshots requires tests to be run with
 a physical or virtual display.
+
+== Table of contents ==
+
+- `Using with Python`
+- `Using with Jython and IronPython`
+- `Where screenshots are saved`
+- `ScreenCapLibrary`
+- `Importing`
+- `Keywords`
 
 = Using with Python =
 
@@ -26,10 +33,6 @@ one found will be used.
 - Scrot :: http://en.wikipedia.org/wiki/Scrot :: Not used on Windows.
   Install with ``apt-get install scrot`` or similar.
 
-Using ``screencapture`` on OSX and specifying explicit screenshot module
-are new in Robot Framework 2.9.2. The support for using ``scrot`` is new
-in Robot Framework 3.0.
-
 = Using with Jython and IronPython =
 
 With Jython and IronPython this library uses APIs provided by JVM and .NET
@@ -45,11 +48,27 @@ into the directory where the XML output file is written.
 It is possible to specify a custom location for screenshots using
 ``screenshot_directory`` argument when `importing` the library and
 using `Set Screenshot Directory` keyword during execution. It is also
-possible to save screenshots using an absolute path.</doc>
-<init>
-<arguments>
-<arg>screenshot_directory=None</arg>
-<arg>screenshot_module=None</arg>
+possible to save screenshots using an absolute path.
+
+= ScreenCapLibrary =
+
+[https://github.com/mihaiparvu/ScreenCapLibrary|ScreenCapLibrary] is an
+external Robot Framework library that can be used as an alternative,
+which additionally provides support for multiple formats, adjusting the
+quality, using GIFs and video capturing.</doc>
+<tags>
+</tags>
+<inits>
+<init name="Init" lineno="107">
+<arguments repr="screenshot_directory=None, screenshot_module=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="screenshot_directory=None">
+<name>screenshot_directory</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="screenshot_module=None">
+<name>screenshot_module</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Configure where screenshots are saved.
 
@@ -67,15 +86,16 @@ Examples (use only one of these):
 | =Setting= |  =Value=   |  =Value=   |
 | Library   | Screenshot |            |
 | Library   | Screenshot | ${TEMPDIR} |
-| Library   | Screenshot | screenshot_module=PyGTK |
-
-Specifying explicit screenshot module is new in Robot Framework 2.9.2.</doc>
-<tags>
-</tags>
+| Library   | Screenshot | screenshot_module=PyGTK |</doc>
+<shortdoc>Configure where screenshots are saved.</shortdoc>
 </init>
-<kw name="Set Screenshot Directory">
-<arguments>
-<arg>path</arg>
+</inits>
+<keywords>
+<kw name="Set Screenshot Directory" lineno="146">
+<arguments repr="path">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path">
+<name>path</name>
+</arg>
 </arguments>
 <doc>Sets the directory where screenshots are saved.
 
@@ -83,13 +103,18 @@ It is possible to use ``/`` as a path separator in all operating
 systems. Path to the old directory is returned.
 
 The directory can also be set in `importing`.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the directory where screenshots are saved.</shortdoc>
 </kw>
-<kw name="Take Screenshot">
-<arguments>
-<arg>name=screenshot</arg>
-<arg>width=800px</arg>
+<kw name="Take Screenshot" lineno="161">
+<arguments repr="name=screenshot, width=800px">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="name=screenshot">
+<name>name</name>
+<default>screenshot</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="width=800px">
+<name>width</name>
+<default>800px</default>
+</arg>
 </arguments>
 <doc>Takes a screenshot in JPEG format and embeds it into the log file.
 
@@ -114,19 +139,23 @@ Examples: (LOGDIR is determined automatically by the library)
 | Take Screenshot | width=550px      |     | # Specify only width. |
 
 The path where the screenshot is saved is returned.</doc>
-<tags>
-</tags>
+<shortdoc>Takes a screenshot in JPEG format and embeds it into the log file.</shortdoc>
 </kw>
-<kw name="Take Screenshot Without Embedding">
-<arguments>
-<arg>name=screenshot</arg>
+<kw name="Take Screenshot Without Embedding" lineno="190">
+<arguments repr="name=screenshot">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="name=screenshot">
+<name>name</name>
+<default>screenshot</default>
+</arg>
 </arguments>
 <doc>Takes a screenshot and links it from the log file.
 
 This keyword is otherwise identical to `Take Screenshot` but the saved
 screenshot is not embedded into the log file. The screenshot is linked
 so it is nevertheless easily available.</doc>
-<tags>
-</tags>
+<shortdoc>Takes a screenshot and links it from the log file.</shortdoc>
 </kw>
+</keywords>
+<datatypes>
+</datatypes>
 </keywordspec>

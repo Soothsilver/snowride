@@ -1,0 +1,10 @@
+libdoc BuiltIn BuiltIn.xml
+libdoc Collections Collections.xml
+libdoc DateTime DateTime.xml
+libdoc Dialogs Dialogs.xml
+libdoc OperatingSystem OperatingSystem.xml
+libdoc Process Process.xml
+libdoc Screenshot Screenshot.xml
+libdoc String String.xml
+libdoc Telnet Telnet.xml
+libdoc XML XML.xml

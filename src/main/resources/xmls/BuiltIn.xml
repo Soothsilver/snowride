@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec generated="20190331 08:41:34" type="library" name="BuiltIn" format="ROBOT">
-<version>3.1.1</version>
-<scope>global</scope>
-<namedargs>yes</namedargs>
+<keywordspec name="BuiltIn" type="LIBRARY" format="ROBOT" scope="GLOBAL" generated="2022-01-27T09:08:01Z" specversion="3" source="../../../../../home/martin/.local/lib/python3.8/site-packages/robot/libraries/BuiltIn.py" lineno="3563">
+<version>4.1.3</version>
 <doc>An always available standard library with often needed keywords.
 
 ``BuiltIn`` is Robot Framework's standard library that provides a set
@@ -18,8 +16,8 @@ conversions (e.g. `Convert To Integer`) and for various other purposes
 - `Evaluating expressions`
 - `Boolean arguments`
 - `Pattern matching`
-- `Multiline string comparisons`
-- `Shortcuts`
+- `Multiline string comparison`
+- `String representations`
 - `Keywords`
 
 = HTML error messages =
@@ -33,21 +31,39 @@ error message.
 = Evaluating expressions =
 
 Many keywords, such as `Evaluate`, `Run Keyword If` and `Should Be True`,
-accept an expression that is evaluated in Python. These expressions are
-evaluated using Python's
+accept an expression that is evaluated in Python.
+
+== Evaluation namespace ==
+
+Expressions are evaluated using Python's
 [http://docs.python.org/library/functions.html#eval|eval] function so
 that all Python built-ins like ``len()`` and ``int()`` are available.
-`Evaluate` allows configuring the execution namespace with custom modules,
-and other keywords have [http://docs.python.org/library/os.html|os]
-and [http://docs.python.org/library/sys.html|sys] modules available
-automatically.
+In addition to that, all unrecognized variables are considered to be
+modules that are automatically imported. It is possible to use all
+available Python modules, including the standard modules and the installed
+third party modules.
 
 Examples:
-| `Run Keyword If` | os.sep == '/' | Log                  | Not on Windows |
-| ${random int} =  | `Evaluate`    | random.randint(0, 5) | modules=random |
+| `Should Be True`   | len('${result}') &gt; 3 |
+| `Run Keyword If`   | os.sep == '/'        | Non-Windows Keyword  |
+| ${robot version} = | `Evaluate`           | robot.__version__    |
+
+`Evaluate` also allows configuring the execution namespace with a custom
+namespace and with custom modules to be imported. The latter functionality
+is useful in special cases where the automatic module import does not work
+such as when using nested modules like ``rootmod.submod`` or list
+comprehensions. See the documentation of the `Evaluate` keyword for mode
+details.
+
+*NOTE:* Automatic module import is a new feature in Robot Framework 3.2.
+Earlier modules needed to be explicitly taken into use when using the
+`Evaluate` keyword and other keywords only had access to ``sys`` and
+``os`` modules.
+
+== Using variables ==
 
 When a variable is used in the expressing using the normal ``${variable}``
-syntax, its value is replaces before the expression is evaluated. This
+syntax, its value is replaced before the expression is evaluated. This
 means that the value used in the expression will be the string
 representation of the variable value, not the variable value itself.
 This is not a problem with numbers and other objects that have a string
@@ -61,17 +77,16 @@ Examples:
 | `Run Keyword If` | '${status}' == 'PASS'     | Log | Passed                |
 | `Run Keyword If` | 'FAIL' in '''${output}''' | Log | Output contains FAIL  |
 
-Starting from Robot Framework 2.9, variables themselves are automatically
-available in the evaluation namespace. They can be accessed using special
-variable syntax without the curly braces like ``$variable``. These
-variables should never be quoted, and in fact they are not even replaced
-inside strings.
+Actual variables values are also available in the evaluation namespace.
+They can be accessed using special variable syntax without the curly
+braces like ``$variable``. These variables should never be quoted.
 
 Examples:
 | `Should Be True` | $rc &lt; 10          | Return code greater than 10  |
 | `Run Keyword If` | $status == 'PASS' | `Log` | Passed               |
 | `Run Keyword If` | 'FAIL' in $output | `Log` | Output contains FAIL |
 | `Should Be True` | len($result) &gt; 1 and $result[1] == 'OK' |
+| `Should Be True` | $result is not None                     |
 
 Using the ``$variable`` syntax slows down expression evaluation a little.
 This should not typically matter, but should be taken into account if
@@ -89,8 +104,9 @@ false. If such an argument is given as a string, it is considered false if
 it is an empty string or equal to ``FALSE``, ``NONE``, ``NO``, ``OFF`` or
 ``0``, case-insensitively. Keywords verifying something that allow dropping
 actual and expected values from the possible error message also consider
-string ``no values`` to be false. Other strings are considered true
-regardless their value, and other argument types are tested using the same
+string ``no values`` to be false. Other strings are considered true unless
+the keyword documentation explicitly states otherwise, and other argument
+types are tested using the same
 [http://docs.python.org/library/stdtypes.html#truth|rules as in Python].
 
 True examples:
@@ -105,9 +121,6 @@ False examples:
 | `Should Be Equal` | ${x} | ${y}  | Custom error | values=${EMPTY}  | # Empty string is false.       |
 | `Should Be Equal` | ${x} | ${y}  | Custom error | values=${FALSE}  | # Python ``False`` is false.   |
 | `Should Be Equal` | ${x} | ${y}  | Custom error | values=no values | # ``no values`` works with ``values`` argument |
-
-Considering string ``NONE`` false is new in Robot Framework 3.0.3 and
-considering also ``OFF`` and ``0`` false is new in Robot Framework 3.1.
 
 = Pattern matching =
 
@@ -130,9 +143,6 @@ Unlike with glob patterns normally, path separator characters ``/`` and
 ``\`` and the newline character ``\n`` are matches by the above
 wildcards.
 
-Support for brackets like ``[abc]`` and ``[!a-z]`` is new in
-Robot Framework 3.1
-
 == Regular expressions ==
 
 Some keywords, for example `Should Match Regexp`, support
@@ -148,12 +158,11 @@ expressions need to be escaped with another backslash like ``\\d\\w+``.
 Strings that may contain special characters but should be handled
 as literal strings, can be escaped with the `Regexp Escape` keyword.
 
-= Multiline string comparisons =
+= Multiline string comparison =
 
 `Should Be Equal` and `Should Be Equal As Strings` report the failures using
 [http://en.wikipedia.org/wiki/Diff_utility#Unified_format|unified diff
-format] if both strings have more than two lines. New in Robot Framework
-2.9.1.
+format] if both strings have more than two lines.
 
 Example:
 | ${first} =  | `Catenate` | SEPARATOR=\n | Not in second | Same | Differs | Same |
@@ -171,13 +180,104 @@ Results in the following error message:
 | -Differs
 | +Differs2
 |  Same
-| +Not in first</doc>
-<kw name="Call Method">
-<arguments>
-<arg>object</arg>
-<arg>method_name</arg>
-<arg>*args</arg>
-<arg>**kwargs</arg>
+| +Not in first
+
+= String representations =
+
+Several keywords log values explicitly (e.g. `Log`) or implicitly (e.g.
+`Should Be Equal` when there are failures). By default keywords log values
+using "human readable" string representation, which means that strings
+like ``Hello`` and numbers like ``42`` are logged as-is. Most of the time
+this is the desired behavior, but there are some problems as well:
+
+- It is not possible to see difference between different objects that
+  have same string representation like string ``42`` and integer ``42``.
+  `Should Be Equal` and some other keywords add the type information to
+  the error message in these cases, though.
+
+- Non-printable characters such as the null byte are not visible.
+
+- Trailing whitespace is not visible.
+
+- Different newlines (``\r\n`` on Windows, ``\n`` elsewhere) cannot
+  be separated from each others.
+
+- There are several Unicode characters that are different but look the
+  same. One example is the Latin ``a`` (``\u0061``) and the Cyrillic
+  ``а`` (``\u0430``). Error messages like ``a != а`` are
+  not very helpful.
+
+- Some Unicode characters can be represented using
+  [https://en.wikipedia.org/wiki/Unicode_equivalence|different forms].
+  For example, ``ä`` can be represented either as a single code point
+  ``\u00e4`` or using two code points ``\u0061`` and ``\u0308`` combined
+  together. Such forms are considered canonically equivalent, but strings
+  containing them are not considered equal when compared in Python. Error
+  messages like ``ä != ä`` are not that helpful either.
+
+- Containers such as lists and dictionaries are formatted into a single
+  line making it hard to see individual items they contain.
+
+To overcome the above problems, some keywords such as `Log` and
+`Should Be Equal` have an optional ``formatter`` argument that can be
+used to configure the string representation. The supported values are
+``str`` (default), ``repr``, and ``ascii`` that work similarly as
+[https://docs.python.org/library/functions.html|Python built-in functions]
+with same names. More detailed semantics are explained below.
+
+== str ==
+
+Use the "human readable" string representation. Equivalent to using
+``str()`` in Python 3 and ``unicode()`` in Python 2. This is the default.
+
+== repr ==
+
+Use the "machine readable" string representation. Similar to using
+``repr()`` in Python, which means that strings like ``Hello`` are logged
+like ``'Hello'``, newlines and non-printable characters are escaped like
+``\n`` and ``\x00``, and so on. Non-ASCII characters are shown as-is
+like ``ä`` in Python 3 and in escaped format like ``\xe4`` in Python 2.
+Use ``ascii`` to always get the escaped format.
+
+There are also some enhancements compared to the standard ``repr()``:
+- Bigger lists, dictionaries and other containers are pretty-printed so
+  that there is one item per row.
+- On Python 2 the ``u`` prefix is omitted with Unicode strings and
+  the ``b`` prefix is added to byte strings.
+
+== ascii ==
+
+Same as using ``ascii()`` in Python 3 or ``repr()`` in Python 2 where
+``ascii()`` does not exist. Similar to using ``repr`` explained above
+but with the following differences:
+
+- On Python 3 non-ASCII characters are escaped like ``\xe4`` instead of
+  showing them as-is like ``ä``. This makes it easier to see differences
+  between Unicode characters that look the same but are not equal. This
+  is how ``repr()`` works in Python 2.
+- On Python 2 just uses the standard ``repr()`` meaning that Unicode
+  strings get the ``u`` prefix and no ``b`` prefix is added to byte
+  strings.
+- Containers are not pretty-printed.</doc>
+<tags>
+</tags>
+<inits>
+</inits>
+<keywords>
+<kw name="Call Method" lineno="3311">
+<arguments repr="object, method_name, *args, **kwargs">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="object">
+<name>object</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method_name">
+<name>method_name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
+<arg kind="VAR_NAMED" required="false" repr="**kwargs">
+<name>kwargs</name>
+</arg>
 </arguments>
 <doc>Calls the named method of the given object with the provided arguments.
 
@@ -186,9 +286,8 @@ assigned to a variable. Keyword fails both if the object does not have
 a method with the given name or if executing the method raises an
 exception.
 
-Support for ``**kwargs`` is new in Robot Framework 2.9. Since that
-possible equal signs in other arguments must be escaped with a
-backslash like ``\=``.
+Possible equal signs in arguments must be escaped with a backslash
+like ``\=``.
 
 Examples:
 | Call Method      | ${hashtable} | put          | myname  | myvalue |
@@ -198,12 +297,13 @@ Examples:
 | Should Be Equal  | ${value}     | myvalue      |         |         |
 | Call Method      | ${object}    | kwargs    | name=value | foo=bar |
 | Call Method      | ${object}    | positional   | escaped\=equals  |</doc>
-<tags>
-</tags>
+<shortdoc>Calls the named method of the given object with the provided arguments.</shortdoc>
 </kw>
-<kw name="Catenate">
-<arguments>
-<arg>*items</arg>
+<kw name="Catenate" lineno="2836">
+<arguments repr="*items">
+<arg kind="VAR_POSITIONAL" required="false" repr="*items">
+<name>items</name>
+</arg>
 </arguments>
 <doc>Catenates the given items together and returns the resulted string.
 
@@ -219,12 +319,13 @@ Examples:
 | ${str1} = 'Hello world'
 | ${str2} = 'Hello---world'
 | ${str3} = 'Helloworld'</doc>
-<tags>
-</tags>
+<shortdoc>Catenates the given items together and returns the resulted string.</shortdoc>
 </kw>
-<kw name="Comment">
-<arguments>
-<arg>*messages</arg>
+<kw name="Comment" lineno="2985">
+<arguments repr="*messages">
+<arg kind="VAR_POSITIONAL" required="false" repr="*messages">
+<name>messages</name>
+</arg>
 </arguments>
 <doc>Displays the given messages in the log file as keyword arguments.
 
@@ -233,11 +334,10 @@ are visible in the log, this keyword can be used to display simple
 messages. Given arguments are ignored so thoroughly that they can even
 contain non-existing variables. If you are interested about variable
 values, you can use the `Log` or `Log Many` keywords.</doc>
-<tags>
-</tags>
+<shortdoc>Displays the given messages in the log file as keyword arguments.</shortdoc>
 </kw>
-<kw name="Continue For Loop">
-<arguments>
+<kw name="Continue For Loop" lineno="2532">
+<arguments repr="">
 </arguments>
 <doc>Skips the current for loop iteration and continues from the next.
 
@@ -246,18 +346,20 @@ continues from the next one. Can be used directly in a for loop or
 in a keyword that the loop uses.
 
 Example:
-| :FOR | ${var}         | IN                     | @{VALUES}         |
-|      | Run Keyword If | '${var}' == 'CONTINUE' | Continue For Loop |
-|      | Do Something   | ${var}                 |
+| FOR | ${var}         | IN                     | @{VALUES}         |
+|     | Run Keyword If | '${var}' == 'CONTINUE' | Continue For Loop |
+|     | Do Something   | ${var}                 |
+| END |
 
 See `Continue For Loop If` to conditionally continue a for loop without
 using `Run Keyword If` or other wrapper keywords.</doc>
-<tags>
-</tags>
+<shortdoc>Skips the current for loop iteration and continues from the next.</shortdoc>
 </kw>
-<kw name="Continue For Loop If">
-<arguments>
-<arg>condition</arg>
+<kw name="Continue For Loop If" lineno="2551">
+<arguments repr="condition">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
 </arguments>
 <doc>Skips the current for loop iteration if the ``condition`` is true.
 
@@ -266,18 +368,29 @@ the given condition. The condition is evaluated using the same
 semantics as with `Should Be True` keyword.
 
 Example:
-| :FOR | ${var}               | IN                     | @{VALUES} |
-|      | Continue For Loop If | '${var}' == 'CONTINUE' |
-|      | Do Something         | ${var}                 |</doc>
-<tags>
-</tags>
+| FOR | ${var}               | IN                     | @{VALUES} |
+|     | Continue For Loop If | '${var}' == 'CONTINUE' |
+|     | Do Something         | ${var}                 |
+| END |</doc>
+<shortdoc>Skips the current for loop iteration if the ``condition`` is true.</shortdoc>
 </kw>
-<kw name="Convert To Binary">
-<arguments>
-<arg>item</arg>
-<arg>base=None</arg>
-<arg>prefix=None</arg>
-<arg>length=None</arg>
+<kw name="Convert To Binary" lineno="169">
+<arguments repr="item, base=None, prefix=None, length=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prefix=None">
+<name>prefix</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="length=None">
+<name>length</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Converts the given item to a binary string.
 
@@ -297,12 +410,13 @@ Examples:
 | ${result} = | Convert To Binary | -2 | prefix=B | length=4 | # Result is -B0010 |
 
 See also `Convert To Integer`, `Convert To Octal` and `Convert To Hex`.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to a binary string.</shortdoc>
 </kw>
-<kw name="Convert To Boolean">
-<arguments>
-<arg>item</arg>
+<kw name="Convert To Boolean" lineno="322">
+<arguments repr="item">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
 </arguments>
 <doc>Converts the given item to Boolean true or false.
 
@@ -310,13 +424,17 @@ Handles strings ``True`` and ``False`` (case-insensitive) as expected,
 otherwise returns item's
 [http://docs.python.org/library/stdtypes.html#truth|truth value]
 using Python's ``bool()`` method.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to Boolean true or false.</shortdoc>
 </kw>
-<kw name="Convert To Bytes">
-<arguments>
-<arg>input</arg>
-<arg>input_type=text</arg>
+<kw name="Convert To Bytes" lineno="338">
+<arguments repr="input, input_type=text">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="input">
+<name>input</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="input_type=text">
+<name>input_type</name>
+<default>text</default>
+</arg>
 </arguments>
 <doc>Converts the given ``input`` to bytes according to the ``input_type``.
 
@@ -360,16 +478,29 @@ Examples (last column shows returned bytes):
 
 Use `Encode String To Bytes` in ``String`` library if you need to
 convert text to bytes using a certain encoding.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given ``input`` to bytes according to the ``input_type``.</shortdoc>
 </kw>
-<kw name="Convert To Hex">
-<arguments>
-<arg>item</arg>
-<arg>base=None</arg>
-<arg>prefix=None</arg>
-<arg>length=None</arg>
-<arg>lowercase=False</arg>
+<kw name="Convert To Hex" lineno="213">
+<arguments repr="item, base=None, prefix=None, length=None, lowercase=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prefix=None">
+<name>prefix</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="length=None">
+<name>length</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="lowercase=False">
+<name>lowercase</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Converts the given item to a hexadecimal string.
 
@@ -393,13 +524,17 @@ Examples:
 | ${result} = | Convert To Hex | 255 | prefix=X | lowercase=yes | # Result is Xff   |
 
 See also `Convert To Integer`, `Convert To Binary` and `Convert To Octal`.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to a hexadecimal string.</shortdoc>
 </kw>
-<kw name="Convert To Integer">
-<arguments>
-<arg>item</arg>
-<arg>base=None</arg>
+<kw name="Convert To Integer" lineno="106">
+<arguments repr="item, base=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Converts the given item to an integer number.
 
@@ -425,13 +560,17 @@ Examples:
 
 See also `Convert To Number`, `Convert To Binary`, `Convert To Octal`,
 `Convert To Hex`, and `Convert To Bytes`.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to an integer number.</shortdoc>
 </kw>
-<kw name="Convert To Number">
-<arguments>
-<arg>item</arg>
-<arg>precision=None</arg>
+<kw name="Convert To Number" lineno="252">
+<arguments repr="item, precision=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="precision=None">
+<name>precision</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Converts the given item to a floating point number.
 
@@ -461,15 +600,25 @@ you can implement custom keywords using Python's
 [http://docs.python.org/library/fractions.html|fractions] modules.
 
 If you need an integer number, use `Convert To Integer` instead.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to a floating point number.</shortdoc>
 </kw>
-<kw name="Convert To Octal">
-<arguments>
-<arg>item</arg>
-<arg>base=None</arg>
-<arg>prefix=None</arg>
-<arg>length=None</arg>
+<kw name="Convert To Octal" lineno="191">
+<arguments repr="item, base=None, prefix=None, length=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="prefix=None">
+<name>prefix</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="length=None">
+<name>length</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Converts the given item to an octal string.
 
@@ -489,28 +638,30 @@ Examples:
 | ${result} = | Convert To Octal | 16 | prefix=oct | length=4 | # Result is oct0020 |
 
 See also `Convert To Integer`, `Convert To Binary` and `Convert To Hex`.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to an octal string.</shortdoc>
 </kw>
-<kw name="Convert To String">
-<arguments>
-<arg>item</arg>
+<kw name="Convert To String" lineno="305">
+<arguments repr="item">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
 </arguments>
 <doc>Converts the given item to a Unicode string.
 
-Uses ``__unicode__`` or ``__str__`` method with Python objects and
-``toString`` with Java objects.
+Strings are also [http://www.macchiato.com/unicode/nfc-faq|
+NFC normalized].
 
 Use `Encode String To Bytes` and `Decode Bytes To String` keywords
 in ``String`` library if you need to convert between Unicode and byte
 strings using different encodings. Use `Convert To Bytes` if you just
 want to create byte strings.</doc>
-<tags>
-</tags>
+<shortdoc>Converts the given item to a Unicode string.</shortdoc>
 </kw>
-<kw name="Create Dictionary">
-<arguments>
-<arg>*items</arg>
+<kw name="Create Dictionary" lineno="446">
+<arguments repr="*items">
+<arg kind="VAR_POSITIONAL" required="false" repr="*items">
+<name>items</name>
+</arg>
 </arguments>
 <doc>Creates and returns a dictionary based on the given ``items``.
 
@@ -523,12 +674,15 @@ them like ``&amp;{dict}``.
 
 Alternatively items can be specified so that keys and values are given
 separately. This and the ``key=value`` syntax can even be combined,
-but separately given items must be first.
+but separately given items must be first. If same key is used multiple
+times, the last value has precedence.
 
-If same key is used multiple times, the last value has precedence.
 The returned dictionary is ordered, and values with strings as keys
 can also be accessed using a convenient dot-access syntax like
-``${dict.key}``.
+``${dict.key}``. Technically the returned dictionary is Robot
+Framework's own ``DotDict`` instance. If there is a need, it can be
+converted into a regular Python ``dict`` instance by using the
+`Convert To Dictionary` keyword from the Collections library.
 
 Examples:
 | &amp;{dict} = | Create Dictionary | key=value | foo=bar | | | # key=value syntax |
@@ -537,20 +691,14 @@ Examples:
 | Should Be Equal | ${dict} | ${dict2} |
 | &amp;{dict} = | Create Dictionary | ${1}=${2} | &amp;{dict} | foo=new | | # using variables |
 | Should Be True | ${dict} == {1: 2, 'key': 'value', 'foo': 'new'} |
-| Should Be Equal | ${dict.key} | value | | | | # dot-access |
-
-This keyword was changed in Robot Framework 2.9 in many ways:
-- Moved from ``Collections`` library to ``BuiltIn``.
-- Support also non-string keys in ``key=value`` syntax.
-- Returned dictionary is ordered and dot-accessible.
-- Old syntax to give keys and values separately was deprecated, but
-  deprecation was later removed in RF 3.0.1.</doc>
-<tags>
-</tags>
+| Should Be Equal | ${dict.key} | value | | | | # dot-access |</doc>
+<shortdoc>Creates and returns a dictionary based on the given ``items``.</shortdoc>
 </kw>
-<kw name="Create List">
-<arguments>
-<arg>*items</arg>
+<kw name="Create List" lineno="432">
+<arguments repr="*items">
+<arg kind="VAR_POSITIONAL" required="false" repr="*items">
+<name>items</name>
+</arg>
 </arguments>
 <doc>Returns a list containing given items.
 
@@ -561,19 +709,26 @@ Examples:
 | @{list} =   | Create List | a    | b    | c    |
 | ${scalar} = | Create List | a    | b    | c    |
 | ${ints} =   | Create List | ${1} | ${2} | ${3} |</doc>
-<tags>
-</tags>
+<shortdoc>Returns a list containing given items.</shortdoc>
 </kw>
-<kw name="Evaluate">
-<arguments>
-<arg>expression</arg>
-<arg>modules=None</arg>
-<arg>namespace=None</arg>
+<kw name="Evaluate" lineno="3255">
+<arguments repr="expression, modules=None, namespace=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="expression">
+<name>expression</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="modules=None">
+<name>modules</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="namespace=None">
+<name>namespace</name>
+<default>None</default>
+</arg>
 </arguments>
-<doc>Evaluates the given expression in Python and returns the results.
+<doc>Evaluates the given expression in Python and returns the result.
 
-``expression`` is evaluated in Python as explained in `Evaluating
-expressions`.
+``expression`` is evaluated in Python as explained in the
+`Evaluating expressions` section.
 
 ``modules`` argument can be used to specify a comma separated
 list of Python modules to be imported and added to the evaluation
@@ -585,25 +740,43 @@ namespace.
 
 Variables used like ``${variable}`` are replaced in the expression
 before evaluation. Variables are also available in the evaluation
-namespace and can be accessed using special syntax ``$variable``.
-This is a new feature in Robot Framework 2.9 and it is explained more
-thoroughly in `Evaluating expressions`.
+namespace and can be accessed using the special ``$variable`` syntax
+as explained in the `Evaluating expressions` section.
 
-Examples (expecting ``${result}`` is 3.14):
-| ${status} = | Evaluate | 0 &lt; ${result} &lt; 10 | # Would also work with string '3.14' |
-| ${status} = | Evaluate | 0 &lt; $result &lt; 10   | # Using variable itself, not string representation |
-| ${random} = | Evaluate | random.randint(0, sys.maxint) | modules=random, sys |
-| ${ns} =     | Create Dictionary | x=${4}    | y=${2}              |
-| ${result} = | Evaluate | x*10 + y           | namespace=${ns}     |
+Starting from Robot Framework 3.2, modules used in the expression are
+imported automatically. There are, however, two cases where they need to
+be explicitly specified using the ``modules`` argument:
+
+- When nested modules like ``rootmod.submod`` are implemented so that
+  the root module does not automatically import sub modules. This is
+  illustrated by the ``selenium.webdriver`` example below.
+
+- When using a module in the expression part of a list comprehension.
+  This is illustrated by the ``json`` example below.
+
+Examples (expecting ``${result}`` is number 3.14):
+| ${status} =  | Evaluate | 0 &lt; ${result} &lt; 10 | # Would also work with string '3.14' |
+| ${status} =  | Evaluate | 0 &lt; $result &lt; 10   | # Using variable itself, not string representation |
+| ${random} =  | Evaluate | random.randint(0, sys.maxsize) |
+| ${options} = | Evaluate | selenium.webdriver.ChromeOptions() | modules=selenium.webdriver |
+| ${items} =   | Evaluate | [json.loads(item) for item in ('1', '"b"')] | modules=json |
+| ${ns} =      | Create Dictionary | x=${4}    | y=${2}              |
+| ${result} =  | Evaluate | x*10 + y           | namespace=${ns}     |
 =&gt;
 | ${status} = True
 | ${random} = &lt;random integer&gt;
-| ${result} = 42</doc>
-<tags>
-</tags>
+| ${options} = ChromeOptions instance
+| ${items} = [1, 'b']
+| ${result} = 42
+
+*NOTE*: Prior to Robot Framework 3.2 using ``modules=rootmod.submod``
+was not enough to make the root module itself available in the
+evaluation namespace. It needed to be taken into use explicitly like
+``modules=rootmod, rootmod.submod``.</doc>
+<shortdoc>Evaluates the given expression in Python and returns the result.</shortdoc>
 </kw>
-<kw name="Exit For Loop">
-<arguments>
+<kw name="Exit For Loop" lineno="2567">
+<arguments repr="">
 </arguments>
 <doc>Stops executing the enclosing for loop.
 
@@ -611,18 +784,20 @@ Exits the enclosing for loop and continues execution after it.
 Can be used directly in a for loop or in a keyword that the loop uses.
 
 Example:
-| :FOR | ${var}         | IN                 | @{VALUES}     |
-|      | Run Keyword If | '${var}' == 'EXIT' | Exit For Loop |
-|      | Do Something   | ${var} |
+| FOR | ${var}         | IN                 | @{VALUES}     |
+|     | Run Keyword If | '${var}' == 'EXIT' | Exit For Loop |
+|     | Do Something   | ${var} |
+| END |
 
 See `Exit For Loop If` to conditionally exit a for loop without
 using `Run Keyword If` or other wrapper keywords.</doc>
-<tags>
-</tags>
+<shortdoc>Stops executing the enclosing for loop.</shortdoc>
 </kw>
-<kw name="Exit For Loop If">
-<arguments>
-<arg>condition</arg>
+<kw name="Exit For Loop If" lineno="2585">
+<arguments repr="condition">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
 </arguments>
 <doc>Stops executing the enclosing for loop if the ``condition`` is true.
 
@@ -631,16 +806,21 @@ the given condition. The condition is evaluated using the same
 semantics as with `Should Be True` keyword.
 
 Example:
-| :FOR | ${var}           | IN                 | @{VALUES} |
-|      | Exit For Loop If | '${var}' == 'EXIT' |
-|      | Do Something     | ${var}             |</doc>
-<tags>
-</tags>
+| FOR | ${var}           | IN                 | @{VALUES} |
+|     | Exit For Loop If | '${var}' == 'EXIT' |
+|     | Do Something     | ${var}             |
+| END |</doc>
+<shortdoc>Stops executing the enclosing for loop if the ``condition`` is true.</shortdoc>
 </kw>
-<kw name="Fail">
-<arguments>
-<arg>msg=None</arg>
-<arg>*tags</arg>
+<kw name="Fail" lineno="510">
+<arguments repr="msg=None, *tags">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*tags">
+<name>tags</name>
+</arg>
 </arguments>
 <doc>Fails the test with the given message and optionally alters its tags.
 
@@ -663,12 +843,14 @@ Examples:
 | Fail | My message       | tag    | -t*  | # Removes all tags starting with 't' except the newly added 'tag'. |
 
 See `Fatal Error` if you need to stop the whole test execution.</doc>
-<tags>
-</tags>
+<shortdoc>Fails the test with the given message and optionally alters its tags.</shortdoc>
 </kw>
-<kw name="Fatal Error">
-<arguments>
-<arg>msg=None</arg>
+<kw name="Fatal Error" lineno="536">
+<arguments repr="msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Stops the whole test execution.
 
@@ -677,15 +859,18 @@ message, and subsequent tests fail with a canned message.
 Possible teardowns will nevertheless be executed.
 
 See `Fail` if you only want to stop one test case unconditionally.</doc>
-<tags>
-</tags>
+<shortdoc>Stops the whole test execution.</shortdoc>
 </kw>
-<kw name="Get Count">
-<arguments>
-<arg>item1</arg>
-<arg>item2</arg>
+<kw name="Get Count" lineno="1287">
+<arguments repr="container, item">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
 </arguments>
-<doc>Returns and logs how many times ``item2`` is found from ``item1``.
+<doc>Returns and logs how many times ``item`` is found from ``container``.
 
 This keyword works with Python strings and lists and all objects
 that either have ``count`` method or can be converted to Python lists.
@@ -693,12 +878,13 @@ that either have ``count`` method or can be converted to Python lists.
 Example:
 | ${count} = | Get Count | ${some item} | interesting value |
 | Should Be True | 5 &lt; ${count} &lt; 10 |</doc>
-<tags>
-</tags>
+<shortdoc>Returns and logs how many times ``item`` is found from ``container``.</shortdoc>
 </kw>
-<kw name="Get Length">
-<arguments>
-<arg>item</arg>
+<kw name="Get Length" lineno="1400">
+<arguments repr="item">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
 </arguments>
 <doc>Returns and logs the length of the given item as an integer.
 
@@ -719,13 +905,18 @@ Examples:
 
 See also `Length Should Be`, `Should Be Empty` and `Should Not Be
 Empty`.</doc>
-<tags>
-</tags>
+<shortdoc>Returns and logs the length of the given item as an integer.</shortdoc>
 </kw>
-<kw name="Get Library Instance">
-<arguments>
-<arg>name=None</arg>
-<arg>all=False</arg>
+<kw name="Get Library Instance" lineno="3528">
+<arguments repr="name=None, all=False">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="name=None">
+<name>name</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="all=False">
+<name>all</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Returns the currently active instance of the specified test library.
 
@@ -749,17 +940,21 @@ the instance must be that name and not the original library name.
 
 If the optional argument ``all`` is given a true value, then a
 dictionary mapping all library names to instances will be returned.
-This feature is new in Robot Framework 2.9.2.
 
 Example:
 | &amp;{all libs} = | Get library instance | all=True |</doc>
-<tags>
-</tags>
+<shortdoc>Returns the currently active instance of the specified test library.</shortdoc>
 </kw>
-<kw name="Get Time">
-<arguments>
-<arg>format=timestamp</arg>
-<arg>time_=NOW</arg>
+<kw name="Get Time" lineno="3172">
+<arguments repr="format=timestamp, time_=NOW">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="format=timestamp">
+<name>format</name>
+<default>timestamp</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="time_=NOW">
+<name>time_</name>
+<default>NOW</default>
+</arg>
 </arguments>
 <doc>Returns the given time in the requested format.
 
@@ -840,13 +1035,17 @@ UTC time is 2006-03-29 12:06:21):
 | @{time} = ['16', '08', '24']
 | @{utc} = ['12', '06', '21']
 | ${hour} = '11'</doc>
-<tags>
-</tags>
+<shortdoc>Returns the given time in the requested format.</shortdoc>
 </kw>
-<kw name="Get Variable Value">
-<arguments>
-<arg>name</arg>
-<arg>default=None</arg>
+<kw name="Get Variable Value" lineno="1522">
+<arguments repr="name, default=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default=None">
+<name>default</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Returns variable value or ``default`` if the variable does not exist.
 
@@ -864,12 +1063,14 @@ Examples:
 | ${z} is set to Python None if it does not exist previously
 
 See `Set Variable If` for another keyword to set variables dynamically.</doc>
-<tags>
-</tags>
+<shortdoc>Returns variable value or ``default`` if the variable does not exist.</shortdoc>
 </kw>
-<kw name="Get Variables">
-<arguments>
-<arg>no_decoration=False</arg>
+<kw name="Get Variables" lineno="1492">
+<arguments repr="no_decoration=False">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="no_decoration=False">
+<name>no_decoration</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Returns a dictionary containing all variables in the current scope.
 
@@ -884,8 +1085,7 @@ current scope.
 By default variables are returned with ``${}``, ``@{}`` or ``&amp;{}``
 decoration based on variable types. Giving a true value (see `Boolean
 arguments`) to the optional argument ``no_decoration`` will return
-the variables without the decoration. This option is new in Robot
-Framework 2.9.
+the variables without the decoration.
 
 Example:
 | ${example_variable} =         | Set Variable | example value         |
@@ -896,13 +1096,16 @@ Example:
 | Variable Should Not Exist     | \${name}    |           |           |
 | ${no decoration} =            | Get Variables | no_decoration=Yes |
 | Dictionary Should Contain Key | ${no decoration} | example_variable |</doc>
-<tags>
-</tags>
+<shortdoc>Returns a dictionary containing all variables in the current scope.</shortdoc>
 </kw>
-<kw name="Import Library">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Import Library" lineno="3029">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Imports a library with the given name and optional arguments.
 
@@ -910,12 +1113,12 @@ This functionality allows dynamic importing of libraries while tests
 are running. That may be necessary, if the library itself is dynamic
 and not yet available when test data is processed. In a normal case,
 libraries should be imported using the Library setting in the Setting
-table.
+section.
 
 This keyword supports importing libraries both using library
 names and physical paths. When paths are used, they must be
 given in absolute format or found from
-[http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#pythonpath-jythonpath-and-ironpythonpath|
+[http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#module-search-path|
 search path]. Forward slashes can be used as path separators in all
 operating systems.
 
@@ -927,12 +1130,13 @@ Examples:
 | Import Library | MyLibrary |
 | Import Library | ${CURDIR}/../Library.py | arg1 | named=arg2 |
 | Import Library | ${LIBRARIES}/Lib.java | arg | WITH NAME | JavaLib |</doc>
-<tags>
-</tags>
+<shortdoc>Imports a library with the given name and optional arguments.</shortdoc>
 </kw>
-<kw name="Import Resource">
-<arguments>
-<arg>path</arg>
+<kw name="Import Resource" lineno="3091">
+<arguments repr="path">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path">
+<name>path</name>
+</arg>
 </arguments>
 <doc>Imports a resource file with the given path.
 
@@ -949,13 +1153,16 @@ Examples:
 | Import Resource | ${CURDIR}/resource.txt |
 | Import Resource | ${CURDIR}/../resources/resource.html |
 | Import Resource | found_from_pythonpath.robot |</doc>
-<tags>
-</tags>
+<shortdoc>Imports a resource file with the given path.</shortdoc>
 </kw>
-<kw name="Import Variables">
-<arguments>
-<arg>path</arg>
-<arg>*args</arg>
+<kw name="Import Variables" lineno="3066">
+<arguments repr="path, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path">
+<name>path</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Imports a variable file with the given path and optional arguments.
 
@@ -974,13 +1181,17 @@ Examples:
 | Import Variables | ${CURDIR}/variables.py   |      |      |
 | Import Variables | ${CURDIR}/../vars/env.py | arg1 | arg2 |
 | Import Variables | file_from_pythonpath.py  |      |      |</doc>
-<tags>
-</tags>
+<shortdoc>Imports a variable file with the given path and optional arguments.</shortdoc>
 </kw>
-<kw name="Keyword Should Exist">
-<arguments>
-<arg>name</arg>
-<arg>msg=None</arg>
+<kw name="Keyword Should Exist" lineno="3154">
+<arguments repr="name, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails unless the given keyword exists in the current scope.
 
@@ -991,29 +1202,52 @@ Works both with the short name (e.g. ``Log``) and the full name
 The default error message can be overridden with the ``msg`` argument.
 
 See also `Variable Should Exist`.</doc>
-<tags>
-</tags>
+<shortdoc>Fails unless the given keyword exists in the current scope.</shortdoc>
 </kw>
-<kw name="Length Should Be">
-<arguments>
-<arg>item</arg>
-<arg>length</arg>
-<arg>msg=None</arg>
+<kw name="Length Should Be" lineno="1448">
+<arguments repr="item, length, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="length">
+<name>length</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Verifies that the length of the given item is correct.
 
 The length of the item is got using the `Get Length` keyword. The
 default error message can be overridden with the ``msg`` argument.</doc>
-<tags>
-</tags>
+<shortdoc>Verifies that the length of the given item is correct.</shortdoc>
 </kw>
-<kw name="Log">
-<arguments>
-<arg>message</arg>
-<arg>level=INFO</arg>
-<arg>html=False</arg>
-<arg>console=False</arg>
-<arg>repr=False</arg>
+<kw name="Log" lineno="2862">
+<arguments repr="message, level=INFO, html=False, console=False, repr=False, formatter=str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="message">
+<name>message</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="level=INFO">
+<name>level</name>
+<default>INFO</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="html=False">
+<name>html</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="console=False">
+<name>console</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="repr=False">
+<name>repr</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="formatter=str">
+<name>formatter</name>
+<default>str</default>
+</arg>
 </arguments>
 <doc>Logs the given message with the given level.
 
@@ -1026,17 +1260,13 @@ Messages logged with the WARN or ERROR levels will be automatically
 visible also in the console and in the Test Execution Errors section
 in the log file.
 
-Logging can be configured using optional ``html``, ``console`` and
-``repr`` arguments. They are off by default, but can be enabled
-by giving them a true value. See `Boolean arguments` section for more
-information about true and false values.
-
-If the ``html`` argument is given a true value, the message will be
-considered HTML and special characters such as ``&lt;`` in it are not
-escaped. For example, logging ``&lt;img src="image.png"&gt;`` creates an
-image when ``html`` is true, but otherwise the message is that exact
-string. An alternative to using the ``html`` argument is using the HTML
-pseudo log level. It logs the message as HTML using the INFO level.
+If the ``html`` argument is given a true value (see `Boolean
+arguments`), the message will be considered HTML and special characters
+such as ``&lt;`` are not escaped. For example, logging
+``&lt;img src="image.png"&gt;`` creates an image when ``html`` is true, but
+otherwise the message is that exact string. An alternative to using
+the ``html`` argument is using the HTML pseudo log level. It logs
+the message as HTML using the INFO level.
 
 If the ``console`` argument is true, the message will be written to
 the console where test execution was started from in addition to
@@ -1044,13 +1274,18 @@ the log file. This keyword always uses the standard output stream
 and adds a newline after the written message. Use `Log To Console`
 instead if either of these is undesirable,
 
-If the ``repr`` argument is true, the given item will be passed through
-a custom version of Python's ``pprint.pformat()`` function before
-logging it. This is useful, for example, when working with strings or
-bytes containing invisible characters, or when working with nested data
-structures. The custom version differs from the standard one so that it
-omits the ``u`` prefix from Unicode strings and adds ``b`` prefix to
-byte strings on Python 2.
+The ``formatter`` argument controls how to format the string
+representation of the message. Possible values are ``str`` (default),
+``repr`` and ``ascii``, and they work similarly to Python built-in
+functions with same names. When using ``repr``, bigger lists,
+dictionaries and other containers are also pretty-printed so that
+there is one item per row. For more details see `String
+representations`.
+
+The old way to control string representation was using the ``repr``
+argument, and ``repr=True`` is still equivalent to using
+``formatter=repr``. The ``repr`` argument will be deprecated in the
+future, though, and using ``formatter`` is thus recommended.
 
 Examples:
 | Log | Hello, world!        |          |   | # Normal INFO message.   |
@@ -1059,16 +1294,17 @@ Examples:
 | Log | &lt;b&gt;Hello&lt;/b&gt;, world! | HTML     |   | # Same as above.         |
 | Log | &lt;b&gt;Hello&lt;/b&gt;, world! | DEBUG    | html=true | # DEBUG as HTML. |
 | Log | Hello, console!   | console=yes | | # Log also to the console. |
-| Log | Hyvä \x00     | repr=yes    | | # Log ``'Hyv\xe4 \x00'``. |
+| Log | Null is \x00  | formatter=repr | | # Log ``'Null is \x00'``. |
 
 See `Log Many` if you want to log multiple messages in one go, and
 `Log To Console` if you only want to write to the console.</doc>
-<tags>
-</tags>
+<shortdoc>Logs the given message with the given level.</shortdoc>
 </kw>
-<kw name="Log Many">
-<arguments>
-<arg>*messages</arg>
+<kw name="Log Many" lineno="2934">
+<arguments repr="*messages">
+<arg kind="VAR_POSITIONAL" required="false" repr="*messages">
+<name>messages</name>
+</arg>
 </arguments>
 <doc>Logs the given messages as separate entries using the INFO level.
 
@@ -1080,14 +1316,21 @@ Examples:
 
 See `Log` and `Log To Console` keywords if you want to use alternative
 log levels, use HTML, or log to the console.</doc>
-<tags>
-</tags>
+<shortdoc>Logs the given messages as separate entries using the INFO level.</shortdoc>
 </kw>
-<kw name="Log To Console">
-<arguments>
-<arg>message</arg>
-<arg>stream=STDOUT</arg>
-<arg>no_newline=False</arg>
+<kw name="Log To Console" lineno="2962">
+<arguments repr="message, stream=STDOUT, no_newline=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="message">
+<name>message</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="stream=STDOUT">
+<name>stream</name>
+<default>STDOUT</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="no_newline=False">
+<name>no_newline</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Logs the given message to the console.
 
@@ -1107,28 +1350,32 @@ Examples:
 
 This keyword does not log the message to the normal log file. Use
 `Log` keyword, possibly with argument ``console``, if that is desired.</doc>
-<tags>
-</tags>
+<shortdoc>Logs the given message to the console.</shortdoc>
 </kw>
-<kw name="Log Variables">
-<arguments>
-<arg>level=INFO</arg>
+<kw name="Log Variables" lineno="1546">
+<arguments repr="level=INFO">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="level=INFO">
+<name>level</name>
+<default>INFO</default>
+</arg>
 </arguments>
 <doc>Logs all variables in the current scope with given log level.</doc>
-<tags>
-</tags>
+<shortdoc>Logs all variables in the current scope with given log level.</shortdoc>
 </kw>
-<kw name="No Operation">
-<arguments>
+<kw name="No Operation" lineno="2798">
+<arguments repr="">
 </arguments>
 <doc>Does absolutely nothing.</doc>
-<tags>
-</tags>
+<shortdoc>Does absolutely nothing.</shortdoc>
 </kw>
-<kw name="Pass Execution">
-<arguments>
-<arg>message</arg>
-<arg>*tags</arg>
+<kw name="Pass Execution" lineno="2724">
+<arguments repr="message, *tags">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="message">
+<name>message</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*tags">
+<name>tags</name>
+</arg>
 </arguments>
 <doc>Skips rest of the current test, setup, or teardown with PASS status.
 
@@ -1171,14 +1418,19 @@ used with care. In the worst case it leads to tests that skip all the
 parts that could actually uncover problems in the tested application.
 In cases where execution cannot continue do to external factors,
 it is often safer to fail the test case and make it non-critical.</doc>
-<tags>
-</tags>
+<shortdoc>Skips rest of the current test, setup, or teardown with PASS status.</shortdoc>
 </kw>
-<kw name="Pass Execution If">
-<arguments>
-<arg>condition</arg>
-<arg>message</arg>
-<arg>*tags</arg>
+<kw name="Pass Execution If" lineno="2776">
+<arguments repr="condition, message, *tags">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="message">
+<name>message</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*tags">
+<name>tags</name>
+</arg>
 </arguments>
 <doc>Conditionally skips rest of the current test, setup, or teardown with PASS status.
 
@@ -1188,15 +1440,17 @@ evaluated similarly as with `Should Be True` keyword, and ``message``
 and ``*tags`` have same semantics as with `Pass Execution`.
 
 Example:
-| :FOR | ${var}            | IN                     | @{VALUES}               |
-|      | Pass Execution If | '${var}' == 'EXPECTED' | Correct value was found |
-|      | Do Something      | ${var}                 |</doc>
-<tags>
-</tags>
+| FOR | ${var}            | IN                     | @{VALUES}               |
+|     | Pass Execution If | '${var}' == 'EXPECTED' | Correct value was found |
+|     | Do Something      | ${var}                 |
+| END |</doc>
+<shortdoc>Conditionally skips rest of the current test, setup, or teardown with PASS status.</shortdoc>
 </kw>
-<kw name="Regexp Escape">
-<arguments>
-<arg>*patterns</arg>
+<kw name="Regexp Escape" lineno="3342">
+<arguments repr="*patterns">
+<arg kind="VAR_POSITIONAL" required="false" repr="*patterns">
+<name>patterns</name>
+</arg>
 </arguments>
 <doc>Returns each argument string escaped for use as a regular expression.
 
@@ -1208,12 +1462,13 @@ Escaping is done with Python's ``re.escape()`` function.
 Examples:
 | ${escaped} = | Regexp Escape | ${original} |
 | @{strings} = | Regexp Escape | @{strings}  |</doc>
-<tags>
-</tags>
+<shortdoc>Returns each argument string escaped for use as a regular expression.</shortdoc>
 </kw>
-<kw name="Reload Library">
-<arguments>
-<arg>name_or_instance</arg>
+<kw name="Reload Library" lineno="3014">
+<arguments repr="name_or_instance">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name_or_instance">
+<name>name_or_instance</name>
+</arg>
 </arguments>
 <doc>Rechecks what keywords the specified library provides.
 
@@ -1222,15 +1477,14 @@ when keywords it provides have changed.
 
 The library can be specified by its name or as the active instance of
 the library. The latter is especially useful if the library itself
-calls this keyword as a method.
-
-New in Robot Framework 2.9.</doc>
-<tags>
-</tags>
+calls this keyword as a method.</doc>
+<shortdoc>Rechecks what keywords the specified library provides.</shortdoc>
 </kw>
-<kw name="Remove Tags">
-<arguments>
-<arg>*tags</arg>
+<kw name="Remove Tags" lineno="3500">
+<arguments repr="*tags">
+<arg kind="VAR_POSITIONAL" required="false" repr="*tags">
+<name>tags</name>
+</arg>
 </arguments>
 <doc>Removes given ``tags`` from the current test or all tests in a suite.
 
@@ -1248,14 +1502,19 @@ Example:
 
 See `Set Tags` if you want to add certain tags and `Fail` if you want
 to fail the test case after setting and/or removing tags.</doc>
-<tags>
-</tags>
+<shortdoc>Removes given ``tags`` from the current test or all tests in a suite.</shortdoc>
 </kw>
-<kw name="Repeat Keyword">
-<arguments>
-<arg>repeat</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Repeat Keyword" lineno="2198">
+<arguments repr="repeat, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="repeat">
+<name>repeat</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Executes the specified keyword multiple times.
 
@@ -1280,15 +1539,14 @@ rounds fails.
 Examples:
 | Repeat Keyword | 5 times   | Go to Previous Page |
 | Repeat Keyword | ${var}    | Some Keyword | arg1 | arg2 |
-| Repeat Keyword | 2 minutes | Some Keyword | arg1 | arg2 |
-
-Specifying ``repeat`` as a timeout is new in Robot Framework 3.0.</doc>
-<tags>
-</tags>
+| Repeat Keyword | 2 minutes | Some Keyword | arg1 | arg2 |</doc>
+<shortdoc>Executes the specified keyword multiple times.</shortdoc>
 </kw>
-<kw name="Replace Variables">
-<arguments>
-<arg>text</arg>
+<kw name="Replace Variables" lineno="1607">
+<arguments repr="text">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="text">
+<name>text</name>
+</arg>
 </arguments>
 <doc>Replaces variables in the given text with their current values.
 
@@ -1305,12 +1563,13 @@ The file ``template.txt`` contains ``Hello ${NAME}!`` and variable
 | ${template} =   | Get File          | ${CURDIR}/template.txt |
 | ${message} =    | Replace Variables | ${template}            |
 | Should Be Equal | ${message}        | Hello Robot!           |</doc>
-<tags>
-</tags>
+<shortdoc>Replaces variables in the given text with their current values.</shortdoc>
 </kw>
-<kw name="Return From Keyword">
-<arguments>
-<arg>*return_values</arg>
+<kw name="Return From Keyword" lineno="2602">
+<arguments repr="*return_values">
+<arg kind="VAR_POSITIONAL" required="false" repr="*return_values">
+<name>return_values</name>
+</arg>
 </arguments>
 <doc>Returns from the enclosing user keyword.
 
@@ -1346,21 +1605,25 @@ logic into a test library.
 | Find Index
 |    [Arguments]    ${element}    @{items}
 |    ${index} =    Set Variable    ${0}
-|    :FOR    ${item}    IN    @{items}
-|    \    Run Keyword If    '${item}' == '${element}'    Return From Keyword    ${index}
-|    \    ${index} =    Set Variable    ${index + 1}
+|    FOR    ${item}    IN    @{items}
+|        Run Keyword If    '${item}' == '${element}'    Return From Keyword    ${index}
+|        ${index} =    Set Variable    ${index + 1}
+|    END
 |    Return From Keyword    ${-1}    # Also [Return] would work here.
 
 The most common use case, returning based on an expression, can be
 accomplished directly with `Return From Keyword If`. See also
 `Run Keyword And Return` and `Run Keyword And Return If`.</doc>
-<tags>
-</tags>
+<shortdoc>Returns from the enclosing user keyword.</shortdoc>
 </kw>
-<kw name="Return From Keyword If">
-<arguments>
-<arg>condition</arg>
-<arg>*return_values</arg>
+<kw name="Return From Keyword If" lineno="2654">
+<arguments repr="condition, *return_values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*return_values">
+<name>return_values</name>
+</arg>
 </arguments>
 <doc>Returns from the enclosing user keyword if ``condition`` is true.
 
@@ -1375,32 +1638,39 @@ Given the same example as in `Return From Keyword`, we can rewrite the
 | Find Index
 |    [Arguments]    ${element}    @{items}
 |    ${index} =    Set Variable    ${0}
-|    :FOR    ${item}    IN    @{items}
-|    \    Return From Keyword If    '${item}' == '${element}'    ${index}
-|    \    ${index} =    Set Variable    ${index + 1}
+|    FOR    ${item}    IN    @{items}
+|        Return From Keyword If    '${item}' == '${element}'    ${index}
+|        ${index} =    Set Variable    ${index + 1}
+|    END
 |    Return From Keyword    ${-1}    # Also [Return] would work here.
 
 See also `Run Keyword And Return` and `Run Keyword And Return If`.</doc>
-<tags>
-</tags>
+<shortdoc>Returns from the enclosing user keyword if ``condition`` is true.</shortdoc>
 </kw>
-<kw name="Run Keyword">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword" lineno="1860">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Executes the given keyword with the given arguments.
 
 Because the name of the keyword to execute is given as an argument, it
 can be a variable and thus set dynamically, e.g. from a return value of
 another keyword or from the command line.</doc>
-<tags>
-</tags>
+<shortdoc>Executes the given keyword with the given arguments.</shortdoc>
 </kw>
-<kw name="Run Keyword And Continue On Failure">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Continue On Failure" lineno="2112">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the keyword and continues execution even if a failure occurs.
 
@@ -1411,28 +1681,31 @@ Example:
 | Log | This keyword is executed |
 
 The execution is not continued if the failure is caused by invalid syntax,
-timeout, or fatal exception.
-Since Robot Framework 2.9, variable errors are caught by this keyword.</doc>
-<tags>
-</tags>
+timeout, or fatal exception.</doc>
+<shortdoc>Runs the keyword and continues execution even if a failure occurs.</shortdoc>
 </kw>
-<kw name="Run Keyword And Expect Error">
-<arguments>
-<arg>expected_error</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Expect Error" lineno="2132">
+<arguments repr="expected_error, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="expected_error">
+<name>expected_error</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the keyword and checks that the expected error occurred.
 
 The keyword to execute and its arguments are specified using ``name``
 and ``*args`` exactly like with `Run Keyword`.
 
-The expected error must be given in the same format as in Robot
-Framework reports. By default it is interpreted as a glob pattern
-with ``*``, ``?`` and ``[chars]`` as wildcards, but starting from
-Robot Framework 3.1 that can be changed by using various prefixes
-explained in the table below. Prefixes are case-sensitive and they
-must be separated from the actual message with a colon and an
+The expected error must be given in the same format as in Robot Framework
+reports. By default it is interpreted as a glob pattern with ``*``, ``?``
+and ``[chars]`` as wildcards, but that can be changed by using various
+prefixes explained in the table below. Prefixes are case-sensitive and
+they must be separated from the actual message with a colon and an
 optional space like ``PREFIX: Message`` or ``PREFIX:Message``.
 
 | = Prefix = | = Explanation = |
@@ -1459,15 +1732,17 @@ Examples:
 | Log To Console | ${msg} |
 
 Errors caused by invalid syntax, timeouts, or fatal exceptions are not
-caught by this keyword.
-Since Robot Framework 2.9, variable errors are caught by this keyword.</doc>
-<tags>
-</tags>
+caught by this keyword.</doc>
+<shortdoc>Runs the keyword and checks that the expected error occurred.</shortdoc>
 </kw>
-<kw name="Run Keyword And Ignore Error">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Ignore Error" lineno="2049">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments and ignores possible error.
 
@@ -1481,15 +1756,17 @@ The keyword name and arguments work as in `Run Keyword`. See
 `Run Keyword If` for a usage example.
 
 Errors caused by invalid syntax, timeouts, or fatal exceptions are not
-caught by this keyword. Otherwise this keyword itself never fails.
-Since Robot Framework 2.9, variable errors are caught by this keyword.</doc>
-<tags>
-</tags>
+caught by this keyword. Otherwise this keyword itself never fails.</doc>
+<shortdoc>Runs the given keyword with the given arguments and ignores possible error.</shortdoc>
 </kw>
-<kw name="Run Keyword And Return">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Return" lineno="2680">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the specified keyword and returns from the enclosing user keyword.
 
@@ -1507,14 +1784,19 @@ Example:
 
 Use `Run Keyword And Return If` if you want to run keyword and return
 based on a condition.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the specified keyword and returns from the enclosing user keyword.</shortdoc>
 </kw>
-<kw name="Run Keyword And Return If">
-<arguments>
-<arg>condition</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Return If" lineno="2706">
+<arguments repr="condition, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the specified keyword and returns from the enclosing user keyword.
 
@@ -1529,13 +1811,16 @@ Example:
 
 Use `Return From Keyword If` if you want to return a certain value
 based on a condition.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the specified keyword and returns from the enclosing user keyword.</shortdoc>
 </kw>
-<kw name="Run Keyword And Return Status">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Return Status" lineno="2091">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with given arguments and returns the status as a Boolean value.
 
@@ -1552,16 +1837,46 @@ Example:
 
 Errors caused by invalid syntax, timeouts, or fatal exceptions are not
 caught by this keyword. Otherwise this keyword itself never fails.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword with given arguments and returns the status as a Boolean value.</shortdoc>
 </kw>
-<kw name="Run Keyword If">
-<arguments>
-<arg>condition</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword And Warn On Failure" lineno="2072">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
+</arguments>
+<doc>Runs the specified keyword logs a warning if the keyword fails.
+
+This keyword is similar to `Run Keyword And Ignore Error` but if the executed
+keyword fails, the error message is logged as a warning to make it more
+visible. Returns status and possible return value or error message exactly
+like `Run Keyword And Ignore Error` does.
+
+Errors caused by invalid syntax, timeouts, or fatal exceptions are not
+caught by this keyword. Otherwise this keyword itself never fails.
+
+New in Robot Framework 4.0.</doc>
+<shortdoc>Runs the specified keyword logs a warning if the keyword fails.</shortdoc>
+</kw>
+<kw name="Run Keyword If" lineno="1943">
+<arguments repr="condition, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments, if ``condition`` is true.
+
+*NOTE:* Robot Framework 4.0 introduced built-in IF/ELSE support and using
+that is generally recommended over using this keyword.
 
 The given ``condition`` is evaluated in Python as explained in
 `Evaluating expressions`, and ``name`` and ``*args`` have same
@@ -1579,8 +1894,8 @@ And Ignore Error` you can also use `Run Keyword And Return Status`.
 Variables used like ``${variable}``, as in the examples above, are
 replaced in the expression before evaluation. Variables are also
 available in the evaluation namespace and can be accessed using special
-syntax ``$variable``. This is a new feature in Robot Framework 2.9
-and it is explained more thoroughly in `Evaluating expressions`.
+syntax ``$variable`` as explained in the `Evaluating expressions`
+section.
 
 Example:
 | `Run Keyword If` | $result is None or $result == 'FAIL' | `Keyword` |
@@ -1628,28 +1943,28 @@ Attributes they contain can thus be used in the condition:
 | `Run Keyword If` | os.sep == '/' | `Unix Keyword`        |
 | ...              | ELSE IF       | sys.platform.startswith('java') | `Jython Keyword` |
 | ...              | ELSE          | `Windows Keyword`     |</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword with the given arguments, if ``condition`` is true.</shortdoc>
 </kw>
-<kw name="Run Keyword If All Critical Tests Passed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If All Critical Tests Passed" deprecated="true" lineno="2466">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
-<doc>Runs the given keyword with the given arguments, if all critical tests passed.
-
-This keyword can only be used in suite teardown. Trying to use it in
-any other place will result in an error.
-
-Otherwise, this keyword works exactly like `Run Keyword`, see its
-documentation for more details.</doc>
-<tags>
-</tags>
+<doc>*DEPRECATED.* Use `BuiltIn.Run Keyword If All Tests Passed` instead.</doc>
+<shortdoc>*DEPRECATED.* Use `BuiltIn.Run Keyword If All Tests Passed` instead.</shortdoc>
 </kw>
-<kw name="Run Keyword If All Tests Passed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If All Tests Passed" lineno="2476">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments, if all tests passed.
 
@@ -1658,28 +1973,28 @@ anywhere else results in an error.
 
 Otherwise, this keyword works exactly like `Run Keyword`, see its
 documentation for more details.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword with the given arguments, if all tests passed.</shortdoc>
 </kw>
-<kw name="Run Keyword If Any Critical Tests Failed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If Any Critical Tests Failed" deprecated="true" lineno="2471">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
-<doc>Runs the given keyword with the given arguments, if any critical tests failed.
-
-This keyword can only be used in a suite teardown. Trying to use it
-anywhere else results in an error.
-
-Otherwise, this keyword works exactly like `Run Keyword`, see its
-documentation for more details.</doc>
-<tags>
-</tags>
+<doc>*DEPRECATED.* Use `BuiltIn.Run Keyword If Any Tests Failed` instead.</doc>
+<shortdoc>*DEPRECATED.* Use `BuiltIn.Run Keyword If Any Tests Failed` instead.</shortdoc>
 </kw>
-<kw name="Run Keyword If Any Tests Failed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If Any Tests Failed" lineno="2490">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments, if one or more tests failed.
 
@@ -1688,13 +2003,16 @@ anywhere else results in an error.
 
 Otherwise, this keyword works exactly like `Run Keyword`, see its
 documentation for more details.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword with the given arguments, if one or more tests failed.</shortdoc>
 </kw>
-<kw name="Run Keyword If Test Failed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If Test Failed" lineno="2417">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments, if the test failed.
 
@@ -1702,17 +2020,17 @@ This keyword can only be used in a test teardown. Trying to use it
 anywhere else results in an error.
 
 Otherwise, this keyword works exactly like `Run Keyword`, see its
-documentation for more details.
-
-Prior to Robot Framework 2.9 failures in test teardown itself were
-not detected by this keyword.</doc>
-<tags>
-</tags>
+documentation for more details.</doc>
+<shortdoc>Runs the given keyword with the given arguments, if the test failed.</shortdoc>
 </kw>
-<kw name="Run Keyword If Test Passed">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If Test Passed" lineno="2431">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments, if the test passed.
 
@@ -1720,17 +2038,17 @@ This keyword can only be used in a test teardown. Trying to use it
 anywhere else results in an error.
 
 Otherwise, this keyword works exactly like `Run Keyword`, see its
-documentation for more details.
-
-Prior to Robot Framework 2.9 failures in test teardown itself were
-not detected by this keyword.</doc>
-<tags>
-</tags>
+documentation for more details.</doc>
+<shortdoc>Runs the given keyword with the given arguments, if the test passed.</shortdoc>
 </kw>
-<kw name="Run Keyword If Timeout Occurred">
-<arguments>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword If Timeout Occurred" lineno="2445">
+<arguments repr="name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword if either a test or a keyword timeout has occurred.
 
@@ -1739,26 +2057,32 @@ anywhere else results in an error.
 
 Otherwise, this keyword works exactly like `Run Keyword`, see its
 documentation for more details.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword if either a test or a keyword timeout has occurred.</shortdoc>
 </kw>
-<kw name="Run Keyword Unless">
-<arguments>
-<arg>condition</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Run Keyword Unless" lineno="2038">
+<arguments repr="condition, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the given keyword with the given arguments if ``condition`` is false.
 
 See `Run Keyword If` for more information and an example. Notice that
 this keyword does not support ``ELSE`` or ``ELSE IF`` branches like
 `Run Keyword If` does, though.</doc>
-<tags>
-</tags>
+<shortdoc>Runs the given keyword with the given arguments if ``condition`` is false.</shortdoc>
 </kw>
-<kw name="Run Keywords">
-<arguments>
-<arg>*keywords</arg>
+<kw name="Run Keywords" lineno="1873">
+<arguments repr="*keywords">
+<arg kind="VAR_POSITIONAL" required="false" repr="*keywords">
+<name>keywords</name>
+</arg>
 </arguments>
 <doc>Executes all the given keywords in a sequence.
 
@@ -1789,13 +2113,16 @@ Notice that the ``AND`` control argument must be used explicitly and
 cannot itself come from a variable. If you need to use literal ``AND``
 string as argument, you can either use variables or escape it with
 a backslash like ``\AND``.</doc>
-<tags>
-</tags>
+<shortdoc>Executes all the given keywords in a sequence.</shortdoc>
 </kw>
-<kw name="Set Global Variable">
-<arguments>
-<arg>name</arg>
-<arg>*values</arg>
+<kw name="Set Global Variable" lineno="1780">
+<arguments repr="name, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Makes a variable available globally in all tests and suites.
 
@@ -1812,12 +2139,13 @@ Because this keyword can change variables everywhere, it should be
 used with care.
 
 See `Set Suite Variable` for more information and examples.</doc>
-<tags>
-</tags>
+<shortdoc>Makes a variable available globally in all tests and suites.</shortdoc>
 </kw>
-<kw name="Set Library Search Order">
-<arguments>
-<arg>*search_order</arg>
+<kw name="Set Library Search Order" lineno="3113">
+<arguments repr="*search_order">
+<arg kind="VAR_POSITIONAL" required="false" repr="*search_order">
+<name>search_order</name>
+</arg>
 </arguments>
 <doc>Sets the resolution order to use when a name matches multiple keywords.
 
@@ -1856,12 +2184,50 @@ or extensions like:
 - The old order is returned and can be used to reset the search order later.
 - Library and resource names in the search order are both case and space
   insensitive.</doc>
-<tags>
-</tags>
+<shortdoc>Sets the resolution order to use when a name matches multiple keywords.</shortdoc>
 </kw>
-<kw name="Set Log Level">
-<arguments>
-<arg>level</arg>
+<kw name="Set Local Variable" lineno="1654">
+<arguments repr="name, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
+</arguments>
+<doc>Makes a variable available everywhere within the local scope.
+
+Variables set with this keyword are available within the
+local scope of the currently executed test case or in the local scope
+of the keyword in which they are defined. For example, if you set a
+variable in a user keyword, it is available only in that keyword. Other
+test cases or keywords will not see variables set with this keyword.
+
+This keyword is equivalent to a normal variable assignment based on a
+keyword return value.
+
+Example:
+| @{list} =          | Create List | item1     | item2     | item3     |
+
+is equivalent with
+
+| Set Local Variable | @{list} | item1    | item2    | item3    |
+
+This keyword will provide the option of setting local variables inside keywords
+like `Run Keyword If`, `Run Keyword And Return If`, `Run Keyword Unless`
+which until now was not possible by using `Set Variable`.
+
+It will also be possible to use this keyword from external libraries
+that want to set local variables.
+
+New in Robot Framework 3.2.</doc>
+<shortdoc>Makes a variable available everywhere within the local scope.</shortdoc>
+</kw>
+<kw name="Set Log Level" lineno="2996">
+<arguments repr="level">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="level">
+<name>level</name>
+</arg>
 </arguments>
 <doc>Sets the log threshold to the specified level and returns the old level.
 
@@ -1871,14 +2237,21 @@ INFO, but it can be overridden with the command line option
 
 The available levels: TRACE, DEBUG, INFO (default), WARN, ERROR and NONE (no
 logging).</doc>
-<tags>
-</tags>
+<shortdoc>Sets the log threshold to the specified level and returns the old level.</shortdoc>
 </kw>
-<kw name="Set Suite Documentation">
-<arguments>
-<arg>doc</arg>
-<arg>append=False</arg>
-<arg>top=False</arg>
+<kw name="Set Suite Documentation" lineno="3432">
+<arguments repr="doc, append=False, top=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="doc">
+<name>doc</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="append=False">
+<name>append</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="top=False">
+<name>top</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Sets documentation for the current test suite.
 
@@ -1893,15 +2266,24 @@ instead.
 
 The documentation of the current suite is available as a built-in
 variable ``${SUITE DOCUMENTATION}``.</doc>
-<tags>
-</tags>
+<shortdoc>Sets documentation for the current test suite.</shortdoc>
 </kw>
-<kw name="Set Suite Metadata">
-<arguments>
-<arg>name</arg>
-<arg>value</arg>
-<arg>append=False</arg>
-<arg>top=False</arg>
+<kw name="Set Suite Metadata" lineno="3452">
+<arguments repr="name, value, append=False, top=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="value">
+<name>value</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="append=False">
+<name>append</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="top=False">
+<name>top</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Sets metadata for the current test suite.
 
@@ -1916,13 +2298,16 @@ arguments`), the metadata of the top level suite is altered instead.
 The metadata of the current suite is available as a built-in variable
 ``${SUITE METADATA}`` in a Python dictionary. Notice that modifying this
 variable directly has no effect on the actual metadata the suite has.</doc>
-<tags>
-</tags>
+<shortdoc>Sets metadata for the current test suite.</shortdoc>
 </kw>
-<kw name="Set Suite Variable">
-<arguments>
-<arg>name</arg>
-<arg>*values</arg>
+<kw name="Set Suite Variable" lineno="1716">
+<arguments repr="name, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Makes a variable available everywhere within the scope of the current suite.
 
@@ -1932,11 +2317,11 @@ keyword thus has the same effect as creating them using the Variable
 table in the test data file or importing them from variable files.
 
 Possible child test suites do not see variables set with this keyword
-by default. Starting from Robot Framework 2.9, that can be controlled
-by using ``children=&lt;option&gt;`` as the last argument. If the specified
-``&lt;option&gt;`` is a non-empty string or any other value considered true
-in Python, the variable is set also to the child suites. Parent and
-sibling suites will never see variables set with this keyword.
+by default, but that can be controlled by using ``children=&lt;option&gt;``
+as the last argument. If the specified ``&lt;option&gt;`` given a true value
+(see `Boolean arguments`), the variable is set also to the child
+suites. Parent and sibling suites will never see variables set with
+this keyword.
 
 The name of the variable can be given either as a normal variable name
 (e.g. ``${NAME}``) or in escaped format as ``\${NAME}`` or ``$NAME``.
@@ -1974,12 +2359,13 @@ Example:
 This limitation applies also to `Set Test Variable`, `Set Global
 Variable`, `Variable Should Exist`, `Variable Should Not Exist` and
 `Get Variable Value` keywords.</doc>
-<tags>
-</tags>
+<shortdoc>Makes a variable available everywhere within the scope of the current suite.</shortdoc>
 </kw>
-<kw name="Set Tags">
-<arguments>
-<arg>*tags</arg>
+<kw name="Set Tags" lineno="3475">
+<arguments repr="*tags">
+<arg kind="VAR_POSITIONAL" required="false" repr="*tags">
+<name>tags</name>
+</arg>
 </arguments>
 <doc>Adds given ``tags`` for the current test or all tests in a suite.
 
@@ -1994,25 +2380,32 @@ The current tags are available as a built-in variable ``@{TEST TAGS}``.
 
 See `Remove Tags` if you want to remove certain tags and `Fail` if
 you want to fail the test case after setting and/or removing tags.</doc>
-<tags>
-</tags>
+<shortdoc>Adds given ``tags`` for the current test or all tests in a suite.</shortdoc>
 </kw>
-<kw name="Set Task Variable">
-<arguments>
-<arg>name</arg>
-<arg>*values</arg>
+<kw name="Set Task Variable" lineno="1707">
+<arguments repr="name, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Makes a variable available everywhere within the scope of the current task.
 
 This is an alias for `Set Test Variable` that is more applicable when
-creating tasks, not tests. New in RF 3.1.</doc>
-<tags>
-</tags>
+creating tasks, not tests.</doc>
+<shortdoc>Makes a variable available everywhere within the scope of the current task.</shortdoc>
 </kw>
-<kw name="Set Test Documentation">
-<arguments>
-<arg>doc</arg>
-<arg>append=False</arg>
+<kw name="Set Test Documentation" lineno="3413">
+<arguments repr="doc, append=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="doc">
+<name>doc</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="append=False">
+<name>append</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Sets documentation for the current test case.
 
@@ -2023,13 +2416,17 @@ as with `Set Test Message` keyword.
 The current test documentation is available as a built-in variable
 ``${TEST DOCUMENTATION}``. This keyword can not be used in suite
 setup or suite teardown.</doc>
-<tags>
-</tags>
+<shortdoc>Sets documentation for the current test case.</shortdoc>
 </kw>
-<kw name="Set Test Message">
-<arguments>
-<arg>message</arg>
-<arg>append=False</arg>
+<kw name="Set Test Message" lineno="3360">
+<arguments repr="message, append=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="message">
+<name>message</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="append=False">
+<name>append</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Sets message for the current test case.
 
@@ -2052,13 +2449,16 @@ Examples:
 | Set Test Message | `*`HTML`*` &lt;b&gt;Hello!&lt;/b&gt; |                      |
 
 This keyword can not be used in suite setup or suite teardown.</doc>
-<tags>
-</tags>
+<shortdoc>Sets message for the current test case.</shortdoc>
 </kw>
-<kw name="Set Test Variable">
-<arguments>
-<arg>name</arg>
-<arg>*values</arg>
+<kw name="Set Test Variable" lineno="1688">
+<arguments repr="name, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Makes a variable available everywhere within the scope of the current test.
 
@@ -2067,14 +2467,17 @@ scope of the currently executed test case. For example, if you set a
 variable in a user keyword, it is available both in the test case level
 and also in all other user keywords used in the current test. Other
 test cases will not see variables set with this keyword.
+It is an error to call `Set Test Variable` outside the
+scope of a test (e.g. in a Suite Setup or Teardown).
 
 See `Set Suite Variable` for more information and examples.</doc>
-<tags>
-</tags>
+<shortdoc>Makes a variable available everywhere within the scope of the current test.</shortdoc>
 </kw>
-<kw name="Set Variable">
-<arguments>
-<arg>*values</arg>
+<kw name="Set Variable" lineno="1626">
+<arguments repr="*values">
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Returns the given values which can then be assigned to a variables.
 
@@ -2094,13 +2497,16 @@ Variables created with this keyword are available only in the
 scope where they are created. See `Set Global Variable`,
 `Set Test Variable` and `Set Suite Variable` for information on how to
 set variables so that they are available also in a larger scope.</doc>
-<tags>
-</tags>
+<shortdoc>Returns the given values which can then be assigned to a variables.</shortdoc>
 </kw>
-<kw name="Set Variable If">
-<arguments>
-<arg>condition</arg>
-<arg>*values</arg>
+<kw name="Set Variable If" lineno="2359">
+<arguments repr="condition, *values">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*values">
+<name>values</name>
+</arg>
 </arguments>
 <doc>Sets variable based on the given condition.
 
@@ -2139,63 +2545,117 @@ conditions without a limit.
 
 Use `Get Variable Value` if you need to set variables
 dynamically based on whether a variable exist or not.</doc>
-<tags>
-</tags>
+<shortdoc>Sets variable based on the given condition.</shortdoc>
 </kw>
-<kw name="Should Be Empty">
-<arguments>
-<arg>item</arg>
-<arg>msg=None</arg>
+<kw name="Should Be Empty" lineno="1460">
+<arguments repr="item, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Verifies that the given item is empty.
 
 The length of the item is got using the `Get Length` keyword. The
 default error message can be overridden with the ``msg`` argument.</doc>
-<tags>
-</tags>
+<shortdoc>Verifies that the given item is empty.</shortdoc>
 </kw>
-<kw name="Should Be Equal">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Be Equal" lineno="599">
+<arguments repr="first, second, msg=None, values=True, ignore_case=False, formatter=str, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="formatter=str">
+<name>formatter</name>
+<default>str</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the given objects are unequal.
 
-Optional ``msg`` and ``values`` arguments specify how to construct
-the error message if this keyword fails:
+Optional ``msg``, ``values`` and ``formatter`` arguments specify how
+to construct the error message if this keyword fails:
 
 - If ``msg`` is not given, the error message is ``&lt;first&gt; != &lt;second&gt;``.
 - If ``msg`` is given and ``values`` gets a true value (default),
   the error message is ``&lt;msg&gt;: &lt;first&gt; != &lt;second&gt;``.
-- If ``msg`` is given and ``values`` gets a false value, the error
-  message is simply ``&lt;msg&gt;``. See `Boolean arguments` for more details
-  about using false values.
+- If ``msg`` is given and ``values`` gets a false value (see
+  `Boolean arguments`), the error message is simply ``&lt;msg&gt;``.
+- ``formatter`` controls how to format the values. Possible values are
+  ``str`` (default), ``repr`` and ``ascii``, and they work similarly
+  as Python built-in functions with same names. See `String
+  representations` for more details.
 
 If ``ignore_case`` is given a true value (see `Boolean arguments`) and
-arguments are strings, it indicates that comparison should be
-case-insensitive. New option in Robot Framework 3.0.1.
+both arguments are strings, comparison is done case-insensitively.
+If both arguments are multiline strings, this keyword uses
+`multiline string comparison`.
 
-If both arguments are multiline strings, the comparison is done using
-`multiline string comparisons`.
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
 
 Examples:
 | Should Be Equal | ${x} | expected |
 | Should Be Equal | ${x} | expected | Custom error message |
 | Should Be Equal | ${x} | expected | Custom message | values=False |
-| Should Be Equal | ${x} | expected | ignore_case=True |</doc>
-<tags>
-</tags>
+| Should Be Equal | ${x} | expected | ignore_case=True | formatter=repr |
+
+``strip_spaces`` is new in Robot Framework 4.0 and
+``collapse_spaces`` is new in Robot Framework 4.1.</doc>
+<shortdoc>Fails if the given objects are unequal.</shortdoc>
 </kw>
-<kw name="Should Be Equal As Integers">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>base=None</arg>
+<kw name="Should Be Equal As Integers" lineno="756">
+<arguments repr="first, second, msg=None, values=True, base=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails if objects are unequal after converting them to integers.
 
@@ -2209,16 +2669,28 @@ Examples:
 | Should Be Equal As Integers | 42   | ${42} | Error message |
 | Should Be Equal As Integers | ABCD | abcd  | base=16 |
 | Should Be Equal As Integers | 0b1011 | 11  |</doc>
-<tags>
-</tags>
+<shortdoc>Fails if objects are unequal after converting them to integers.</shortdoc>
 </kw>
-<kw name="Should Be Equal As Numbers">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>precision=6</arg>
+<kw name="Should Be Equal As Numbers" lineno="793">
+<arguments repr="first, second, msg=None, values=True, precision=6">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="precision=6">
+<name>precision</name>
+<default>6</default>
+</arg>
 </arguments>
 <doc>Fails if objects are unequal after converting them to real numbers.
 
@@ -2250,35 +2722,75 @@ you can implement custom keywords using Python's
 See `Should Not Be Equal As Numbers` for a negative version of this
 keyword and `Should Be Equal` for an explanation on how to override
 the default error message with ``msg`` and ``values``.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if objects are unequal after converting them to real numbers.</shortdoc>
 </kw>
-<kw name="Should Be Equal As Strings">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Be Equal As Strings" lineno="872">
+<arguments repr="first, second, msg=None, values=True, ignore_case=False, strip_spaces=False, formatter=str, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="formatter=str">
+<name>formatter</name>
+<default>str</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if objects are unequal after converting them to strings.
 
 See `Should Be Equal` for an explanation on how to override the default
-error message with ``msg`` and ``values``.
+error message with ``msg``, ``values`` and ``formatter``.
 
-If ``ignore_case`` is given a true value (see `Boolean arguments`), it
-indicates that comparison should be case-insensitive. New option in
-Robot Framework 3.0.1.
+If ``ignore_case`` is given a true value (see `Boolean arguments`),
+comparison is done case-insensitively. If both arguments are
+multiline strings, this keyword uses `multiline string comparison`.
 
-If both arguments are multiline strings, the comparison is done using
-`multiline string comparisons`.</doc>
-<tags>
-</tags>
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
+
+Strings are always [http://www.macchiato.com/unicode/nfc-faq| NFC normalized].
+
+``strip_spaces`` is new in Robot Framework 4.0
+and ``collapse_spaces`` is new in Robot Framework 4.1.</doc>
+<shortdoc>Fails if objects are unequal after converting them to strings.</shortdoc>
 </kw>
-<kw name="Should Be True">
-<arguments>
-<arg>condition</arg>
-<arg>msg=None</arg>
+<kw name="Should Be True" lineno="558">
+<arguments repr="condition, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails if the given condition is not true.
 
@@ -2299,9 +2811,9 @@ Examples:
 
 Variables used like ``${variable}``, as in the examples above, are
 replaced in the expression before evaluation. Variables are also
-available in the evaluation namespace and can be accessed using special
-syntax ``$variable``. This is a new feature in Robot Framework 2.9
-and it is explained more thoroughly in `Evaluating expressions`.
+available in the evaluation namespace, and can be accessed using
+special ``$variable`` syntax as explained in the `Evaluating
+expressions` section.
 
 Examples:
 | Should Be True | $rc &lt; 10          |
@@ -2316,16 +2828,36 @@ several useful attributes:
 | Should Be True | os.linesep == '\r\n'          | # Windows |
 | Should Be True | sys.platform == 'darwin'        | # OS X    |
 | Should Be True | sys.platform.startswith('java') | # Jython  |</doc>
-<tags>
-</tags>
+<shortdoc>Fails if the given condition is not true.</shortdoc>
 </kw>
-<kw name="Should Contain">
-<arguments>
-<arg>container</arg>
-<arg>item</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Contain" lineno="1056">
+<arguments repr="container, item, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if ``container`` does not contain ``item`` one or more times.
 
@@ -2338,31 +2870,49 @@ error message with arguments ``msg`` and ``values``.
 If ``ignore_case`` is given a true value (see `Boolean arguments`) and
 compared items are strings, it indicates that comparison should be
 case-insensitive. If the ``container`` is a list-like object, string
-items in it are compared case-insensitively. New option in Robot
-Framework 3.0.1.
+items in it are compared case-insensitively.
+
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
 
 Examples:
 | Should Contain | ${output}    | PASS  |
 | Should Contain | ${some list} | value | msg=Failure! | values=False |
-| Should Contain | ${some list} | value | ignore_case=True |</doc>
-<tags>
-</tags>
+| Should Contain | ${some list} | value | ignore_case=True |
+
+``strip_spaces`` is new in Robot Framework 4.0 and ``collapse_spaces`` is new
+in Robot Framework 4.1.</doc>
+<shortdoc>Fails if ``container`` does not contain ``item`` one or more times.</shortdoc>
 </kw>
-<kw name="Should Contain Any">
-<arguments>
-<arg>container</arg>
-<arg>*items</arg>
-<arg>**configuration</arg>
+<kw name="Should Contain Any" lineno="1112">
+<arguments repr="container, *items, **configuration">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*items">
+<name>items</name>
+</arg>
+<arg kind="VAR_NAMED" required="false" repr="**configuration">
+<name>configuration</name>
+</arg>
 </arguments>
 <doc>Fails if ``container`` does not contain any of the ``*items``.
 
 Works with strings, lists, and anything that supports Python's ``in``
 operator.
 
-Supports additional configuration parameters ``msg``, ``values``
-and ``ignore_case``, which have exactly the same semantics as arguments
-with same names have with `Should Contain`. These arguments must
-always be given using ``name=value`` syntax after all ``items``.
+Supports additional configuration parameters ``msg``, ``values``,
+``ignore_case`` and ``strip_spaces``, and ``collapse_spaces``
+which have exactly the same semantics as arguments with same
+names have with `Should Contain`. These arguments must always
+be given using ``name=value`` syntax after all ``items``.
 
 Note that possible equal signs in ``items`` must be escaped with
 a backslash (e.g. ``foo\=bar``) to avoid them to be passed in
@@ -2372,21 +2922,38 @@ Examples:
 | Should Contain Any | ${string} | substring 1 | substring 2 |
 | Should Contain Any | ${list}   | item 1 | item 2 | item 3 |
 | Should Contain Any | ${list}   | item 1 | item 2 | item 3 | ignore_case=True |
-| Should Contain Any | ${list}   | @{items} | msg=Custom message | values=False |
-
-New in Robot Framework 3.0.1.</doc>
-<tags>
-</tags>
+| Should Contain Any | ${list}   | @{items} | msg=Custom message | values=False |</doc>
+<shortdoc>Fails if ``container`` does not contain any of the ``*items``.</shortdoc>
 </kw>
-<kw name="Should Contain X Times">
-<arguments>
-<arg>item1</arg>
-<arg>item2</arg>
-<arg>count</arg>
-<arg>msg=None</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Contain X Times" lineno="1229">
+<arguments repr="container, item, count, msg=None, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="count">
+<name>count</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
-<doc>Fails if ``item1`` does not contain ``item2`` ``count`` times.
+<doc>Fails if ``container`` does not contain ``item`` ``count`` times.
 
 Works with strings, lists and all objects that `Get Count` works
 with. The default error message can be overridden with ``msg`` and
@@ -2394,39 +2961,83 @@ the actual count is always logged.
 
 If ``ignore_case`` is given a true value (see `Boolean arguments`) and
 compared items are strings, it indicates that comparison should be
-case-insensitive. If the ``item1`` is a list-like object, string
-items in it are compared case-insensitively. New option in Robot
-Framework 3.0.1.
+case-insensitive. If the ``container`` is a list-like object, string
+items in it are compared case-insensitively.
+
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
 
 Examples:
 | Should Contain X Times | ${output}    | hello | 2 |
-| Should Contain X Times | ${some list} | value | 3 | ignore_case=True |</doc>
-<tags>
-</tags>
+| Should Contain X Times | ${some list} | value | 3 | ignore_case=True |
+
+``strip_spaces`` is new in Robot Framework 4.0 and ``collapse_spaces`` is new
+in Robot Framework 4.1.</doc>
+<shortdoc>Fails if ``container`` does not contain ``item`` ``count`` times.</shortdoc>
 </kw>
-<kw name="Should End With">
-<arguments>
-<arg>str1</arg>
-<arg>str2</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should End With" lineno="978">
+<arguments repr="str1, str2, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str1">
+<name>str1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str2">
+<name>str2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the string ``str1`` does not end with the string ``str2``.
 
 See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+of the ``ignore_case``, ``strip_spaces``, and ``collapse_spaces`` options.</doc>
+<shortdoc>Fails if the string ``str1`` does not end with the string ``str2``.</shortdoc>
 </kw>
-<kw name="Should Match">
-<arguments>
-<arg>string</arg>
-<arg>pattern</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Match" lineno="1325">
+<arguments repr="string, pattern, msg=None, values=True, ignore_case=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="string">
+<name>string</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="pattern">
+<name>pattern</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the given ``string`` does not match the given ``pattern``.
 
@@ -2434,18 +3045,30 @@ Pattern matching is similar as matching files in a shell with
 ``*``, ``?`` and ``[chars]`` acting as wildcards. See the
 `Glob patterns` section for more information.
 
+If ``ignore_case`` is given a true value (see `Boolean arguments`) and
+compared items are strings, it indicates that comparison should be
+case-insensitive.
+
 See `Should Be Equal` for an explanation on how to override the default
-error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+error message with ``msg`` and ``values``.</doc>
+<shortdoc>Fails if the given ``string`` does not match the given ``pattern``.</shortdoc>
 </kw>
-<kw name="Should Match Regexp">
-<arguments>
-<arg>string</arg>
-<arg>pattern</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
+<kw name="Should Match Regexp" lineno="1344">
+<arguments repr="string, pattern, msg=None, values=True">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="string">
+<name>string</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="pattern">
+<name>pattern</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
 </arguments>
 <doc>Fails if ``string`` does not match ``pattern`` as a regular expression.
 
@@ -2482,28 +3105,52 @@ Examples:
 | ${match} = 'Bar: 43'
 | ${group1} = 'Bar'
 | ${group2} = '43'</doc>
-<tags>
-</tags>
+<shortdoc>Fails if ``string`` does not match ``pattern`` as a regular expression.</shortdoc>
 </kw>
-<kw name="Should Not Be Empty">
-<arguments>
-<arg>item</arg>
-<arg>msg=None</arg>
+<kw name="Should Not Be Empty" lineno="1469">
+<arguments repr="item, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Verifies that the given item is not empty.
 
 The length of the item is got using the `Get Length` keyword. The
 default error message can be overridden with the ``msg`` argument.</doc>
-<tags>
-</tags>
+<shortdoc>Verifies that the given item is not empty.</shortdoc>
 </kw>
-<kw name="Should Not Be Equal">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not Be Equal" lineno="699">
+<arguments repr="first, second, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the given objects are equal.
 
@@ -2511,18 +3158,42 @@ See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``.
 
 If ``ignore_case`` is given a true value (see `Boolean arguments`) and
-both arguments are strings, it indicates that comparison should be
-case-insensitive. New option in Robot Framework 3.0.1.</doc>
-<tags>
-</tags>
+both arguments are strings, comparison is done case-insensitively.
+
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
+
+``strip_spaces`` is new in Robot Framework 4.0 and ``collapse_spaces`` is new
+in Robot Framework 4.1.</doc>
+<shortdoc>Fails if the given objects are equal.</shortdoc>
 </kw>
-<kw name="Should Not Be Equal As Integers">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>base=None</arg>
+<kw name="Should Not Be Equal As Integers" lineno="739">
+<arguments repr="first, second, msg=None, values=True, base=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base=None">
+<name>base</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails if objects are equal after converting them to integers.
 
@@ -2533,16 +3204,28 @@ See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``.
 
 See `Should Be Equal As Integers` for some usage examples.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if objects are equal after converting them to integers.</shortdoc>
 </kw>
-<kw name="Should Not Be Equal As Numbers">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>precision=6</arg>
+<kw name="Should Not Be Equal As Numbers" lineno="776">
+<arguments repr="first, second, msg=None, values=True, precision=6">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="precision=6">
+<name>precision</name>
+<default>6</default>
+</arg>
 </arguments>
 <doc>Fails if objects are equal after converting them to real numbers.
 
@@ -2553,47 +3236,106 @@ See `Should Be Equal As Numbers` for examples on how to use
 ``precision`` and why it does not always work as expected. See also
 `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if objects are equal after converting them to real numbers.</shortdoc>
 </kw>
-<kw name="Should Not Be Equal As Strings">
-<arguments>
-<arg>first</arg>
-<arg>second</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not Be Equal As Strings" lineno="831">
+<arguments repr="first, second, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="first">
+<name>first</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="second">
+<name>second</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if objects are equal after converting them to strings.
 
-If ``ignore_case`` is given a true value (see `Boolean arguments`), it
-indicates that comparison should be case-insensitive. New option in
-Robot Framework 3.0.1.
-
 See `Should Be Equal` for an explanation on how to override the default
-error message with ``msg`` and ``values``.</doc>
-<tags>
-</tags>
+error message with ``msg`` and ``values``.
+
+If ``ignore_case`` is given a true value (see `Boolean arguments`),
+comparison is done case-insensitively.
+
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
+
+Strings are always [http://www.macchiato.com/unicode/nfc-faq|
+NFC normalized].
+
+``strip_spaces`` is new in Robot Framework 4.0 and ``collapse_spaces`` is new
+in Robot Framework 4.1.</doc>
+<shortdoc>Fails if objects are equal after converting them to strings.</shortdoc>
 </kw>
-<kw name="Should Not Be True">
-<arguments>
-<arg>condition</arg>
-<arg>msg=None</arg>
+<kw name="Should Not Be True" lineno="549">
+<arguments repr="condition, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails if the given condition is true.
 
 See `Should Be True` for details about how ``condition`` is evaluated
 and how ``msg`` can be used to override the default error message.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if the given condition is true.</shortdoc>
 </kw>
-<kw name="Should Not Contain">
-<arguments>
-<arg>container</arg>
-<arg>item</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not Contain" lineno="999">
+<arguments repr="container, item, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="item">
+<name>item</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if ``container`` contains ``item`` one or more times.
 
@@ -2604,27 +3346,45 @@ See `Should Be Equal` for an explanation on how to override the default
 error message with arguments ``msg`` and ``values``. ``ignore_case``
 has exactly the same semantics as with `Should Contain`.
 
+If ``strip_spaces`` is given a true value (see `Boolean arguments`)
+and both arguments are strings, the comparison is done without leading
+and trailing spaces. If ``strip_spaces`` is given a string value
+``LEADING`` or ``TRAILING`` (case-insensitive), the comparison is done
+without leading or trailing spaces, respectively.
+
+If ``collapse_spaces`` is given a true value (see `Boolean arguments`) and both
+arguments are strings, the comparison is done with all white spaces replaced by
+a single space character.
+
 Examples:
 | Should Not Contain | ${some list} | value  |
-| Should Not Contain | ${output}    | FAILED | ignore_case=True |</doc>
-<tags>
-</tags>
+| Should Not Contain | ${output}    | FAILED | ignore_case=True |
+
+``strip_spaces`` is new in Robot Framework 4.0 and ``collapse_spaces`` is new
+in Robot Framework 4.1.</doc>
+<shortdoc>Fails if ``container`` contains ``item`` one or more times.</shortdoc>
 </kw>
-<kw name="Should Not Contain Any">
-<arguments>
-<arg>container</arg>
-<arg>*items</arg>
-<arg>**configuration</arg>
+<kw name="Should Not Contain Any" lineno="1171">
+<arguments repr="container, *items, **configuration">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="container">
+<name>container</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*items">
+<name>items</name>
+</arg>
+<arg kind="VAR_NAMED" required="false" repr="**configuration">
+<name>configuration</name>
+</arg>
 </arguments>
 <doc>Fails if ``container`` contains one or more of the ``*items``.
 
 Works with strings, lists, and anything that supports Python's ``in``
 operator.
 
-Supports additional configuration parameters ``msg``, ``values``
-and ``ignore_case``, which have exactly the same semantics as arguments
-with same names have with `Should Contain`. These arguments must
-always be given using ``name=value`` syntax after all ``items``.
+Supports additional configuration parameters ``msg``, ``values``,
+``ignore_case`` and ``strip_spaces``, and ``collapse_spaces`` which have exactly
+the same semantics as arguments with same names have with `Should Contain`.
+These arguments must always be given using ``name=value`` syntax after all ``items``.
 
 Note that possible equal signs in ``items`` must be escaped with
 a backslash (e.g. ``foo\=bar``) to avoid them to be passed in
@@ -2634,35 +3394,65 @@ Examples:
 | Should Not Contain Any | ${string} | substring 1 | substring 2 |
 | Should Not Contain Any | ${list}   | item 1 | item 2 | item 3 |
 | Should Not Contain Any | ${list}   | item 1 | item 2 | item 3 | ignore_case=True |
-| Should Not Contain Any | ${list}   | @{items} | msg=Custom message | values=False |
-
-New in Robot Framework 3.0.1.</doc>
-<tags>
-</tags>
+| Should Not Contain Any | ${list}   | @{items} | msg=Custom message | values=False |</doc>
+<shortdoc>Fails if ``container`` contains one or more of the ``*items``.</shortdoc>
 </kw>
-<kw name="Should Not End With">
-<arguments>
-<arg>str1</arg>
-<arg>str2</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not End With" lineno="956">
+<arguments repr="str1, str2, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str1">
+<name>str1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str2">
+<name>str2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the string ``str1`` ends with the string ``str2``.
 
 See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+of the ``ignore_case``, ``strip_spaces``, and ``collapse_spaces`` options.</doc>
+<shortdoc>Fails if the string ``str1`` ends with the string ``str2``.</shortdoc>
 </kw>
-<kw name="Should Not Match">
-<arguments>
-<arg>string</arg>
-<arg>pattern</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not Match" lineno="1307">
+<arguments repr="string, pattern, msg=None, values=True, ignore_case=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="string">
+<name>string</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="pattern">
+<name>pattern</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the given ``string`` matches the given ``pattern``.
 
@@ -2670,61 +3460,148 @@ Pattern matching is similar as matching files in a shell with
 ``*``, ``?`` and ``[chars]`` acting as wildcards. See the
 `Glob patterns` section for more information.
 
+If ``ignore_case`` is given a true value (see `Boolean arguments`),
+the comparison is case-insensitive.
+
 See `Should Be Equal` for an explanation on how to override the default
-error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+error message with ``msg`` and ``values`.</doc>
+<shortdoc>Fails if the given ``string`` matches the given ``pattern``.</shortdoc>
 </kw>
-<kw name="Should Not Match Regexp">
-<arguments>
-<arg>string</arg>
-<arg>pattern</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
+<kw name="Should Not Match Regexp" lineno="1391">
+<arguments repr="string, pattern, msg=None, values=True">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="string">
+<name>string</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="pattern">
+<name>pattern</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
 </arguments>
 <doc>Fails if ``string`` matches ``pattern`` as a regular expression.
 
 See `Should Match Regexp` for more information about arguments.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if ``string`` matches ``pattern`` as a regular expression.</shortdoc>
 </kw>
-<kw name="Should Not Start With">
-<arguments>
-<arg>str1</arg>
-<arg>str2</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Not Start With" lineno="913">
+<arguments repr="str1, str2, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str1">
+<name>str1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str2">
+<name>str2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the string ``str1`` starts with the string ``str2``.
 
 See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+of the ``ignore_case``, ``strip_spaces``, and ``collapse_spaces`` options.</doc>
+<shortdoc>Fails if the string ``str1`` starts with the string ``str2``.</shortdoc>
 </kw>
-<kw name="Should Start With">
-<arguments>
-<arg>str1</arg>
-<arg>str2</arg>
-<arg>msg=None</arg>
-<arg>values=True</arg>
-<arg>ignore_case=False</arg>
+<kw name="Should Start With" lineno="935">
+<arguments repr="str1, str2, msg=None, values=True, ignore_case=False, strip_spaces=False, collapse_spaces=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str1">
+<name>str1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="str2">
+<name>str2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="values=True">
+<name>values</name>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_case=False">
+<name>ignore_case</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="strip_spaces=False">
+<name>strip_spaces</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="collapse_spaces=False">
+<name>collapse_spaces</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Fails if the string ``str1`` does not start with the string ``str2``.
 
 See `Should Be Equal` for an explanation on how to override the default
 error message with ``msg`` and ``values``, as well as for semantics
-of the ``ignore_case`` option.</doc>
-<tags>
-</tags>
+of the ``ignore_case``, ``strip_spaces``, and ``collapse_spaces`` options.</doc>
+<shortdoc>Fails if the string ``str1`` does not start with the string ``str2``.</shortdoc>
 </kw>
-<kw name="Sleep">
-<arguments>
-<arg>time_</arg>
-<arg>reason=None</arg>
+<kw name="Skip" lineno="2512">
+<arguments repr="msg=Skipped with Skip keyword.">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=Skipped with Skip keyword.">
+<name>msg</name>
+<default>Skipped with Skip keyword.</default>
+</arg>
+</arguments>
+<doc>Skips the rest of the current test.
+
+Skips the remaining keywords in the current test and sets the given
+message to the test. If the test has teardown, it will be executed.</doc>
+<shortdoc>Skips the rest of the current test.</shortdoc>
+</kw>
+<kw name="Skip If" lineno="2520">
+<arguments repr="condition, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="condition">
+<name>condition</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
+</arguments>
+<doc>Skips the rest of the current test if the ``condition`` is True.
+
+Skips the remaining keywords in the current test and sets the given
+message to the test. If ``msg`` is not given, the ``condition`` will
+be used as the message. If the test has teardown, it will be executed.
+
+If the ``condition`` evaluates to False, does nothing.</doc>
+<shortdoc>Skips the rest of the current test if the ``condition`` is True.</shortdoc>
+</kw>
+<kw name="Sleep" lineno="2801">
+<arguments repr="time_, reason=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time_">
+<name>time_</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="reason=None">
+<name>reason</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Pauses the test executed for the given time.
 
@@ -2739,13 +3616,17 @@ Examples:
 | Sleep | 1.5                  |
 | Sleep | 2 minutes 10 seconds |
 | Sleep | 10s                  | Wait for a reply |</doc>
-<tags>
-</tags>
+<shortdoc>Pauses the test executed for the given time.</shortdoc>
 </kw>
-<kw name="Variable Should Exist">
-<arguments>
-<arg>name</arg>
-<arg>msg=None</arg>
+<kw name="Variable Should Exist" lineno="1568">
+<arguments repr="name, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails unless the given variable exists within the current scope.
 
@@ -2756,13 +3637,17 @@ that the former has some limitations explained in `Set Suite Variable`.
 The default error message can be overridden with the ``msg`` argument.
 
 See also `Variable Should Not Exist` and `Keyword Should Exist`.</doc>
-<tags>
-</tags>
+<shortdoc>Fails unless the given variable exists within the current scope.</shortdoc>
 </kw>
-<kw name="Variable Should Not Exist">
-<arguments>
-<arg>name</arg>
-<arg>msg=None</arg>
+<kw name="Variable Should Not Exist" lineno="1587">
+<arguments repr="name, msg=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="msg=None">
+<name>msg</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Fails if the given variable exists within the current scope.
 
@@ -2773,23 +3658,29 @@ that the former has some limitations explained in `Set Suite Variable`.
 The default error message can be overridden with the ``msg`` argument.
 
 See also `Variable Should Exist` and `Keyword Should Exist`.</doc>
-<tags>
-</tags>
+<shortdoc>Fails if the given variable exists within the current scope.</shortdoc>
 </kw>
-<kw name="Wait Until Keyword Succeeds">
-<arguments>
-<arg>retry</arg>
-<arg>retry_interval</arg>
-<arg>name</arg>
-<arg>*args</arg>
+<kw name="Wait Until Keyword Succeeds" lineno="2277">
+<arguments repr="retry, retry_interval, name, *args">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="retry">
+<name>retry</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="retry_interval">
+<name>retry_interval</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="name">
+<name>name</name>
+</arg>
+<arg kind="VAR_POSITIONAL" required="false" repr="*args">
+<name>args</name>
+</arg>
 </arguments>
 <doc>Runs the specified keyword and retries if it fails.
 
 ``name`` and ``args`` define the keyword that is executed similarly
 as with `Run Keyword`. How long to retry running the keyword is
 defined using ``retry`` argument either as timeout or count.
-``retry_interval`` is the time to wait before trying to run the
-keyword again after the previous run has failed.
+``retry_interval`` is the time to wait between execution attempts.
 
 If ``retry`` is given as timeout, it must be in Robot Framework's
 time format (e.g. ``1 minute``, ``2 min 3 s``, ``4.5``) that is
@@ -2798,12 +3689,22 @@ given as count, it must have ``times`` or ``x`` postfix (e.g.
 ``5 times``, ``10 x``). ``retry_interval`` must always be given in
 Robot Framework's time format.
 
+By default ``retry_interval`` is the time to wait _after_ a keyword has
+failed. For example, if the first run takes 2 seconds and the retry
+interval is 3 seconds, the second run starts 5 seconds after the first
+run started. If ``retry_interval`` start with prefix ``strict:``, the
+execution time of the previous keyword is subtracted from the retry time.
+With the earlier example the second run would thus start 3 seconds after
+the first run started. A warning is logged if keyword execution time is
+longer than a strict interval.
+
 If the keyword does not succeed regardless of retries, this keyword
 fails. If the executed keyword passes, its return value is returned.
 
 Examples:
 | Wait Until Keyword Succeeds | 2 min | 5 sec | My keyword | argument |
 | ${result} = | Wait Until Keyword Succeeds | 3x | 200ms | My keyword |
+| ${result} = | Wait Until Keyword Succeeds | 3x | strict: 200ms | My keyword |
 
 All normal failures are caught by this keyword. Errors caused by
 invalid syntax, test or keyword timeouts, or fatal exceptions (caused
@@ -2814,10 +3715,10 @@ lots of output and considerably increase the size of the generated
 output files. It is possible to remove unnecessary keywords from
 the outputs using ``--RemoveKeywords WUKS`` command line option.
 
-Support for specifying ``retry`` as a number of times to retry is
-a new feature in Robot Framework 2.9.
-Since Robot Framework 2.9, variable errors are caught by this keyword.</doc>
-<tags>
-</tags>
+Support for "strict" retry interval is new in Robot Framework 4.1.</doc>
+<shortdoc>Runs the specified keyword and retries if it fails.</shortdoc>
 </kw>
+</keywords>
+<datatypes>
+</datatypes>
 </keywordspec>

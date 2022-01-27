@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec generated="20190331 08:41:46" type="library" name="DateTime" format="ROBOT">
-<version>3.1.1</version>
-<scope>global</scope>
-<namedargs>yes</namedargs>
+<keywordspec name="DateTime" type="LIBRARY" format="ROBOT" scope="GLOBAL" generated="2022-01-27T09:08:02Z" specversion="3" source="../../../../../home/martin/.local/lib/python3.8/site-packages/robot/libraries/DateTime.py" lineno="1">
+<version>4.1.3</version>
 <doc>A test library for handling date and time values.
 
 ``DateTime`` is a Robot Framework standard library that supports creating and
@@ -11,14 +9,13 @@ as well as doing simple calculations with them (e.g. `Subtract Time From Date`,
 `Add Time To Time`). It supports dates and times in various formats, and can
 also be used by other libraries programmatically.
 
-= Table of Contents =
+== Table of contents ==
 
 - `Terminology`
 - `Date formats`
 - `Time formats`
 - `Millisecond handling`
 - `Programmatic usage`
-- `Shortcuts`
 - `Keywords`
 
 = Terminology =
@@ -75,7 +72,7 @@ Examples:
 It is possible to use custom timestamps in both input and output.
 The custom format is same as accepted by Python's
 [http://docs.python.org/library/datetime.html#strftime-strptime-behavior|
-datatime.strptime] function. For example, the default timestamp discussed
+datetime.strptime] function. For example, the default timestamp discussed
 in the previous section would match ``%Y-%m-%d %H:%M:%S.%f``.
 
 When using a custom timestamp in input, it must be specified using
@@ -137,15 +134,12 @@ Examples:
 == Earliest supported date ==
 
 The earliest date that is supported depends on the date format and to some
-extend on the platform:
+extent on the platform:
 
 - Timestamps support year 1900 and above.
 - Python datetime objects support year 1 and above.
 - Epoch time supports 1970 and above on Windows with Python and IronPython.
 - On other platforms epoch time supports 1900 and above or even earlier.
-
-Prior to Robot Framework 2.9.2, all formats had same limitation as epoch time
-has nowadays.
 
 = Time formats =
 
@@ -248,9 +242,7 @@ by giving a true value to ``exclude_millis`` argument. If the argument is given
 as a string, it is considered true unless it is empty or case-insensitively
 equal to ``false``, ``none`` or ``no``. Other argument types are tested using
 same [http://docs.python.org/library/stdtypes.html#truth|rules as in
-Python]. Notice that prior to Robot Framework 2.9, all strings except
-the empty string were considered true, and that considering ``none`` false is
-new in Robot Framework 3.0.3.
+Python].
 
 When milliseconds are excluded, seconds in returned dates and times are
 rounded to the nearest full second. With `timestamp` and `timer string`
@@ -291,13 +283,31 @@ Additionally helper classes ``Date`` and ``Time`` can be used directly:
 |     date = Date(date).convert('datetime')
 |     interval = Time(interval).convert('number')
 |     # ...</doc>
-<kw name="Add Time To Date">
-<arguments>
-<arg>date</arg>
-<arg>time</arg>
-<arg>result_format=timestamp</arg>
-<arg>exclude_millis=False</arg>
-<arg>date_format=None</arg>
+<tags>
+</tags>
+<inits>
+</inits>
+<keywords>
+<kw name="Add Time To Date" lineno="423">
+<arguments repr="date, time, result_format=timestamp, exclude_millis=False, date_format=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="date">
+<name>date</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time">
+<name>time</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=timestamp">
+<name>result_format</name>
+<default>timestamp</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="date_format=None">
+<name>date_format</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Adds time to date and returns the resulting date.
 
@@ -316,15 +326,24 @@ Examples:
 | Should Be Equal | ${date}          | 2014-06-04 12:05:03.111 |              |
 | ${date} =       | Add Time To Date | 2014-05-28 12:05:03.111 | 01:02:03:004 |
 | Should Be Equal | ${date}          | 2014-05-28 13:07:06.115 |</doc>
-<tags>
-</tags>
+<shortdoc>Adds time to date and returns the resulting date.</shortdoc>
 </kw>
-<kw name="Add Time To Time">
-<arguments>
-<arg>time1</arg>
-<arg>time2</arg>
-<arg>result_format=number</arg>
-<arg>exclude_millis=False</arg>
+<kw name="Add Time To Time" lineno="471">
+<arguments repr="time1, time2, result_format=number, exclude_millis=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time1">
+<name>time1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time2">
+<name>time2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=number">
+<name>result_format</name>
+<default>number</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Adds time to another time and returns the resulting time.
 
@@ -340,15 +359,25 @@ Examples:
 | Should Be Equal | ${time}          | ${102}            |
 | ${time} =       | Add Time To Time | 3 hours 5 minutes | 01:02:03 | timer | exclude_millis=yes |
 | Should Be Equal | ${time}          | 04:07:03          |</doc>
-<tags>
-</tags>
+<shortdoc>Adds time to another time and returns the resulting time.</shortdoc>
 </kw>
-<kw name="Convert Date">
-<arguments>
-<arg>date</arg>
-<arg>result_format=timestamp</arg>
-<arg>exclude_millis=False</arg>
-<arg>date_format=None</arg>
+<kw name="Convert Date" lineno="354">
+<arguments repr="date, result_format=timestamp, exclude_millis=False, date_format=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="date">
+<name>date</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=timestamp">
+<name>result_format</name>
+<default>timestamp</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="date_format=None">
+<name>date_format</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Converts between supported `date formats`.
 
@@ -366,14 +395,21 @@ Examples:
 | Should Be Equal | ${date}      | ${1401267903.111}       |
 | ${date} =       | Convert Date | 5.28.2014 12:05         | exclude_millis=yes | date_format=%m.%d.%Y %H:%M |
 | Should Be Equal | ${date}      | 2014-05-28 12:05:00     |</doc>
-<tags>
-</tags>
+<shortdoc>Converts between supported `date formats`.</shortdoc>
 </kw>
-<kw name="Convert Time">
-<arguments>
-<arg>time</arg>
-<arg>result_format=number</arg>
-<arg>exclude_millis=False</arg>
+<kw name="Convert Time" lineno="377">
+<arguments repr="time, result_format=number, exclude_millis=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time">
+<name>time</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=number">
+<name>result_format</name>
+<default>number</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Converts between supported `time formats`.
 
@@ -390,15 +426,26 @@ Examples:
 | Should Be Equal | ${time}       | 1 hour 1 second   |
 | ${time} =       | Convert Time  | ${3661.5} | timer | exclude_milles=yes |
 | Should Be Equal | ${time}       | 01:01:02          |</doc>
-<tags>
-</tags>
+<shortdoc>Converts between supported `time formats`.</shortdoc>
 </kw>
-<kw name="Get Current Date">
-<arguments>
-<arg>time_zone=local</arg>
-<arg>increment=0</arg>
-<arg>result_format=timestamp</arg>
-<arg>exclude_millis=False</arg>
+<kw name="Get Current Date" lineno="312">
+<arguments repr="time_zone=local, increment=0, result_format=timestamp, exclude_millis=False">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="time_zone=local">
+<name>time_zone</name>
+<default>local</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="increment=0">
+<name>increment</name>
+<default>0</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=timestamp">
+<name>result_format</name>
+<default>timestamp</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Returns current local or UTC time with an optional increment.
 
@@ -423,17 +470,32 @@ Examples:
 | ${date} =       | Get Current Date | result_format=datetime  |
 | Should Be Equal | ${date.year}     | ${2014}                 |
 | Should Be Equal | ${date.month}    | ${6}                    |</doc>
-<tags>
-</tags>
+<shortdoc>Returns current local or UTC time with an optional increment.</shortdoc>
 </kw>
-<kw name="Subtract Date From Date">
-<arguments>
-<arg>date1</arg>
-<arg>date2</arg>
-<arg>result_format=number</arg>
-<arg>exclude_millis=False</arg>
-<arg>date1_format=None</arg>
-<arg>date2_format=None</arg>
+<kw name="Subtract Date From Date" lineno="397">
+<arguments repr="date1, date2, result_format=number, exclude_millis=False, date1_format=None, date2_format=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="date1">
+<name>date1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="date2">
+<name>date2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=number">
+<name>result_format</name>
+<default>number</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="date1_format=None">
+<name>date1_format</name>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="date2_format=None">
+<name>date2_format</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Subtracts date from another date and returns time between.
 
@@ -453,16 +515,28 @@ Arguments:
 | Should Be Equal | ${time}                 | ${42}                   |
 | ${time} =       | Subtract Date From Date | 2014-05-28 12:05:52     | 2014-05-27 12:05:10 | verbose |
 | Should Be Equal | ${time}                 | 1 day 42 seconds        |</doc>
-<tags>
-</tags>
+<shortdoc>Subtracts date from another date and returns time between.</shortdoc>
 </kw>
-<kw name="Subtract Time From Date">
-<arguments>
-<arg>date</arg>
-<arg>time</arg>
-<arg>result_format=timestamp</arg>
-<arg>exclude_millis=False</arg>
-<arg>date_format=None</arg>
+<kw name="Subtract Time From Date" lineno="447">
+<arguments repr="date, time, result_format=timestamp, exclude_millis=False, date_format=None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="date">
+<name>date</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time">
+<name>time</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=timestamp">
+<name>result_format</name>
+<default>timestamp</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="date_format=None">
+<name>date_format</name>
+<default>None</default>
+</arg>
 </arguments>
 <doc>Subtracts time from date and returns the resulting date.
 
@@ -481,15 +555,24 @@ Examples:
 | Should Be Equal | ${date}                 | 2014-05-28 12:05:03.111 |
 | ${date} =       | Subtract Time From Date | 2014-05-28 13:07:06.115 | 01:02:03:004 |
 | Should Be Equal | ${date}                 | 2014-05-28 12:05:03.111 |</doc>
-<tags>
-</tags>
+<shortdoc>Subtracts time from date and returns the resulting date.</shortdoc>
 </kw>
-<kw name="Subtract Time From Time">
-<arguments>
-<arg>time1</arg>
-<arg>time2</arg>
-<arg>result_format=number</arg>
-<arg>exclude_millis=False</arg>
+<kw name="Subtract Time From Time" lineno="492">
+<arguments repr="time1, time2, result_format=number, exclude_millis=False">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time1">
+<name>time1</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="time2">
+<name>time2</name>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="result_format=number">
+<name>result_format</name>
+<default>number</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="exclude_millis=False">
+<name>exclude_millis</name>
+<default>False</default>
+</arg>
 </arguments>
 <doc>Subtracts time from another time and returns the resulting time.
 
@@ -506,7 +589,9 @@ Examples:
 | Should Be Equal | ${time}                 | ${50}    |
 | ${time} =       | Subtract Time From Time | ${time}  | 1 minute | compact |
 | Should Be Equal | ${time}                 | - 10s    |</doc>
-<tags>
-</tags>
+<shortdoc>Subtracts time from another time and returns the resulting time.</shortdoc>
 </kw>
+</keywords>
+<datatypes>
+</datatypes>
 </keywordspec>
