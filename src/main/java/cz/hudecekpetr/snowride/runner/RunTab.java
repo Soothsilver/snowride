@@ -477,6 +477,10 @@ public class RunTab {
         File argfile;
         File runnerAgent;
         try {
+            // Keeping Snowride opened for days might cause the tmp directory to be cleaned-up
+            if (!temporaryDirectory.toFile().exists()) {
+                temporaryDirectory = createTemporaryDirectory();
+            }
             runnerAgent = temporaryDirectory.resolve("TestRunnerAgent.py").toFile();
             argfile = File.createTempFile("argfile", ".txt", temporaryDirectory.toFile());
             createArgFile(argfile, testCases);
