@@ -11,6 +11,7 @@ import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.RobotFile;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.LongRunningOperation;
+import javafx.application.Platform;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.FileUtils;
@@ -42,7 +43,9 @@ public class GateParser {
             List<HighElement> fileSuites = new ArrayList<>();
             File[] files = directoryPath.listFiles();
             if (files == null) {
-                throw new RuntimeException("The file '" + directoryPath + "' is not a directory.");
+                Platform.runLater(() -> {
+                    throw new RuntimeException("The file '" + directoryPath + "' is not a directory.");
+                });
             }
             double perFile = partOfProgress / files.length;
             for (File inFile : files) {

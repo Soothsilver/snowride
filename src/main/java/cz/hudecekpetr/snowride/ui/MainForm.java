@@ -961,6 +961,11 @@ public class MainForm {
                 File canonicalPath = loadRobotsFrom.getAbsoluteFile().getCanonicalFile();
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 0.8);
 
+                List<File> missingAdditionalFiles = Settings.getInstance().getMissingAdditionalFoldersAsFiles();
+                if (!missingAdditionalFiles.isEmpty()) {
+                    Platform.runLater(() -> new SnowAlert(Alert.AlertType.WARNING, "Additional files '" + missingAdditionalFiles + "' were not found. Please remove them from settings.").show());
+                }
+
                 List<File> additionalFiles = Settings.getInstance().getAdditionalFoldersAsFiles();
                 ExternalResourcesElement externalResources = gateParser.createExternalResourcesElement(additionalFiles, projectLoad, 0.2);
                 UltimateRoot ultimateRoot = new UltimateRoot(folderSuite, externalResources);

@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Settings are loaded at the beginning. They're user-global. To access the settings, use {@link Settings#getInstance()}.
@@ -140,6 +141,18 @@ public class Settings {
     }
 
     public List<File> getAdditionalFoldersAsFiles() {
+        return getAllAdditionalFoldersAsFiles().stream().filter(File::exists).collect(Collectors.toList());
+    }
+
+    public List<File> getMissingAdditionalFoldersAsFiles() {
+        return getAllAdditionalFoldersAsFiles().stream().filter(file -> !file.exists()).collect(Collectors.toList());
+    }
+
+    public void saveIntoSnow(File saveWhere) {
+        SnowFile.saveInto(saveWhere);
+    }
+
+    private List<File> getAllAdditionalFoldersAsFiles() {
         List<File> files = new ArrayList<>();
         String[] foldersSplit = StringUtils.split(additionalFolders, '\n');
         for (String folder : foldersSplit) {
@@ -151,9 +164,5 @@ public class Settings {
             files.add(folderAsFile);
         }
         return files;
-    }
-
-    public void saveIntoSnow(File saveWhere) {
-        SnowFile.saveInto(saveWhere);
     }
 }
