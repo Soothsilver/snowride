@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import cz.hudecekpetr.snowride.SnowConstants;
 import cz.hudecekpetr.snowride.filesystem.ReloadChangesWindow;
 import cz.hudecekpetr.snowride.output.OutputParser;
 import cz.hudecekpetr.snowride.search.FullTextSearchScene;
@@ -940,6 +941,7 @@ public class MainForm {
     }
 
     public void loadProjectFromFolderOrSnowFile(File path) {
+        SnowConstants.INSTANCE.setStageTitle("- " + path.getName());
 
         boolean abort = maybeOfferSaveDiscardOrCancel();
         if (abort) {
