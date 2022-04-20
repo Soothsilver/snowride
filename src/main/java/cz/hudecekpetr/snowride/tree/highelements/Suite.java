@@ -309,19 +309,18 @@ public abstract class Suite extends HighElement implements ISuite {
             if (previous.isPresent()) {
                 TreeItem<HighElement> currentNode = previous.get();
                 HighElement currentElement = currentNode.getValue();
-                if (currentElement == newElement) {
-                    continue;
+                if (currentElement != newElement) {
+                    if (replace && newElement instanceof Scenario && currentElement instanceof Scenario) {
+                        ((Scenario) newElement).basedOn((Scenario) currentElement);
+                    }
+                    newElement.updateGraphics(currentNode.getGraphic(), currentElement);
+                    newElement.outputElement = currentElement.outputElement;
+                    currentNode.setValue(newElement);
+                    newElement.treeNode = currentNode;
+                    newElement.treeNodeGraphic = currentNode.getGraphic();
+                    MainForm.INSTANCE.navigationStack.updateElement(currentElement, newElement);
+                    currentElement.treeNode = null;
                 }
-                if (replace && newElement instanceof Scenario && currentElement instanceof Scenario) {
-                    ((Scenario) newElement).basedOn((Scenario) currentElement);
-                }
-                newElement.updateGraphics(currentNode.getGraphic(), currentElement);
-                newElement.outputElement = currentElement.outputElement;
-                currentNode.setValue(newElement);
-                newElement.treeNode = currentNode;
-                newElement.treeNodeGraphic = currentNode.getGraphic();
-                MainForm.INSTANCE.navigationStack.updateElement(currentElement, newElement);
-                currentElement.treeNode = null;
             }
             treeNode.getChildren().add(newElement.treeNode);
         }
