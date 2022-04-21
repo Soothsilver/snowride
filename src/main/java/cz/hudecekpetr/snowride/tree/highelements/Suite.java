@@ -503,8 +503,8 @@ public abstract class Suite extends HighElement implements ISuite {
             treeChildren.forEach(child -> sortTree(child.getValue()));
             // exclude ultimate root because we want "External resources" to be second. In fact, we depend on it.
             if (!(element instanceof UltimateRoot)) {
-                treeChildren.sort(Comparator.comparing(child -> child.getValue().getShortNameAsOnDisk()));
-                element.children.sort(Comparator.comparing(HighElement::getShortNameAsOnDisk));
+                treeChildren.sort(Comparator.comparing(child -> child.getValue().getShortNameAsOnDisk().toLowerCase()));
+                element.children.sort(Comparator.comparing(child -> child.getShortNameAsOnDisk().toLowerCase()));
             }
         }
     }
