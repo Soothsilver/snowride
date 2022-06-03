@@ -6,6 +6,7 @@ import cz.hudecekpetr.snowride.ui.Images;
 import javafx.scene.image.Image;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.InputStream;
@@ -76,11 +77,24 @@ public class ExternalLibrary {
                 for (int j = 0; j < actualArgs.getLength(); j++) {
                     String arg = actualArgs.item(j).getTextContent();
                     ParameterKind parameterKind = ParameterKind.STANDARD;
-                    if (arg.indexOf('=') != -1) {
-                        parameterKind = ParameterKind.NAMED;
-                    }
-                    if (arg.startsWith("*")) {
-                        parameterKind = ParameterKind.VARARGS;
+                    Node kind = actualArgs.item(j).getAttributes().getNamedItem("kind");
+                    if (kind != null) {
+                        // Quick alignments for changed "Arguments" specification in robot-framework 4.x
+                        // More details: https://robot-framework.readthedocs.io/en/master/_modules/robot/running/arguments/argumentspec.html
+                        // POSITIONAL_OR_NAMED | VAR_POSITIONAL | VAR_NAMED
+                        arg = ((Element) actualArgs.item(j)).getElementsByTagName("name").item(0).getTextContent();
+                        if (actualArgs.item(j).getAttributes().getNamedItem("repr").getNodeValue().startsWith("*")) {
+                            parameterKind = ParameterKind.VARARGS;
+                        } else if (kind.getNodeValue().equals("POSITIONAL_OR_NAMED") || kind.getNodeValue().equals("VAR_NAMED")) {
+                            parameterKind = ParameterKind.NAMED;
+                        }
+                    } else {
+                        if (arg.indexOf('=') != -1) {
+                            parameterKind = ParameterKind.NAMED;
+                        }
+                        if (arg.startsWith("*")) {
+                            parameterKind = ParameterKind.VARARGS;
+                        }
                     }
                     parameters.add(new Parameter(arg, parameterKind));
                 }
