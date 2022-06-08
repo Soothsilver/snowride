@@ -1,2 +1,4 @@
 Directory=./src/main/robot_samples
 RunnerScript=
+AdditionalPaths=
+RunnerArguments=
