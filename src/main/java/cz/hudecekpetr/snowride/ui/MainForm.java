@@ -1086,7 +1086,7 @@ public class MainForm {
     }
 
     public Optional<HighElement> findTestByFullyQualifiedName(String longname) {
-        return getRootElement().selfAndDescendantHighElements().filter(he -> he.getQualifiedName().toLowerCase().replace('_', ' ').equals(longname.replace('_', ' ').toLowerCase())).findFirst();
+        return getRootElement().selfAndDescendantHighElements().filter(he -> he.getQualifiedNameNormalized().equalsIgnoreCase(longname.replace('_', ' '))).findFirst();
     }
 
     public void toast(String toastMessage) {

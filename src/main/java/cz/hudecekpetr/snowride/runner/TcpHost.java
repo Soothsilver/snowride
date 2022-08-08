@@ -5,6 +5,7 @@ import com.jsoniter.any.Any;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.generalpurpose.ByteArrayBuilder;
 import cz.hudecekpetr.snowride.output.OutputParser;
+import cz.hudecekpetr.snowride.tree.highelements.HighElement;
 import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.fx.DeferredActions;
 import cz.hudecekpetr.snowride.ui.Images;
@@ -19,8 +20,10 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 public class TcpHost {
     /**

@@ -143,6 +143,14 @@ public abstract class HighElement implements IAutocompleteOption {
         }
     }
 
+    public String getQualifiedNameNormalized() {
+        if (parent == null || parent.excludedFromQualifiedName()) {
+            return getShortName().replace('_', ' ').trim();
+        } else {
+            return parent.getQualifiedNameNormalized() + "." + getShortName().replace('_', ' ').trim();
+        }
+    }
+
     public abstract void deleteSelf(MainForm mainForm);
 
     public void dissociateSelfFromChild(HighElement child) {
