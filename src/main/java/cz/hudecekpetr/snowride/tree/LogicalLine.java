@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static cz.hudecekpetr.snowride.Extensions.toInvariant;
@@ -304,12 +306,30 @@ public class LogicalLine {
                     prefix.equalsIgnoreCase("And") ||
                     prefix.equalsIgnoreCase("But")) {
                 String afterPrefix = cellContents.substring(firstSpace + 1);
-                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(afterPrefix));
-                for (IKnownKeyword homonym : homonyms) {
-                    if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
-                        cellSemantics.thisHereKeyword = homonym;
+                String key = toInvariant(afterPrefix);
+                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(key);
+
+                // Support keywords with "variables" in name, example: "Ensure '${field}" equals "${value}"' actual usage 'Ensure "town" equals "Prague"'
+                if (homonyms == null) {
+                    Map<String, String> keywordsWithVariablesInName = cellSemantics.permissibleKeywordsByInvariantName.keySet().stream()
+                            .filter(s -> s.contains("${"))
+                            .collect(Collectors.toMap(x -> x.replaceAll("\\$\\{.*?}", ".*"), x -> x));
+                    Optional<String> keywordName = keywordsWithVariablesInName.keySet().stream().filter(key::matches).findFirst();
+                    if (keywordName.isPresent()) {
+                        homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(keywordsWithVariablesInName.get(keywordName.get()));
                     }
                 }
+
+                if (homonyms != null) {
+                    for (IKnownKeyword homonym : homonyms) {
+                        if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                            cellSemantics.thisHereKeyword = homonym;
+                        }
+                    }
+                } else {
+                    System.out.println("Keyword '" + key + "' was not foud!");
+                }
+
                 if (cellSemantics.thisHereKeyword == null) {
                     determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, afterPrefix);
                 }
