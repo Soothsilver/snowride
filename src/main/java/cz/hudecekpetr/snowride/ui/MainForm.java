@@ -27,6 +27,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.control.NotificationPane;
 
 import cz.hudecekpetr.snowride.errors.ErrorsTab;
@@ -961,6 +962,11 @@ public class MainForm {
             try {
                 FilesystemWatcher.getInstance().forgetEverything();
                 File canonicalPath = loadRobotsFrom.getAbsoluteFile().getCanonicalFile();
+                if (!canonicalPath.exists()) {
+                    projectLoad.progress.set(1);
+                    Platform.runLater(() -> new SnowAlert(Alert.AlertType.WARNING, "File or folder '" + canonicalPath + "' does not exist.", new ButtonType("Close")).showAndWait());
+                    return;
+                }
                 FolderSuite folderSuite = gateParser.loadDirectory(canonicalPath, projectLoad, 0.8);
 
                 List<File> missingAdditionalFiles = Settings.getInstance().getMissingAdditionalFoldersAsFiles();
@@ -1004,8 +1010,10 @@ public class MainForm {
                     reloadExternalLibraries();
                 });
             } catch (IOException e) {
+                projectLoad.progress.set(1);
                 throw new RuntimeException(e);
             } catch (Throwable t) {
+                projectLoad.progress.set(1);
                 t.printStackTrace();
             }
         });
