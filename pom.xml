@@ -15,7 +15,7 @@
         <moduleName>cz.hudecekpetr.snowride</moduleName>
         <mainClass>cz.hudecekpetr.snowride.SnowrideApplication</mainClass>
 
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.7.20</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
 
