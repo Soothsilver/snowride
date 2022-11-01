@@ -13,7 +13,12 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.awt.*;
+import java.io.IOException;
+import java.net.JarURLConnection;
 import java.net.URI;
+import java.net.URL;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 
 public class AboutSnowride extends AboutDialogBase {
@@ -21,7 +26,8 @@ public class AboutSnowride extends AboutDialogBase {
     public static final String GITHUB_MAIN_URL = "https://github.com/Soothsilver/snowride";
 
     public AboutSnowride() {
-        Label lblSnowride = new Label("Snowride");
+        String version = readVersionFromManifest();
+        Label lblSnowride = new Label("Snowride " + version);
         lblSnowride.setFont(MainForm.BIGGER_FONT);
         Label lblDescription = new Label("Snowride is a fast and many-featured IDE for Robot Framework test projects.");
         Label lblAuthor = new Label("© 2019 Petr Hudeček");
@@ -46,5 +52,21 @@ public class AboutSnowride extends AboutDialogBase {
         this.setScene(new Scene(vbAll, 500, 400));
         this.setTitle("About Snowride");
         this.getIcons().add(Images.snowflake);
+    }
+    private static String readVersionFromManifest() {
+        String className = AboutSnowride.class.getSimpleName() + ".class";
+        String classPath = AboutSnowride.class.getResource(className).toString();
+        if (classPath.startsWith("jar")) {
+            try {
+                URL url = new URL(classPath);
+                JarURLConnection jarConnection = (JarURLConnection) url.openConnection();
+                Manifest manifest = jarConnection.getManifest();
+                Attributes attributes = manifest.getMainAttributes();
+                return attributes.getValue("Implementation-Version");
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        return "LATEST";
     }
 }
