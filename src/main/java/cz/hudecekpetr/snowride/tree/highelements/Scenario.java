@@ -279,7 +279,7 @@ public class Scenario extends HighElement {
 
     @Override
     public void updateTagsForSelfAndChildren() {
-        if (parent.childTestsAreTemplates) {
+        if (parent.childTestsAreTemplates && isTestCase) {
             semanticsIsTemplateTestCase = true;
         }
         actualTags = new HashSet<>(parent.forceTagsCumulative);
