@@ -1,14 +1,6 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
-
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -31,24 +23,11 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableFocusModel;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TablePositionBase;
-import javafx.scene.control.TableSelectionModel;
-import javafx.scene.control.TableView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.*;
 
 public class SnowTableView extends TableView<LogicalLine> {
 
