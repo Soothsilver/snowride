@@ -1,5 +1,15 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.SnowAlert;
@@ -27,11 +37,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class Scenario extends HighElement {
 
