@@ -1,11 +1,22 @@
 package cz.hudecekpetr.snowride.tree.highelements;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.SnowAlert;
 import cz.hudecekpetr.snowride.fx.autocompletion.IAutocompleteOption;
 import cz.hudecekpetr.snowride.fx.bindings.PositionInListProperty;
 import cz.hudecekpetr.snowride.runner.TestResult;
+import cz.hudecekpetr.snowride.semantics.IKnownKeyword;
 import cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils;
 import cz.hudecekpetr.snowride.semantics.codecompletion.VariableCompletionOption;
 import cz.hudecekpetr.snowride.semantics.findusages.FindUsages;
@@ -26,11 +37,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class Scenario extends HighElement {
 
@@ -38,6 +44,8 @@ public class Scenario extends HighElement {
     public TestResult lastTestResult = TestResult.NOT_YET_RUN;
     public HashSet<Tag> actualTags = new HashSet<>();
     public boolean semanticsIsTemplateTestCase;
+    public String templateName;
+    public Scenario templateReferenced;
     private Cell nameCell;
     private boolean isTestCase;
     private List<String> semanticsArguments = new ArrayList<>();
@@ -45,7 +53,6 @@ public class Scenario extends HighElement {
 
     public Scenario(Cell nameCell, boolean isTestCase, List<LogicalLine> lines) {
         super(nameCell.contents, null, new ArrayList<>());
-
         this.nameCell = nameCell;
         this.setTestCase(isTestCase);
         this.lines = FXCollections.observableList(lines);
@@ -223,6 +230,8 @@ public class Scenario extends HighElement {
     public void analyzeSemantics() {
         // TODO template-ness can also be inherited from parent suites
         semanticsIsTemplateTestCase = false;
+        templateName = null;
+        templateReferenced = null;
         ArrayList<String> argCells = new ArrayList<>();
         semanticsDocumentation = "";
         thisScenarioVariables.clear();
@@ -246,6 +255,18 @@ public class Scenario extends HighElement {
 
                 } else if (line.cells.get(1).contents.equalsIgnoreCase("[Template]")) {
                     semanticsIsTemplateTestCase = true;
+                    templateName = line.cells.get(2).contents;
+                    if (parent != null && parent.getKeywordsPermissibleInSuiteByInvariantName() != null) {
+                        List<IKnownKeyword> possibleReferences = parent.getKeywordsPermissibleInSuiteByInvariantName()
+                                .get(Extensions.toInvariant(templateName));
+                        // at fist shot, there can be references with the same name,
+                        // we may somehow improve the matching?
+                        if (possibleReferences != null && !possibleReferences.isEmpty()
+                                && possibleReferences.get(0).getScenarioIfPossible() != null) {
+                            templateReferenced = possibleReferences.get(0).getScenarioIfPossible();
+                        }
+                    }
+
                 }
             }
             for (Cell cell : line.cells) {

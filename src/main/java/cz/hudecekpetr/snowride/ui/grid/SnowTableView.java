@@ -1,6 +1,14 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
+
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -23,11 +31,23 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.*;
-import javafx.scene.input.*;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableFocusModel;
+import javafx.scene.control.TablePosition;
+import javafx.scene.control.TablePositionBase;
+import javafx.scene.control.TableSelectionModel;
+import javafx.scene.control.TableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 
 
 public class SnowTableView extends TableView<LogicalLine> {
@@ -601,12 +621,19 @@ public class SnowTableView extends TableView<LogicalLine> {
         // match lines from output.xml
         OutputMatcher.matchLines(highElement, lines);
 
+        boolean containsTemplate = false;
+
         scenario = highElement;
         // For key-value tables:
         for (LogicalLine line : lines) {
             line.setBelongsToHighElement(highElement);
             line.belongsWhere = snowTableKind;
             line.recalcStyles();
+
+            if (!containsTemplate && line.cells.size() > 1) {
+                Cell cell1 = line.cells.get(1);
+                containsTemplate = cell1.contents.contains("Template");
+            }
         }
         // Renew data
         this.setItems(lines);
@@ -628,6 +655,29 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.getColumns().addAll(newColumns);
         }
         this.considerAddingVirtualRowsAndColumns();
+
+        if (scenario instanceof Scenario && ((Scenario) scenario).semanticsIsTemplateTestCase) {
+            Scenario scenarioTyped = (Scenario) scenario;
+            if (scenarioTyped.templateReferenced.getLines().size() > 0) {
+                // simply put into header what is in line 0 of referenced template
+                LogicalLine line0 = scenarioTyped.templateReferenced.getLines().get(0);
+                List<TableColumn<LogicalLine, ?>> colsToRename = this.getColumns().subList(1,
+                    this.getColumns().size() - 1);
+                for (int i = 0; i < colsToRename.size(); i++) {
+                    // we need to shift indexes by -2 , expecting [Arguments] modifier first + empty col
+                    if (line0.cells.size() >= i + 3) {
+                        TableColumn<LogicalLine, ?> col = colsToRename.get(i);
+                        col.setText(line0.cells.get(i + 2).contents);
+                    } else {
+                        colsToRename.get(i).setText("");
+                    }
+                }
+
+            }
+        } else {
+            // clean the possible template artifacts
+            this.getColumns().subList(1, this.getColumns().size() - 1).forEach(col -> col.setText(""));
+        }
     }
 
     private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition position) {
