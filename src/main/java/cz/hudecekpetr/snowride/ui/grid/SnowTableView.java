@@ -640,13 +640,17 @@ public class SnowTableView extends TableView<LogicalLine> {
             if (scenarioTyped.templateReferenced.getLines().size() > 0) {
                 // simply put into header what is in line 0 of referenced template
                 LogicalLine line0 = scenarioTyped.templateReferenced.getLines().get(0);
+                LogicalLine argLine = scenarioTyped.templateReferenced.getLines().stream()
+                        .filter(line -> line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")).findAny()
+                        .orElse(line0);
+
                 List<TableColumn<LogicalLine, ?>> colsToRename = this.getColumns().subList(1,
                     this.getColumns().size() - 1);
                 for (int i = 0; i < colsToRename.size(); i++) {
                     // we need to shift indexes by -2 , expecting [Arguments] modifier first + empty col
-                    if (line0.cells.size() >= i + 3) {
+                    if (argLine.cells.size() >= i + 3) {
                         TableColumn<LogicalLine, ?> col = colsToRename.get(i);
-                        col.setText(line0.cells.get(i + 2).contents);
+                        col.setText(argLine.cells.get(i + 2).contents);
                     } else {
                         colsToRename.get(i).setText("");
                     }
