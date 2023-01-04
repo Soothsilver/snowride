@@ -46,7 +46,7 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        this.setStyle("-fx-selection-bar: lightyellow;");
+
         this.skinProperty().addListener((observable, oldValue, newValue) -> {
             final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
             header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));

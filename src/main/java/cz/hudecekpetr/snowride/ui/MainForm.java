@@ -121,6 +121,7 @@ public class MainForm {
     private ScheduledExecutorService endTheToastExecutor = Executors.newSingleThreadScheduledExecutor();
     private String notificationShowingWhat = null;
     private Button bStop;
+    private Scene scene;
 
     public MainForm(Stage stage) {
         SystemColorService.initialize();
@@ -167,7 +168,8 @@ public class MainForm {
         VBox vBox = new VBox(mainMenu, toolBar, treeAndGrid);
         notificationPane = new NotificationPane(vBox);
         VBox.setVgrow(treeAndGrid, Priority.ALWAYS);
-        Scene scene = new Scene(notificationPane, Settings.getInstance().width, Settings.getInstance().height);
+
+        this.scene = new Scene(notificationPane, Settings.getInstance().width, Settings.getInstance().height);
         scene.getStylesheets().add(getClass().getResource("/snow.css").toExternalForm());
         scene.getStylesheets().add("snow://autogen.css");
         addGlobalShortcuts(scene);
@@ -851,7 +853,16 @@ public class MainForm {
             SettingsWindow settingsWindow = new SettingsWindow(MainForm.this);
             settingsWindow.show();
         });
-        Menu toolsMenu = new Menu("Tools", null, bSettings2);
+        CheckMenuItem darkThemeSwitch = new CheckMenuItem("Dark/Light switch");
+        darkThemeSwitch.selectedProperty().addListener( (obs,wasSelected,isSelected)->{
+            if(isSelected) {
+                scene.getStylesheets().add("snow-dark.css");
+            } else {
+                scene.getStylesheets().remove("snow-dark.css");
+            }
+        });
+        
+        Menu toolsMenu = new Menu("Tools", null, darkThemeSwitch,bSettings2);
         Menu helpMenu = new Menu("Help", null, about, shortcuts, robotFrameworkUserGuide, robotFrameworkLibrariesDocumentation, releaseNotes);
         mainMenu.getMenus().addAll(projectMenu, navigateMenu, runMenu, toolsMenu, helpMenu);
         return mainMenu;

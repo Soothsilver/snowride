@@ -10,17 +10,31 @@ import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.robotframework.jaxb.BodyItemStatusValue;
 import org.robotframework.jaxb.Keyword;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
-    private static final String LINE_NUMBER_CELL_STYLE = "-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;";
+    private static String ROWHEAD_STYLE = "rowhead";
+    private static String ROWHEAD_BASIC_STYLE = "rowheadBasic";
+    private static String ROWHEAD_FAIL_STYLE = "rowheadFail";
+    private static String ROWHEAD_PASS_STYLE = "rowheadPass";
+    private static String ROWHEAD_SKIP_STYLE = "rowheadSkip";
+    private static String ROWHEAD_PARTIAL_STYLE = "rowHeadPartial";
+
+    private static List<String> interchangableStyles = Arrays.asList(ROWHEAD_STYLE, ROWHEAD_BASIC_STYLE,
+        ROWHEAD_FAIL_STYLE, ROWHEAD_PASS_STYLE, ROWHEAD_SKIP_STYLE, ROWHEAD_PARTIAL_STYLE);
 
     private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
     private final SnowTableView snowTableView;
@@ -212,18 +226,30 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     @Override
     protected void updateItem(Cell item, boolean empty) {
         super.updateItem(item, empty);
-        styleProperty().unbind();
+        
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
+            getStyleClass().removeAll(interchangableStyles);
             setStyle(null);
         } else {
             setTextAndGraphicTo(item);
             updateLineNumberCellStyle(item);
-            if (!item.isLineNumberCell) {
-                // TODO This is a potential performance bottleneck.
-                styleProperty().bind(item.getStyleProperty());
+            getStyleClass().removeAll(Cell.interchangableCellStyles);
+            getStyleClass().addAll(item.getCssStyleClassesProperty());
+            // make the binding manually s we want jsut add some styles on top
+            if (item.getRecentChangeListener() != null) {
+                item.getCssStyleClassesProperty().removeListener(item.getRecentChangeListener());
             }
+            ChangeListener<List<String>> changeListener = (observable, oldValue, newValue) -> {
+                getStyleClass().removeAll(Cell.interchangableCellStyles);
+                getStyleClass().addAll(item.getCssStyleClassesProperty());
+                setVisible(false);
+                setVisible(true);
+            };
+            item.setRecentChangeListener(changeListener);
+            item.getCssStyleClassesProperty().addListener(changeListener);
+            
             if (item.triggerDocumentationNext) {
                 triggerDocumentation();
                 item.triggerDocumentationNext = false;
@@ -240,33 +266,30 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             if (cell.iceCell == null) {
                 cell.iceCell = this;
             }
-            String style = LINE_NUMBER_CELL_STYLE;
-            String color = "lavender";
+            List<String> rowHeadStyles = new ArrayList<>();
+            rowHeadStyles.add(ROWHEAD_STYLE);
+
             if (cell.partOfLine != null && cell.partOfLine.status != null) {
                 BodyItemStatusValue status = cell.partOfLine.status;
                 if (status == BodyItemStatusValue.FAIL) {
-                    color = "#ce3e01";
-                    //style += "-fx-background-color: #ce3e01;";
+                    rowHeadStyles.add(ROWHEAD_FAIL_STYLE);
                 } else if (status == BodyItemStatusValue.PASS) {
-                    color = "#97bd61";
-                    //style += "-fx-background-color: #97bd61;";
+                    rowHeadStyles.add(ROWHEAD_PASS_STYLE);
                 } else if (status == BodyItemStatusValue.SKIP) {
-                    color = "#dddddd";
-                    //style += "-fx-background-color: #dddddd;";
+                    rowHeadStyles.add(ROWHEAD_SKIP_STYLE);
                 } else if (status == BodyItemStatusValue.NOT_RUN) {
-                    color = "lightgray";
-                    //style += "-fx-background-color: lightgray;";
                 }
 
                 if (cell.partOfLine.doesNotMatch) {
-                    style += "-fx-background-color: linear-gradient(from 12px 12px to 0px 0px, " + color + " 50%, #F4A460 10%);";
+                    rowHeadStyles.add(ROWHEAD_PARTIAL_STYLE);
                 } else {
-                    style += "-fx-background-color: " + color + ";";
                 }
             } else {
-                style += "-fx-background-color: lavender;";
+                rowHeadStyles.add(ROWHEAD_BASIC_STYLE);
             }
-            setStyle(style);
+            rowHeadStyles.forEach(style -> getStyleClass().add(style));
+            setVisible(false);
+            setVisible(true);
         }
     }
 

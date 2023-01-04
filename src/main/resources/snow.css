@@ -53,3 +53,138 @@
 .hyperlink:hover {
     -fx-underline: true;
 }
+
+.snow .rowhead{
+	-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;
+}
+
+.snow .rowheadBasic{
+	-fx-background-color: lavender;
+}
+
+
+.snow .rowheadFail{
+	-fx-background-color: #ce3e01;
+}
+
+.snow .rowheadPass{
+	-fx-background-color: #97bd61;
+}
+
+.snow .rowheadSkip{
+	-fx-background-color: #dddddd;
+}
+
+.snow .rowHeadPartial{
+	-fx-background-color: linear-gradient(from 12px 12px to 0px 0px, rgba(244,194,96,1), rgba(244,194,96,0));
+}
+
+.snow .settingsCell{
+	-fx-text-fill: darkmagenta;
+}
+.snow .nonSettingsCell{
+	-fx-text-fill: green;
+}
+
+.snow .suiteImportCell{
+	-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold;
+}
+.snow .otherImportCell{
+	-fx-text-fill: dodgerblue;
+}
+.snow .failedImportCell{
+	-fx-text-fill: red;
+}
+.snow .reservedKeywordCell{
+	-fx-text-fill: darkmagenta;
+	-fx-font-weight: bold;
+}
+
+.snow .indentationCell{
+	-fx-font-style: italic; -fx-background-color: darkgray;
+}
+.snow .commentCell{
+	-fx-text-fill: brown;
+}
+.snow .keywordCell{
+	-fx-font-weight: bold;
+}
+
+.snow .scenarioLinkCell{
+	-fx-text-fill: blue;
+}
+
+.snow .scenarioLinkActiveCell{
+	-fx-underline: true;
+}
+
+.snow .keywordNoLinkCell{
+	-fx-text-fill: dodgerblue; 
+}
+
+.snow .conditionalKeywordCell{
+	-fx-text-fill: darkmagenta; 
+	-fx-font-weight: bold;
+}
+
+.snow .variableCell{
+	-fx-text-fill: green;
+}
+
+.snow .variableUnknownOriginCell{
+	-fx-text-fill: #ff861a;
+}
+
+.snow .borderedCell{
+	-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; 
+}
+
+.snow .highlightedCell{
+	-fx-background-color: #FFFF77; 
+}
+
+
+.snow .forbiddenArgumentCell{
+	-fx-background-color: #ff7291; 
+}
+
+.snow .blankArgumentCell{
+	-fx-background-color: #c0c0c0; 
+}
+
+.snow .variableArgumentCell{
+	-fx-background-color: #F5F5F5;
+}
+
+.snow .mandatoryArgumentCell{
+	-fx-background-color: white;
+}
+
+.snow .missingMandatoryArgumentCell{
+	-fx-background-color: #ffcf32; 
+}
+
+.snow{
+	-fx-selection-bar: lightyellow;
+}
+
+.resultPaneKilled{
+	-fx-background-color: #D3D3D3; 
+}
+
+.resultPaneHasFailures{
+	-fx-background-color: #F4A460; 
+}
+
+.resultPaneHasInProgress{
+	-fx-background-color: #90EE90; 
+}
+
+.resultPaneFinishedFine{
+	-fx-background-color: #32CD32; 
+}
+
+
+.resultPaneDefault{
+	-fx-background-color: transparent; 
+}
