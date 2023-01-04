@@ -73,6 +73,19 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class RunTab {
+
+    private static final String STYLE_RESULT_PANE_KILLED = "resultPaneKilled";
+    private static final String STYLE_RESULT_PANE_HAS_FAILURES = "resultPaneHasFailures";
+    private static final String STYLE_RESULT_PANE_IN_PROGRESS = "resultPaneHasInProgress";
+    private static final String STYLE_RESULT_PANE_FINISHED_FINE = "resultPaneFinishedFine";
+    private static final String STYLE_RESULT_PANE_DEFAULT = "resultPaneDefault";
+
+    public static List<String> interchangableStyles = Arrays.asList(STYLE_RESULT_PANE_KILLED,
+        STYLE_RESULT_PANE_HAS_FAILURES,
+        STYLE_RESULT_PANE_IN_PROGRESS,
+        STYLE_RESULT_PANE_FINISHED_FINE,
+        STYLE_RESULT_PANE_DEFAULT);
+
     public static final String INITIAL_STYLE = "-fx-font-family: monospace; -fx-font-size: 10pt;";
     public Run run = new Run();
     public BooleanProperty canRun = new SimpleBooleanProperty(true);
@@ -570,25 +583,29 @@ public class RunTab {
 
     public void updateResultsPanel() {
         if (run.forciblyKilled) {
-            setHboxBackgroundColor(Color.LIGHTGRAY);
+            setHboxBackgroundStyle(STYLE_RESULT_PANE_KILLED);
         } else if (run.countFailedTests > 0) {
-            setHboxBackgroundColor(Color.SANDYBROWN);
+            setHboxBackgroundStyle(STYLE_RESULT_PANE_HAS_FAILURES);
         } else if (run.countPassedTests > 0) {
             if (run.isInProgress()) {
-                setHboxBackgroundColor(Color.LIGHTGREEN);
+                setHboxBackgroundStyle(STYLE_RESULT_PANE_IN_PROGRESS);
             } else {
-                setHboxBackgroundColor(Color.LIMEGREEN);
+                setHboxBackgroundStyle(STYLE_RESULT_PANE_FINISHED_FINE);
             }
         } else {
-            setHboxBackgroundColor(Color.TRANSPARENT);
+            setHboxBackgroundStyle(STYLE_RESULT_PANE_DEFAULT);
         }
         lblFailed.setText("Failed: " + run.countFailedTests);
         lblSkipped.setText("Skipped: " + run.countSkippedTests);
         lblPassed.setText("Passed: " + run.countPassedTests);
     }
 
-    private void setHboxBackgroundColor(Color color) {
-        hboxExecutionLine.setBackground(new Background(new BackgroundFill(color, null, null)));
+    private void setHboxBackgroundStyle(String styleClass) {
+        hboxExecutionLine.getStyleClass().removeAll(interchangableStyles);
+        hboxExecutionLine.getStyleClass().add(styleClass);
+        hboxExecutionLine.setVisible(false);
+        hboxExecutionLine.setVisible(true);
+
     }
 
     private void openFileOrDirectory(MouseEvent event, String filename) {

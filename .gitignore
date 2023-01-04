@@ -9,3 +9,4 @@ gen/
 /.settings/org.eclipse.m2e.core.prefs
 /.settings/org.jetbrains.kotlin.core.prefs
 /.settings/org.eclipse.jdt.ui.prefs
+/.settings/org.eclipse.jdt.launching.prefs

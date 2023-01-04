@@ -1,0 +1,212 @@
+.root { 
+    -fx-accent: #1e74c6;
+    -fx-focus-color: -fx-accent;
+    -fx-base: #373e43;
+    -fx-control-inner-background: derive(-fx-base, 35%);
+    -fx-control-inner-background-alt: -fx-control-inner-background ;
+}
+
+.label{
+    -fx-text-fill: lightgray;
+}
+
+.text-field {
+    -fx-prompt-text-fill: gray;
+}
+
+.titulo{
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+}
+
+.button{
+    -fx-focus-traversable: false;
+}
+
+.button:hover{
+    -fx-text-fill: white;
+}
+
+.separator *.line { 
+    -fx-background-color: #3C3C3C;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+}
+
+.paragraph-box .search-highlight {
+    -rtfx-background-color: yellow;
+}
+
+.paragraph-box .search-highlight {
+    -rtfx-background-color: orange;
+}
+
+
+.paragraph-box:has-caret {
+    -fx-background-color: #2f2f30;
+}
+
+/* Custom styling for the "Assisted grid editing (snow) table". This does not take effect for the "Errors" table. */
+.table-view.snow:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.table-view.snow:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected {
+
+    -fx-background: #002644 !important;
+    -fx-background-color: #002644 !important;
+    -fx-table-cell-border-color: orange;
+    -fx-text-fill: #65bbff !important;
+}
+
+.snow .table-cell {
+    -fx-border-color: transparent #212121 #212121 transparent; -fx-border-width: 1px;
+}
+
+
+.snow .rowhead{
+	-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;
+}
+
+.snow .rowheadBasic{
+	-fx-background-color: #424242;
+	-fx-foreground-color: #ff8000;
+}
+
+.snow .rowheadFail{
+	-fx-background-color: #ce3e01;
+}
+
+.snow .rowheadPass{
+	-fx-background-color: #66ae00;
+}
+
+.snow .rowheadSkip{
+	-fx-background-color: #6c6c6c;
+}
+
+.snow .rowHeadPartial{
+	-fx-background-color: linear-gradient(from 12px 12px to 0px 0px, rgba(180,130,80,1), rgba(180,130,80,0));
+}
+
+.snow .settingsCell{
+	-fx-text-fill: #46a4ff;
+}
+.snow .nonSettingsCell{
+	-fx-text-fill: #31ff2b;
+}
+
+.snow .suiteImportCell{
+	-fx-text-fill: #728FCE; -fx-underline: true; -fx-font-weight: bold;
+}
+.snow .otherImportCell{
+	-fx-text-fill: #FF8F1F;
+}
+.snow .failedImportCell{
+	-fx-text-fill: #ff5f5f;
+}
+.snow .reservedKeywordCell{
+	-fx-text-fill: #ff81ff;
+	-fx-font-weight: bold;
+}
+
+.snow .indentationCell{
+	-fx-font-style: italic; -fx-background-color: #1A1B1C;
+}
+.snow .commentCell{
+	-fx-text-fill: #ff7e7e;
+}
+.snow .keywordCell{
+	-fx-font-weight: bold;
+}
+
+.snow .scenarioLinkCell{
+	-fx-text-fill: lightblue;
+}
+
+.snow .scenarioLinkActiveCell{
+	-fx-underline: true;
+}
+
+.snow .keywordNoLinkCell{
+	-fx-text-fill: #80c0ff; 
+}
+
+.snow .conditionalKeywordCell{
+	-fx-text-fill: #ff81ff; 
+	-fx-font-weight: bold;
+}
+
+.snow .variableCell{
+	-fx-text-fill: #4fe657;
+}
+
+.snow .variableUnknownOriginCell{
+	-fx-text-fill: #ff861a;
+}
+
+.snow .borderedCell{
+	-fx-border-color: transparent #2c2c2c #2c2c2c transparent; -fx-border-width: 1px; 
+}
+
+.snow .highlightedCell{
+	-fx-background-color: #594531; 
+}
+
+
+.snow .forbiddenArgumentCell{
+	-fx-background-color: #8f4051; 
+}
+
+.snow .blankArgumentCell{
+	-fx-background-color: #303030; 
+}
+
+.snow .variableArgumentCell{
+	-fx-background-color: #555555;
+}
+
+.snow .mandatoryArgumentCell{
+	-fx-background-color: #333333;
+}
+
+.snow .missingMandatoryArgumentCell{
+	-fx-background-color: #c49f26; 
+}
+
+.snow{
+	-fx-selection-bar: #ffbb00;
+}
+
+.styled-text-area {
+    -fx-background-color: #373e43;
+}
+.paragraph-box > .paragraph-text > .text {
+    -fx-fill: white;
+}
+
+.lineno {
+ -fx-background-color: black;
+}
+
+.myLink {
+    -fx-text-fill: #ff861a;
+}
+
+.resultPaneKilled{
+	-fx-background-color: #2e2e2e; 
+}
+
+.resultPaneHasFailures{
+	-fx-background-color: #9c240b; 
+}
+
+.resultPaneHasInProgress{
+	-fx-background-color: #059400; 
+}
+
+.resultPaneFinishedFine{
+	-fx-background-color: #065700; 
+}
+
+
+.resultPaneDefault{
+	-fx-background-color: transparent; 
+}
