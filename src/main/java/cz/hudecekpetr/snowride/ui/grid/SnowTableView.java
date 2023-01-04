@@ -52,8 +52,11 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        this.setStyle("-fx-selection-bar: lightyellow; -fx-font-size: " + 12 + "pt;");
-        this.setFixedCellSize(23);
+
+        this.skinProperty().addListener((observable, oldValue, newValue) -> {
+            final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
+            header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
+        });
         TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
