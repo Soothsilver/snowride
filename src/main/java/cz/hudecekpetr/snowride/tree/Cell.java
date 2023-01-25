@@ -213,8 +213,7 @@ public class Cell implements IHasQuickDocumentation {
                     break;
             }
         }
-        cssStyleClassesProperty.clear();
-        cssStyleClassesProperty.addAll(styleClasses);
+		cssStyleClassesProperty.setValue(new LiveArrayList(styleClasses));
     }
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {
