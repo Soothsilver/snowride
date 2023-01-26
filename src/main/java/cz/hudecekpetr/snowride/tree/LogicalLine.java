@@ -250,6 +250,9 @@ public class LogicalLine {
             boolean mayBeKeywordInKeyword = false;
             if (currentKeyword != null) {
                 Scenario scenarioOfMainLineKeyword = currentKeyword.getScenarioIfPossible();
+                if (scenarioOfMainLineKeyword != null) {
+                    scenarioOfMainLineKeyword.analyzeCodeInSelf();
+                }
                 mayBeKeywordInKeyword = scenarioOfMainLineKeyword != null
                         && scenarioOfMainLineKeyword.variablesCarryingKeyword != null
                         && !scenarioOfMainLineKeyword.variablesCarryingKeyword.isEmpty();
