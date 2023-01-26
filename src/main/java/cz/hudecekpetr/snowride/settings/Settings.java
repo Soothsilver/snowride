@@ -27,6 +27,7 @@ public class Settings {
 
     // Open project:
     public String lastOpenedProject = null;
+    public int lastOpeneProjectsMaxSize = 8;
     public List<String> lastOpenedProjects = new ArrayList<>();
 
     // Runner:
@@ -110,7 +111,7 @@ public class Settings {
         }
         lastOpenedProjects.removeIf(projectPath -> projectPath.equals(path));
         lastOpenedProjects.add(0, path);
-        if (lastOpenedProjects.size() > 8) {
+        if (lastOpenedProjects.size() > lastOpeneProjectsMaxSize) {
             lastOpenedProjects.remove(lastOpenedProjects.size() - 1);
         }
     }

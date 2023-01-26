@@ -36,15 +36,18 @@ public class AutoCompletePopup<T extends IAutocompleteOption> extends PopupContr
     private StringConverter<T> converter;
     private IntegerProperty visibleRowCount = new SimpleIntegerProperty(this, "visibleRowCount", 10);
     private ObjectProperty<EventHandler<AutoCompletePopup.SuggestionEvent<T>>> onSuggestion = new ObjectPropertyBase<EventHandler<AutoCompletePopup.SuggestionEvent<T>>>() {
+        @Override
         @SuppressWarnings("RedundantCast") // not redundant, there would be a compile error
         protected void invalidated() {
             AutoCompletePopup.this.eventHandlerManager.setEventHandler(AutoCompletePopup.SuggestionEvent.SUGGESTION, (EventHandler) this.get());
         }
 
+        @Override
         public Object getBean() {
             return AutoCompletePopup.this;
         }
 
+        @Override
         public String getName() {
             return "onSuggestion";
         }
@@ -111,10 +114,12 @@ public class AutoCompletePopup<T extends IAutocompleteOption> extends PopupContr
         this.onSuggestionProperty().set(value);
     }
 
+    @Override
     public EventDispatchChain buildEventDispatchChain(EventDispatchChain tail) {
         return super.buildEventDispatchChain(tail).append(this.eventHandlerManager);
     }
 
+    @Override
     protected Skin<?> createDefaultSkin() {
         return new AutoCompletePopupSkin(this);
     }

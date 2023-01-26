@@ -39,6 +39,7 @@ public class SettingsWindow extends Stage {
     private CheckBox cbUseSystemColorWindow;
     private CheckBox cbAutocompleteVariables;
     private TextField tbNumber2;
+    private TextField tbProjectsHistorySizeField;
     private ComboBox<ReloadOnChangeStrategy> cbReloadStrategy;
 
     public SettingsWindow(MainForm mainForm) {
@@ -119,6 +120,7 @@ public class SettingsWindow extends Stage {
         cbUseSystemColorWindow.setWrapText(true);
         cbUseSystemColorWindow.setSelected(Settings.getInstance().cbUseSystemColorWindow);
 
+        // tree size
         Label lblNumber2 = new Label("Size of tree view font (in points): ");
         tbNumber2 = new TextField(Integer.toString(Settings.getInstance().treeSizeItemHeight));
         tbNumber2.setTextFormatter(new TextFormatter<String>(change -> {
@@ -129,9 +131,25 @@ public class SettingsWindow extends Stage {
             return null;
         }));
         tbNumber2.textProperty().addListener((ChangeListener<String>)this::treeSizeChanged);
-        HBox num2 = new HBox(5, lblNumber2, tbNumber2);
-        num2.setAlignment(Pos.CENTER_LEFT);
+        HBox tbTreeSizeItemHeightFieldBox = new HBox(5, lblNumber2, tbNumber2);
+        tbTreeSizeItemHeightFieldBox.setAlignment(Pos.CENTER_LEFT);
 
+        // projects history
+        Label lblProjectsHistory = new Label("Size of recet projets section in main menu: ");
+        tbProjectsHistorySizeField = new TextField(Integer.toString(Settings.getInstance().lastOpeneProjectsMaxSize));
+        tbProjectsHistorySizeField.setTextFormatter(new TextFormatter<String>(change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        }));
+        tbProjectsHistorySizeField.textProperty()
+                .addListener((ChangeListener<String>) this::projectsHistorySizeChanged);
+        HBox projectsHistoryFieldBox = new HBox(5, lblProjectsHistory, tbProjectsHistorySizeField);
+        projectsHistoryFieldBox.setAlignment(Pos.CENTER_LEFT);
+
+        // autocomplete
         cbAutocompleteVariables = new CheckBox("Offer autocompletion for variables");
         cbAutocompleteVariables.setWrapText(true);
         cbAutocompleteVariables.setSelected(Settings.getInstance().cbAutocompleteVariables);
@@ -147,7 +165,8 @@ public class SettingsWindow extends Stage {
               cbAutocompleteVariables, hboxReloadStrategy);
         vboxEditor.setPadding(new Insets(5, 0, 0, 0));
         VBox vboxAppearance = new VBox(5,
-                cbReloadAll, cbDeselectAll, cbHighlightSameCells, cbUseSystemColorWindow, num2);
+                cbReloadAll, cbDeselectAll, cbHighlightSameCells, cbUseSystemColorWindow, tbTreeSizeItemHeightFieldBox,
+                projectsHistoryFieldBox);
         vboxAppearance.setPadding(new Insets(5, 0, 0, 0));
         VBox vboxBehavior = new VBox(5, cbDisableOutputParsing, cbDisableOutputParsingWarning, cbFirstCompletionOption, cbAutoExpandSelectedTests, cbUseStructureChanged);
         vboxBehavior.setPadding(new Insets(5, 0, 0, 0));
@@ -176,6 +195,19 @@ public class SettingsWindow extends Stage {
             int asInt = Integer.parseInt(newValue);
             mainForm.getProjectTree().setStyle("-fx-font-size: " + asInt + "pt;");
             Settings.getInstance().treeSizeItemHeight = asInt;
+        } catch (Exception e) {
+            throw new RuntimeException(newValue + " is not a number.");
+        }
+    }
+
+    private void projectsHistorySizeChanged(ObservableValue<? extends String> observableValue, String old,
+            String newValue) {
+        if (StringUtils.isBlank(newValue)) {
+            return;
+        }
+        try {
+            int asInt = Integer.parseInt(newValue);
+            Settings.getInstance().lastOpeneProjectsMaxSize = asInt;
         } catch (Exception e) {
             throw new RuntimeException(newValue + " is not a number.");
         }

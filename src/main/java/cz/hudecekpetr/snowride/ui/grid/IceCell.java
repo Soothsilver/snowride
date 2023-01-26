@@ -277,7 +277,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                     return;
                 }
                 boolean collectionsAreEqual = oldValue.containsAll(newValue) && newValue.containsAll(oldValue);
-                if (collectionsAreEqual) {
+                boolean allAreSet = getStyleClass().contains(newValue);
+                if (collectionsAreEqual && allAreSet) {
                     return;
                 }
                 setVisible(false);
