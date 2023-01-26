@@ -247,28 +247,33 @@ public class LogicalLine {
                 }
             }
 
-            boolean isVariable = isVariable(cell.contents);
-            boolean isCertainlyNotAKeyword = isInScenario && (isVariable || cell.contents.trim().equals("\\"));
-            boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
-            if (canKeywordBeHere) {
+            boolean mayBeKeywordInKeyword = false;
+            if (currentKeyword != null) {
+                Scenario scenarioOfMainLineKeyword = currentKeyword.getScenarioIfPossible();
+                mayBeKeywordInKeyword = scenarioOfMainLineKeyword != null
+                        && scenarioOfMainLineKeyword.variablesCarryingKeyword != null
+                        && !scenarioOfMainLineKeyword.variablesCarryingKeyword.isEmpty();
+            }
+            
+            
 
-                // This is the keyword.
-                cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
-                cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
-                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(cell.contents));
-                if (homonyms != null) {
-                    for (IKnownKeyword homonym : homonyms) {
-                        if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
-                            cellSemantics.thisHereKeyword = homonym;
-                        }
-                    }
+            boolean isVariable = isVariable(cell.contents);
+            boolean isVariablCarryingKeyword = isVariable && (currentKeyword != null
+                    && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
+            if (isVariablCarryingKeyword && belongsToHighElement instanceof Scenario) {
+                if (((Scenario) belongsToHighElement).getSemanticsArguments().contains(cell.contents)) {
+                    belongsToHighElement.variablesCarryingKeyword.add(cell.contents);
                 }
-                if (cellSemantics.thisHereKeyword == null) {
-                    determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, cell.contents);
-                }
-                if (cellSemantics.thisHereKeyword == null) {
-                    determineViaGherkin(cellSemantics, kind, cell.contents);
-                }
+            }
+
+            boolean isCertainlyNotAKeyword = isInScenario && (isVariable || cell.contents.trim().equals("\\"));
+            boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet
+                    || (currentKeyword != null
+                            && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument)
+                    || mayBeKeywordInKeyword;
+            if (canKeywordBeHere) {
+                assignCellSemanticsAKeywordWhenPossible(cell.contents, kind, cellSemantics);
+
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
                 if (isTemplate) {
@@ -291,9 +296,36 @@ public class LogicalLine {
                 }
             }
 
-
         }
 
+    }
+
+    private void assignCellSemanticsAKeywordWhenPossible(String cellContents, SnowTableKind kind,
+            CellSemantics cellSemantics) {
+        if (cellContents.isEmpty() || cellSemantics == null) {
+            return;
+        }
+
+        // This is the keyword.
+        cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
+        cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite()
+                .getKeywordsPermissibleInSuiteByInvariantName();
+
+        Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName
+                .get(toInvariant(cellContents));
+        if (homonyms != null) {
+            for (IKnownKeyword homonym : homonyms) {
+                if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                    cellSemantics.thisHereKeyword = homonym;
+                }
+            }
+        }
+        if (cellSemantics.thisHereKeyword == null) {
+            determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, cellContents);
+        }
+        if (cellSemantics.thisHereKeyword == null) {
+            determineViaGherkin(cellSemantics, kind, cellContents);
+        }
     }
 
     private void determineViaGherkin(CellSemantics cellSemantics, SnowTableKind kind, String cellContents) {

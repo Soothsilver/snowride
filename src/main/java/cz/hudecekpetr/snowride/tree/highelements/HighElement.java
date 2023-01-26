@@ -38,6 +38,7 @@ public abstract class HighElement implements IAutocompleteOption {
     public SimpleStringProperty shortNameProperty = new SimpleStringProperty();
     public ObservableList<SnowrideError> selfErrors = FXCollections.observableArrayList();
     public Set<String> variables = new HashSet<>();
+    public Set<String> variablesCarryingKeyword = new HashSet<>();
 
     /**
      * Observable list of all {@link SnowrideError}s from this element and all children. It updates automatically from
