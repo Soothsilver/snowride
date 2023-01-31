@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static cz.hudecekpetr.snowride.Extensions.toInvariant;
@@ -60,6 +61,9 @@ public class LogicalLine {
     public List<ForIteration> forIterations;
     public For forLoop;
 
+    // optimization flag - when the line is changed we want to update the semantics
+    private boolean semanticsUpToDate = false;
+
     public static LogicalLine createEmptyLine(SnowTableKind snowTableKind, HighElement highElement, ObservableList<LogicalLine> list) {
         LogicalLine newLine = new LogicalLine();
         newLine.setBelongsToHighElement(highElement);
@@ -85,6 +89,7 @@ public class LogicalLine {
     }
 
     public LogicalLine prepend(String cellspace, String cell) {
+        semanticsUpToDate = false;
         cells.add(0, new Cell("", cellspace, this));
         cells.add(1, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
@@ -92,6 +97,7 @@ public class LogicalLine {
     }
 
     public LogicalLine prepend(String cell) {
+        semanticsUpToDate = false;
         cells.add(0, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
         return this;
@@ -188,7 +194,9 @@ public class LogicalLine {
     }
 
     public void recalculateSemantics() {
-
+        if (semanticsUpToDate) {
+            return;
+        }
         boolean thereHasBeenNoGuaranteedKeywordCellYet = true;
         boolean isInScenario = getBelongsToHighElement() instanceof Scenario;
         boolean skipFirst = isInScenario;
@@ -300,7 +308,7 @@ public class LogicalLine {
             }
 
         }
-
+        semanticsUpToDate = true;
     }
 
     private void assignCellSemanticsAKeywordWhenPossible(String cellContents, SnowTableKind kind,
@@ -399,6 +407,7 @@ public class LogicalLine {
     }
 
     public void reformat(SectionKind sectionKind) {
+        semanticsUpToDate = false;
         for (int i = cells.size() - 1; i >= 0; i--) {
             Cell cell = cells.get(i);
             if (StringUtils.isBlank(cell.contents) && StringUtils.isBlank(cell.postTrivia)) {

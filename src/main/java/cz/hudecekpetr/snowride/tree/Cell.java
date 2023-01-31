@@ -125,7 +125,7 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     public void updateStyle() {
-        if (isLineNumberCell) {
+        if (isLineNumberCell || semantics == null) {
             return;
         }
         leadsToSuite = null;
