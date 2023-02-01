@@ -79,7 +79,8 @@ public class LogicalLine {
         if (text.trim().startsWith("#")) {
             // TODO not perfect, probably better dealt with at grammar/lexer level:
             if (text.startsWith("  ") || text.startsWith("\t") || text.startsWith(" \t")) {
-                line.cells.add(new Cell("", text.substring(0, text.indexOf('#')), line));
+                line.cells.add(
+                        new Cell("", text.substring(0, text.indexOf('#')), line));
             }
             line.cells.add(new Cell(text.trim(), "", line));
         } else {
@@ -136,18 +137,20 @@ public class LogicalLine {
             Cell cell = new Cell("", "    ", this);
             cell.virtual = true;
             cells.add(cell);
+            semanticsUpToDate = false;
         }
         while (cells.size() > wrappers.size()) {
             int index = wrappers.size();
             SimpleObjectProperty<Cell> wrapper = new SimpleObjectProperty<>();
             wrapper.addListener((observable, oldValue, newValue) -> {
                 String previousValue = cells.get(index).contents;
-                cells.set(index, newValue);
-                recalcStyles();
-
-
-                if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
-                    getBelongsToHighElement().markAsStructurallyChanged(mainForm);
+                if (!previousValue.equals(newValue.contents)) {
+                    cells.set(index, newValue);
+                    semanticsUpToDate = false;
+                    recalcStyles();
+                    if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
+                        getBelongsToHighElement().markAsStructurallyChanged(mainForm);
+                    }
                 }
             });
             wrappers.add(wrapper);
@@ -176,6 +179,7 @@ public class LogicalLine {
     }
 
     public void shiftTrueCellsRight(MainForm mainForm) {
+        semanticsUpToDate = false;
         int cellCount = cells.size();
         for (int i = cellCount - 1; i >= 1; i--) {
             getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
@@ -183,6 +187,7 @@ public class LogicalLine {
     }
 
     public void shiftTrueCellsLeft(MainForm mainForm) {
+        semanticsUpToDate = false;
         int cellCount = cells.size();
         for (int i = 2; i <= cellCount; i++) {
             if (i == cellCount) {
@@ -194,7 +199,11 @@ public class LogicalLine {
     }
 
     public void recalculateSemantics() {
-        if (semanticsUpToDate) {
+        recalculateSemantics(false);
+    }
+
+    public void recalculateSemantics(boolean force) {
+        if (!force && semanticsUpToDate) {
             return;
         }
         boolean thereHasBeenNoGuaranteedKeywordCellYet = true;
@@ -283,7 +292,7 @@ public class LogicalLine {
                             && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument)
                     || mayBeKeywordInKeyword;
             if (canKeywordBeHere) {
-                assignCellSemanticsAKeywordWhenPossible(cell.contents, kind, cellSemantics);
+                assignCellSemanticsAKeywordWhenPossible(i, cell.contents, kind, cellSemantics);
 
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
@@ -311,13 +320,10 @@ public class LogicalLine {
         semanticsUpToDate = true;
     }
 
-    private void assignCellSemanticsAKeywordWhenPossible(String cellContents, SnowTableKind kind,
+    private void assignCellSemanticsAKeywordWhenPossible(int cellIndex, String cellContents, SnowTableKind kind,
             CellSemantics cellSemantics) {
-        if (cellContents.isEmpty() || cellSemantics == null) {
-            return;
-        }
-
-        // This is the keyword.
+        // we need to assign this always as it is used also for auto-complete
+        // including typing on empty cell
         cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
         cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite()
                 .getKeywordsPermissibleInSuiteByInvariantName();

@@ -217,18 +217,23 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {
-        partOfLine.recalculateSemantics();
+        partOfLine.recalculateSemantics(true);
         Stream<IAutocompleteOption> options = Stream.empty();
-        if (semantics.isKeyword) {
+        // get the semantics after recalculation locally
+        CellSemantics actualSemantics = getSemantics();
+        if (actualSemantics.isKeyword) {
             options = Stream.concat(options,
-                    semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
+                    actualSemantics.permissibleKeywords.stream()
+                            .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind)));
             if (whatWrittenSoFar.getSource() == null) {
                 options = Stream.concat(options,
-                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                        actualSemantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals(""))
+                                .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind))
                                 .map(kw -> new LibraryAutocompleteOption(kw.getSourceName())).distinct());
             } else {
                 options = Stream.concat(options,
-                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                        actualSemantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals(""))
+                                .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind))
                                 .filter(kw -> Extensions.toInvariant(kw.getSourceName()).equals(Extensions.toInvariant(whatWrittenSoFar.getSource())))
                                 .map(QualifiedCompletionOption::new));
             }
@@ -240,8 +245,9 @@ public class Cell implements IHasQuickDocumentation {
         }
         options = Stream.concat(options, GherkinKeywords.all.stream());
         if (Settings.getInstance().cbAutocompleteVariables) {
-            if (semantics.cellIndex >= 1 && semantics.variablesList != null && snowTableKind != SnowTableKind.VARIABLES) {
-                options = Stream.concat(options, semantics.variablesList.stream());
+            if (actualSemantics.cellIndex >= 1 && actualSemantics.variablesList != null
+                    && snowTableKind != SnowTableKind.VARIABLES) {
+                options = Stream.concat(options, actualSemantics.variablesList.stream());
             }
         }
         return options;

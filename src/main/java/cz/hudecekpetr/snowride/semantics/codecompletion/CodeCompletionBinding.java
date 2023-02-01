@@ -15,6 +15,7 @@ import javafx.application.Platform;
 import javafx.scene.control.TextField;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,10 +50,15 @@ public class CodeCompletionBinding {
         String text = Extensions.toInvariant(request.getUserText());
         Cell cell = iceCell.getItem();
         QualifiedKeyword whatWrittenSoFar = QualifiedKeyword.fromDottedString(text);
-
-        Stream<? extends IAutocompleteOption> allOptions = cell.getCompletionOptions(snowTableKind, whatWrittenSoFar).filter(option ->
-                Extensions.toInvariant(option.getAutocompleteText()).contains(text)
-        );
+        Stream<? extends IAutocompleteOption> allOptions = (Stream) Collections.emptySet().stream();
+        try {
+            // allow to print the error which may appear here at least to error output
+            allOptions = cell
+                    .getCompletionOptions(snowTableKind, whatWrittenSoFar)
+                    .filter(option -> Extensions.toInvariant(option.getAutocompleteText()).contains(text));
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
         List<IAutocompleteOption> collectedOptions = allOptions.collect(Collectors.toList());
         boolean exactMatchFound = false;
         for (IAutocompleteOption collectedOption : collectedOptions) {

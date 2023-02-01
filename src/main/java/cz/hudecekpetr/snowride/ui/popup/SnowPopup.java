@@ -27,9 +27,4 @@ abstract public class SnowPopup extends PopupControl {
         );
     }
 
-    @Override
-    protected Skin<?> createDefaultSkin() {
-        return new SnowPopupSkin(this, this.getOwnerNode());
-    }
-
 }
