@@ -16,6 +16,7 @@ import cz.hudecekpetr.snowride.tree.sections.TestCaseName;
 import cz.hudecekpetr.snowride.tree.sections.TestCasesSection;
 import cz.hudecekpetr.snowride.tree.sections.TextOnlyRobotSection;
 import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
@@ -26,6 +27,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -251,8 +253,30 @@ public class AntlrListener extends RobotBaseListener implements ANTLRErrorListen
                 errors.add(e);
             }
         } else {
-            errors.add(new RuntimeException("Non-exception error " + msg));
+            String[] lastLines;
+            if (line < 1) {
+                lastLines = getLines(recognizer, line);
+            } else if (line < 2) {
+                lastLines = getLines(recognizer, line - 1, line);
+            } else {
+                lastLines = getLines(recognizer, line - 2, line - 1, line);
+            }
+            errors.add(new RuntimeException(
+                    "Non-exception error " + msg + " at line " + line + " position " + charPositionInLine
+                            + " offending symol: " + offendingSymbol
+                            + " \n Last lines: \n" + String.join("\n", lastLines)));
         }
+    }
+
+    protected String[] getLines(Recognizer recognizer, int... lineIndexes) {
+        String[] result = new String[lineIndexes.length];
+        CommonTokenStream tokens = (CommonTokenStream) recognizer.getInputStream();
+        String input = tokens.getTokenSource().getInputStream().toString();
+        String[] lines = input.split("\n");
+        for (int i = 0; i < lineIndexes.length; i++) {
+            result[i] = lines[lineIndexes[i]];
+        }
+        return result;
     }
 
     @Override

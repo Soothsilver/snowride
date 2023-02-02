@@ -637,7 +637,7 @@ public class SnowTableView extends TableView<LogicalLine> {
 
         if (scenario instanceof Scenario && ((Scenario) scenario).semanticsIsTemplateTestCase) {
             Scenario scenarioTyped = (Scenario) scenario;
-            if (scenarioTyped.templateReferenced.getLines().size() > 0) {
+            if (scenarioTyped.templateReferenced != null && scenarioTyped.templateReferenced.getLines().size() > 0) {
                 // simply put into header what is in line 0 of referenced template
                 LogicalLine line0 = scenarioTyped.templateReferenced.getLines().get(0);
                 LogicalLine argLine = scenarioTyped.templateReferenced.getLines().stream()
