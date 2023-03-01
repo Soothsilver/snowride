@@ -28,8 +28,14 @@ import javafx.scene.input.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SnowTableView extends TableView<LogicalLine> {
+    private final static Integer DEFAULT_FONT_SIZE = 12;
+    private final static Integer DEFAULT_CELL_SIZE = 23;
+    private Integer fontSize = DEFAULT_FONT_SIZE;
+    private Integer cellSize = DEFAULT_CELL_SIZE;
 
     public SnowTableKind snowTableKind;
     public boolean triggerAutocompletionNext;
@@ -46,7 +52,8 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
+        this.setStyle("-fx-selection-bar: lightyellow; -fx-font-size: " + 12 + "pt;");
+        this.setFixedCellSize(23);
         this.skinProperty().addListener((observable, oldValue, newValue) -> {
             final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
             header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
@@ -73,6 +80,23 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setContextMenu(cmenu);
         this.setOnKeyPressed(this::onKeyPressed);
         this.setOnMouseClicked(this::onMouseClicked);
+        this.addEventHandler(ScrollEvent.ANY, event -> {
+            if (event.isShortcutDown()) {
+                if (event.getDeltaY() > 0) {
+                    if (fontSize < 30) {
+                        fontSize++;
+                        cellSize = fontSize * 2 - 1;
+                    }
+                } else {
+                    if (fontSize > 4) {
+                        fontSize--;
+                        cellSize = fontSize * 2 - 1;
+                    }
+                }
+                applyFontSize();
+                event.consume();
+            }
+        });
     }
 
     private List<MenuItem> recreateContextMenu(ContextMenuEvent contextMenuEvent) {
@@ -252,6 +276,12 @@ public class SnowTableView extends TableView<LogicalLine> {
         arrowSelectionHelper.onKeyPressed(keyEvent, getSelectionModel());
         if (keyEvent.isConsumed()) {
             return;
+        }
+        if ((keyEvent.getCode() == KeyCode.DIGIT0 || keyEvent.getCode() == KeyCode.NUMPAD0) && keyEvent.isShortcutDown()) {
+            fontSize = DEFAULT_FONT_SIZE;
+            cellSize = DEFAULT_CELL_SIZE;
+            applyFontSize();
+            keyEvent.consume();
         }
         if (keyEvent.getCode() == KeyCode.I && keyEvent.isShiftDown() && keyEvent.isShortcutDown()) {
             insertSelectedCells();
@@ -752,5 +782,15 @@ public class SnowTableView extends TableView<LogicalLine> {
         TablePosition<LogicalLine, Cell> focusedCell = getFocusedTablePosition();
         SimpleObjectProperty<Cell> cellSimpleObjectProperty = tablePositionToCell(focusedCell);
         return cellSimpleObjectProperty.getValue();
+    }
+
+    private void applyFontSize() {
+        String style = this.getStyle();
+        Pattern pattern = Pattern.compile("(.*)(-fx-font-size: .*?pt;)(.*)");
+        Matcher matcher = pattern.matcher(style);
+        if (matcher.find()) {
+            this.setStyle(matcher.group(1) + "-fx-font-size: " + fontSize + "pt;" + matcher.group(3));
+        }
+        this.setFixedCellSize(cellSize);
     }
 }

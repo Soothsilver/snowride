@@ -17,6 +17,8 @@ F1, Ctrl+Q: Show quick documentation for selected cell
 F4, Ctrl+W: Show "messages / arguments / FOR iterations" on passing/failing for selected line
 Ctrl+Z: Undo (you must have a table focused)
 Ctrl+Shift+Z, Ctrl+Y: Redo
+Ctrl+Scroll: Increase/Decrease font size
+Ctrl+0: Default font size
 
 # Text Edit:
 Ctrl+F: Search
