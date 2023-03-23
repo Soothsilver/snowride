@@ -9,19 +9,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class AboutKeyboardShortcuts extends AboutDialogBase {
     public AboutKeyboardShortcuts() {
-        Label lblShortcuts;
-        try {
-            lblShortcuts = new Label(IOUtils.resourceToString("/KeyboardShortcuts.txt", StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Label lblShortcuts = new Label(new Scanner(AboutChangelog.class.getResourceAsStream("/KeyboardShortcuts.txt"), "UTF-8").useDelimiter("\\A").next());
         VBox vbMain = new VBox(5, lblShortcuts);
         javafx.scene.control.Button bClose = new Button("Close");
         bClose.setOnAction(event -> close());

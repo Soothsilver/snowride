@@ -10,19 +10,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
-import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class AboutChangelog extends AboutDialogBase {
     public AboutChangelog() {
-        String content;
-        try {
-           content = IOUtils.resourceToString("/Changelog.html", StandardCharsets.UTF_8);
-        } catch (IOException e) {
-           content = Extensions.toStringWithTrace(e);
-        }
+        String content = new Scanner(AboutChangelog.class.getResourceAsStream("/Changelog.html"), "UTF-8").useDelimiter("\\A").next();
         WebView webView = new WebView();
         webView.getEngine().loadContent(content);
         Button bClose = new Button("Close");
