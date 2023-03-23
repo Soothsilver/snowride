@@ -11,10 +11,15 @@
     <name>Snowride</name>
     <description>A faster IDE for Robot Framework</description>
 
+    <scm>
+        <connection>scm:git:ssh://git@github.com:Soothsilver/snowride.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:Soothsilver/snowride.git</developerConnection>
+    </scm>
+
     <properties>
         <javafx.version>17.0.6</javafx.version>
         <moduleName>cz.hudecekpetr.snowride</moduleName>
-        <mainClass>cz.hudecekpetr.snowride.SnowrideApplication</mainClass>
+        <mainClass>cz.hudecekpetr.snowride.SnowrideDeferredApplication</mainClass>
 
         <kotlin.version>1.8.10</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
@@ -24,6 +29,7 @@
         <jaxb.version>4.0.2</jaxb.version>
         <antlr4.version>4.12.0</antlr4.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -190,19 +196,11 @@
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -354,11 +352,35 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>${mainClass}</mainClass>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                        <manifestEntries>
+                            <SCM-Revision>${buildNumber}</SCM-Revision>
+                        </manifestEntries>
+                    </archive>
                     <outputDirectory>
                         ${project.build.directory}/modules
                     </outputDirectory>
@@ -400,34 +422,152 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <mainClass>${mainClass}</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>none</phase> <!-- bind to the packaging phase -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <profiles>
         <profile>
+            <id>platform-specific-fat-jars</id>
+            <activation>
+                <!-- FIXME: put in place proper activation policy -->
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <!-- Ensure both Win/Linux specific dependencies for all used JavaFX libraries are on the classpath -->
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-web</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-web</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>win</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <shadedClassifierName>win</shadedClassifierName>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>com.iontrading.isfW:tracing:jar:clear</exclude>
+                                            <exclude>org.openjfx:*:*:linux</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>linux</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <shadedClassifierName>linux</shadedClassifierName>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>com.iontrading.isfW:tracing:jar:clear</exclude>
+                                            <exclude>org.openjfx:*:*:win</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+<!--        <profile>
             <id>windows-x86_64</id>
             <activation>
                 <os>
@@ -749,13 +889,13 @@
                                         </module>
                                     </modules>
                                     <jdepsExtraArgs>
-                                        <arg>--ignore-missing-deps</arg>
+                                        <arg>&#45;&#45;ignore-missing-deps</arg>
                                     </jdepsExtraArgs>
                                     <overwriteExistingFiles>true</overwriteExistingFiles>
                                 </configuration>
                             </execution>
 
-                            <!-- FIXME: Necessary to manually add following 'add-opens': "&#45;&#45;add-opens javafx.base/com.sun.javafx.event=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.base/com.sun.javafx.collections=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.controls/javafx.scene.control=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.stage=cz.hudecekpetr.snowride &#45;&#45;add-opens org.controlsfx.controls/org.controlsfx.control.textfield=cz.hudecekpetr.snowride"-->
+                            &lt;!&ndash; FIXME: Necessary to manually add following 'add-opens': "&#45;&#45;add-opens javafx.base/com.sun.javafx.event=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.base/com.sun.javafx.collections=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.controls/javafx.scene.control=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.stage=cz.hudecekpetr.snowride &#45;&#45;add-opens org.controlsfx.controls/org.controlsfx.control.textfield=cz.hudecekpetr.snowride"&ndash;&gt;
                             <execution>
                                 <id>snowride-image</id>
                                 <phase>package</phase>
@@ -781,6 +921,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
+        </profile>-->
     </profiles>
 </project>
