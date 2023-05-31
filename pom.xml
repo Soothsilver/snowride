@@ -6,17 +6,28 @@
 
     <groupId>cz.hudecekpetr.snowride</groupId>
     <artifactId>snowride</artifactId>
-    <version>3.2-SNAPSHOT</version>
+    <version>4.1-SNAPSHOT</version>
 
     <name>Snowride</name>
     <description>A faster IDE for Robot Framework</description>
 
-    <properties>
-        <moduleName>cz.hudecekpetr.snowride</moduleName>
-        <mainClass>cz.hudecekpetr.snowride.SnowrideApplication</mainClass>
+    <scm>
+        <connection>scm:git:ssh://git@github.com:Soothsilver/snowride.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:Soothsilver/snowride.git</developerConnection>
+    </scm>
 
-        <kotlin.version>1.7.20</kotlin.version>
+    <properties>
+        <javafx.version>17.0.6</javafx.version>
+        <moduleName>cz.hudecekpetr.snowride</moduleName>
+        <mainClass>cz.hudecekpetr.snowride.SnowrideDeferredApplication</mainClass>
+
+        <kotlin.version>1.8.10</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <controlsfx.version>11.1.2</controlsfx.version>
+        <jakarta.xml.bind.api.version>4.0.0</jakarta.xml.bind.api.version>
+        <jaxb.version>4.0.2</jaxb.version>
+        <antlr4.version>4.12.0</antlr4.version>
     </properties>
 
     <dependencyManagement>
@@ -39,12 +50,12 @@
             <dependency>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-runtime</artifactId>
-                <version>4.9.3</version>
+                <version>${antlr4.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
                 <artifactId>xstream</artifactId>
-                <version>1.4.18</version>
+                <version>1.4.20</version>
             </dependency>
             <dependency>
                 <groupId>org.zeroturnaround</groupId>
@@ -59,7 +70,7 @@
             <dependency>
                 <groupId>org.controlsfx</groupId>
                 <artifactId>controlsfx</artifactId>
-                <version>8.40.18</version>
+                <version>${controlsfx.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.fxmisc.richtext</groupId>
@@ -67,10 +78,59 @@
                 <version>0.10.7</version>
             </dependency>
             <dependency>
-                <groupId>org.fxmisc.flowless</groupId>
-                <artifactId>flowless</artifactId>
-                <version>0.6.4</version>
-                <scope>compile</scope>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${jakarta.xml.bind.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-core</artifactId>
+                <version>${jaxb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-impl</artifactId>
+                <version>${jaxb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>javax.activation-api</artifactId>
+                <version>1.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-base</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-controls</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-fxml</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-graphics</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-media</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-swing</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-web</artifactId>
+                <version>${javafx.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -112,35 +172,79 @@
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-maven-plugin</artifactId>
+                    <version>0.0.8</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.10.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.antlr</groupId>
                     <artifactId>antlr4-maven-plugin</artifactId>
-                    <version>4.9.3</version>
+                    <version>${antlr4.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.moditect</groupId>
+                    <artifactId>moditect-maven-plugin</artifactId>
+                    <version>1.0.0.RC2</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -180,11 +284,46 @@
             </plugin>
 
             <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>${mainClass}</mainClass>
+                    <options>
+                        <option>--add-opens</option>
+                        <option>javafx.base/com.sun.javafx.event=cz.hudecekpetr.snowride</option>
+                        <option>--add-opens</option>
+                        <option>javafx.base/com.sun.javafx.collections=cz.hudecekpetr.snowride</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/javafx.scene.control=cz.hudecekpetr.snowride</option>
+
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <!-- in order to load "autocompletion.css" from controlsfx jar -->
+                        <option>org.controlsfx.controls/org.controlsfx.control.textfield=cz.hudecekpetr.snowride</option>
+                    </options>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <release>17</release>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>javafx.base/com.sun.javafx.event=cz.hudecekpetr.snowride</arg>
+                        <arg>--add-exports</arg>
+                        <arg>javafx.base/com.sun.javafx.collections=cz.hudecekpetr.snowride</arg>
+                        <arg>--add-exports</arg>
+                        <arg>javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride</arg>
+                        <arg>--add-exports</arg>
+                        <arg>javafx.graphics/com.sun.javafx.stage=cz.hudecekpetr.snowride</arg>
+                    </compilerArgs>
                 </configuration>
                 <executions>
                     <!-- Replacing default-compile as it is treated specially by maven -->
@@ -212,6 +351,40 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>${mainClass}</mainClass>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                        <manifestEntries>
+                            <SCM-Revision>${buildNumber}</SCM-Revision>
+                        </manifestEntries>
+                    </archive>
+                    <outputDirectory>
+                        ${project.build.directory}/modules
+                    </outputDirectory>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -249,30 +422,505 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <mainClass>${mainClass}</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- bind to the packaging phase -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>platform-specific-fat-jars</id>
+            <activation>
+                <!-- FIXME: put in place proper activation policy -->
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <!-- Ensure both Win/Linux specific dependencies for all used JavaFX libraries are on the classpath -->
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-web</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-web</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>win</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <shadedClassifierName>win</shadedClassifierName>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>com.iontrading.isfW:tracing:jar:clear</exclude>
+                                            <exclude>org.openjfx:*:*:linux</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>linux</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <shadedClassifierName>linux</shadedClassifierName>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>com.iontrading.isfW:tracing:jar:clear</exclude>
+                                            <exclude>org.openjfx:*:*:win</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+<!--        <profile>
+            <id>windows-x86_64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+                <property>
+                    <name>javafx.monocle</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <properties>
+                <javafx.platform>win</javafx.platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+                <property>
+                    <name>javafx.monocle</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <properties>
+                <javafx.platform>linux</javafx.platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>macosx-x86_64</id>
+            <activation>
+                <os>
+                    <name>mac os x</name>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac</javafx.platform>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>native-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-dependencies</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                                    <includeScope>runtime</includeScope>
+                                    <classifier>${javafx.platform}</classifier>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>copy-depends</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.jetbrains.kotlin</groupId>
+                                            <artifactId>kotlin-stdlib</artifactId>
+                                            <version>${kotlin.version}</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.controlsfx</groupId>
+                                            <artifactId>controlsfx</artifactId>
+                                            <version>${controlsfx.version}</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>jakarta.xml.bind</groupId>
+                                            <artifactId>jakarta.xml.bind-api</artifactId>
+                                            <version>${jakarta.xml.bind.api.version}</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.sun.activation</groupId>
+                                            <artifactId>jakarta.activation</artifactId>
+                                            <version>2.0.0</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.sun.xml.bind</groupId>
+                                            <artifactId>jaxb-core</artifactId>
+                                            <version>${jaxb.version}</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.sun.xml.bind</groupId>
+                                            <artifactId>jaxb-impl</artifactId>
+                                            <version>${jaxb.version}</version>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.moditect</groupId>
+                        <artifactId>moditect-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-module-info</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-module-info</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                                    <modules>
+                                        <module>
+                                            <artifact>
+                                                <groupId>com.jsoniter</groupId>
+                                                <artifactId>jsoniter</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>com.jsoniter</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.zeroturnaround</groupId>
+                                                <artifactId>zt-process-killer</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>org.zeroturnaround</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.fxmisc.undo</groupId>
+                                                <artifactId>undofx</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module org.fxmisc.undo {
+                                                requires transitive reactfx;
+                                                requires javafx.base;
+
+                                                exports org.fxmisc.undo;
+                                                exports org.fxmisc.undo.impl;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>javax.activation</groupId>
+                                                <artifactId>javax.activation-api</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>javax.activation</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.apache.commons</groupId>
+                                                <artifactId>commons-lang3</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>org.apache.commons.lang3</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.antlr</groupId>
+                                                <artifactId>antlr4-runtime</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>org.antlr.antlr4.runtime</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.zeroturnaround</groupId>
+                                                <artifactId>zt-process-killer</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>zt.process.killer</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.zeroturnaround</groupId>
+                                                <artifactId>zt-exec</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>zt.exec</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>net.java.dev.jna</groupId>
+                                                <artifactId>jna</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>jna</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.reactfx</groupId>
+                                                <artifactId>reactfx</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module reactfx {
+                                                requires javafx.base;
+                                                requires javafx.graphics;
+                                                requires javafx.controls;
+                                                exports org.reactfx;
+                                                exports org.reactfx.collection;
+                                                exports org.reactfx.inhibeans;
+                                                exports org.reactfx.inhibeans.binding;
+                                                exports org.reactfx.inhibeans.collection;
+                                                exports org.reactfx.inhibeans.property;
+                                                exports org.reactfx.inhibeans.value;
+                                                exports org.reactfx.util;
+                                                exports org.reactfx.value;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>commons-io</groupId>
+                                                <artifactId>commons-io</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>org.apache.commons.io</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>com.jsoniter</groupId>
+                                                <artifactId>jsoniter</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>jsoniter</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.slf4j</groupId>
+                                                <artifactId>slf4j-api</artifactId>
+                                            </artifact>
+                                            <moduleInfo>
+                                                <name>slf4j.api</name>
+                                            </moduleInfo>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.fxmisc.wellbehaved</groupId>
+                                                <artifactId>wellbehavedfx</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module wellbehavedfx {
+                                                requires javafx.graphics;
+                                                exports org.fxmisc.wellbehaved.event;
+                                                exports org.fxmisc.wellbehaved.event.internal;
+                                                exports org.fxmisc.wellbehaved.event.template;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.fxmisc.flowless</groupId>
+                                                <artifactId>flowless</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module flowless {
+                                                requires reactfx;
+                                                requires javafx.graphics;
+                                                requires javafx.controls;
+                                                exports org.fxmisc.flowless;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>org.fxmisc.richtext</groupId>
+                                                <artifactId>richtextfx</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module org.fxmisc.richtext {
+                                                requires javafx.graphics;
+                                                requires javafx.controls;
+                                                requires reactfx;
+                                                requires flowless;
+                                                requires org.fxmisc.undo;
+                                                requires wellbehavedfx;
+                                                exports org.fxmisc.richtext;
+                                                exports org.fxmisc.richtext.model;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                        <module>
+                                            <artifact>
+                                                <groupId>com.thoughtworks.xstream</groupId>
+                                                <artifactId>xstream</artifactId>
+                                            </artifact>
+                                            <moduleInfoSource>
+                                                module xstream {
+                                                requires java.xml;
+                                                exports com.thoughtworks.xstream;
+                                                exports com.thoughtworks.xstream.converters.reflection;
+                                                exports com.thoughtworks.xstream.io.xml;
+                                                }
+                                            </moduleInfoSource>
+                                        </module>
+                                    </modules>
+                                    <jdepsExtraArgs>
+                                        <arg>&#45;&#45;ignore-missing-deps</arg>
+                                    </jdepsExtraArgs>
+                                    <overwriteExistingFiles>true</overwriteExistingFiles>
+                                </configuration>
+                            </execution>
+
+                            &lt;!&ndash; FIXME: Necessary to manually add following 'add-opens': "&#45;&#45;add-opens javafx.base/com.sun.javafx.event=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.base/com.sun.javafx.collections=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.controls/javafx.scene.control=cz.hudecekpetr.snowride &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls &#45;&#45;add-opens javafx.graphics/com.sun.javafx.stage=cz.hudecekpetr.snowride &#45;&#45;add-opens org.controlsfx.controls/org.controlsfx.control.textfield=cz.hudecekpetr.snowride"&ndash;&gt;
+                            <execution>
+                                <id>snowride-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>create-runtime-image</goal>
+                                </goals>
+                                <configuration>
+                                    <modulePath>
+                                        <path>${project.build.directory}/modules</path>
+                                    </modulePath>
+                                    <modules>
+                                        <module>${moduleName}</module>
+                                    </modules>
+                                    <jarInclusionPolicy>NONE</jarInclusionPolicy>
+                                    <launcher>
+                                        <name>Snowride</name>
+                                        <module>${moduleName}/${mainClass}</module>
+                                    </launcher>
+                                    <outputDirectory>${project.build.directory}/jlink-image</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+    </profiles>
 </project>

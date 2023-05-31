@@ -1,5 +1,7 @@
 package cz.hudecekpetr.snowride.ui.popup;
 
+
+import com.sun.javafx.stage.PopupWindowHelper;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Priority;
@@ -51,7 +53,7 @@ public class MessagesPopup extends SnowPopup {
         messagesPane.setPadding(new Insets(6));
 
         this.setConsumeAutoHidingEvents(false);
-        this.getContent().add(messagesPane);
+        PopupWindowHelper.getContent(this).add(messagesPane);
     }
 
     public void setArgs(List<String> args) {

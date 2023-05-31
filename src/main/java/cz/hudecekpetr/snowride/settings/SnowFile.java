@@ -1,7 +1,6 @@
 package cz.hudecekpetr.snowride.settings;
 
 import cz.hudecekpetr.snowride.ui.MainForm;
-
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
