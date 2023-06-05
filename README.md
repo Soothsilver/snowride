@@ -3,11 +3,12 @@ A faster RIDE-like IDE for Robot Framework test suites
 
 Snowride is inspired by [RIDE](https://github.com/robotframework/RIDE) and copies many elements of its user interface but it adds features RIDE doesn't have and is faster.
 
-**Screenshot.** 
+**Screenshot.**
 ![Screenshot](screenshots/Release1.PNG)
 
 **Download.**
-As a prerequisite, you must have Java 8 installed. Snowride doesn't work with any other version of Java. Use the "Download" link/button at the top of this readme file to download the executable JAR file, then run it.
+As a prerequisite, you must have Java 17 installed. Snowride doesn't work with any other version of Java. Use the "
+Download" link/button at the top of this readme file to download the executable JAR file, then run it.
 
 **Design principles of *Snowride*:**
 * **Responsive.** Every operation should happen immediately. Snowride should load within a second. 
