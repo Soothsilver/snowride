@@ -18,7 +18,6 @@ module cz.hudecekpetr.snowride {
     requires org.fxmisc.undo;
     requires wellbehavedfx;
     exports cz.hudecekpetr.snowride;
-
     opens cz.hudecekpetr.snowride.settings;
     opens org.robotframework.jaxb to jakarta.xml.bind;
 }

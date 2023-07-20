@@ -1,6 +1,6 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
+// import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -54,8 +54,8 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         this.skinProperty().addListener((observable, oldValue, newValue) -> {
-            final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
-            header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
+            // final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
+            // header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
         });
         TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
         rowColumn.setText("Row");

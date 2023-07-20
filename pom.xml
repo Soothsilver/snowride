@@ -323,7 +323,10 @@
                         <arg>javafx.graphics/com.sun.javafx.util=cz.hudecekpetr.snowride</arg>
                         <arg>--add-exports</arg>
                         <arg>javafx.graphics/com.sun.javafx.stage=cz.hudecekpetr.snowride</arg>
+			<arg>--add-reads</arg>
+                        <arg>cz.hudecekpetr.snowride=ALL-UNNAMED</arg>
                     </compilerArgs>
+		    <encoding>UTF-8</encoding>
                 </configuration>
                 <executions>
                     <!-- Replacing default-compile as it is treated specially by maven -->
