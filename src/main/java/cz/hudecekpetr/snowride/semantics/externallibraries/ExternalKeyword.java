@@ -44,6 +44,7 @@ public class ExternalKeyword implements IKnownKeyword {
         keywordToNextIndex.put("Wait Until Keyword Succeeds", 2);
         keywordToNextIndex.put("Repeat Keyword", 1);
         keywordToNextIndex.put("Run Keyword", 0);
+        keywordToNextIndex.put("Run Keywords", 0);
         keywordToNextIndex.put("Run Keyword And Continue On Failure", 0);
         keywordToNextIndex.put("Run Keyword And Expect Error", 1);
         keywordToNextIndex.put("Run Keyword And Ignore Error", 0);

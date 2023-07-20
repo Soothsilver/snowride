@@ -1,5 +1,6 @@
 package cz.hudecekpetr.snowride.ui.grid;
 
+// import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import cz.hudecekpetr.snowride.Extensions;
 import cz.hudecekpetr.snowride.filesystem.LastChangeKind;
 import cz.hudecekpetr.snowride.fx.TableClipboard;
@@ -26,10 +27,9 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import java.util.*;
 
 public class SnowTableView extends TableView<LogicalLine> {
     private final static Integer DEFAULT_FONT_SIZE = 12;
@@ -52,8 +52,11 @@ public class SnowTableView extends TableView<LogicalLine> {
         this.setEditable(true);
         this.getSelectionModel().setCellSelectionEnabled(true);
         this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        this.setStyle("-fx-selection-bar: lightyellow; -fx-font-size: " + 12 + "pt;");
-        this.setFixedCellSize(23);
+
+        this.skinProperty().addListener((observable, oldValue, newValue) -> {
+            // final TableHeaderRow header = (TableHeaderRow) lookup("TableHeaderRow");
+            // header.reorderingProperty().addListener((o, oldVal, newVal) -> header.setReordering(false));
+        });
         TableColumn<LogicalLine, Cell> rowColumn = createColumn(-1);
         rowColumn.setText("Row");
         rowColumn.setPrefWidth(30);
@@ -627,12 +630,19 @@ public class SnowTableView extends TableView<LogicalLine> {
         // match lines from output.xml
         OutputMatcher.matchLines(highElement, lines);
 
+        boolean containsTemplate = false;
+
         scenario = highElement;
         // For key-value tables:
         for (LogicalLine line : lines) {
             line.setBelongsToHighElement(highElement);
             line.belongsWhere = snowTableKind;
             line.recalcStyles();
+
+            if (!containsTemplate && line.cells.size() > 1) {
+                Cell cell1 = line.cells.get(1);
+                containsTemplate = cell1.contents.contains("Template");
+            }
         }
         // Renew data
         this.setItems(lines);
@@ -654,6 +664,33 @@ public class SnowTableView extends TableView<LogicalLine> {
             this.getColumns().addAll(newColumns);
         }
         this.considerAddingVirtualRowsAndColumns();
+
+        if (scenario instanceof Scenario && ((Scenario) scenario).semanticsIsTemplateTestCase) {
+            Scenario scenarioTyped = (Scenario) scenario;
+            if (scenarioTyped.templateReferenced != null && scenarioTyped.templateReferenced.getLines().size() > 0) {
+                // simply put into header what is in line 0 of referenced template
+                LogicalLine line0 = scenarioTyped.templateReferenced.getLines().get(0);
+                LogicalLine argLine = scenarioTyped.templateReferenced.getLines().stream()
+                        .filter(line -> line.cells.get(1).contents.equalsIgnoreCase("[Arguments]")).findAny()
+                        .orElse(line0);
+
+                List<TableColumn<LogicalLine, ?>> colsToRename = this.getColumns().subList(1,
+                    this.getColumns().size() - 1);
+                for (int i = 0; i < colsToRename.size(); i++) {
+                    // we need to shift indexes by -2 , expecting [Arguments] modifier first + empty col
+                    if (argLine.cells.size() >= i + 3) {
+                        TableColumn<LogicalLine, ?> col = colsToRename.get(i);
+                        col.setText(argLine.cells.get(i + 2).contents);
+                    } else {
+                        colsToRename.get(i).setText("");
+                    }
+                }
+
+            }
+        } else {
+            // clean the possible template artifacts
+            this.getColumns().subList(1, this.getColumns().size() - 1).forEach(col -> col.setText(""));
+        }
     }
 
     private SimpleObjectProperty<Cell> tablePositionToCell(TablePosition position) {

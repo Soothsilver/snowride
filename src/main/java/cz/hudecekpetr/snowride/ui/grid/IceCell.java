@@ -10,17 +10,32 @@ import cz.hudecekpetr.snowride.tree.highelements.Scenario;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.MainForm;
 import cz.hudecekpetr.snowride.undo.ChangeTextOperation;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.robotframework.jaxb.BodyItemStatusValue;
 import org.robotframework.jaxb.Keyword;
 
 public class IceCell extends TableCell<LogicalLine, Cell> {
-    private static final String LINE_NUMBER_CELL_STYLE = "-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;";
+    private static String ROWHEAD_STYLE = "rowhead";
+    private static String ROWHEAD_BASIC_STYLE = "rowheadBasic";
+    private static String ROWHEAD_FAIL_STYLE = "rowheadFail";
+    private static String ROWHEAD_PASS_STYLE = "rowheadPass";
+    private static String ROWHEAD_SKIP_STYLE = "rowheadSkip";
+    private static String ROWHEAD_PARTIAL_STYLE = "rowHeadPartial";
+
+    private static List<String> interchangableStyles = Arrays.asList(ROWHEAD_STYLE, ROWHEAD_BASIC_STYLE,
+            ROWHEAD_FAIL_STYLE, ROWHEAD_PASS_STYLE, ROWHEAD_SKIP_STYLE, ROWHEAD_PARTIAL_STYLE);
 
     private static TablePosition<LogicalLine, Cell> fullDragStartedAt = null;
     private final SnowTableView snowTableView;
@@ -28,32 +43,41 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     private CodeCompletionBinding codeCompletionBinding;
     private int cellIndex;
     private TextField textField;
+    private Cell lastLogicalCell;
 
     public IceCell(TableColumn<LogicalLine, Cell> column, int cellIndex, SnowTableView snowTableView) {
         this.column = column;
         this.cellIndex = cellIndex;
         this.snowTableView = snowTableView;
-        this.setOnMouseEntered(event -> Underlining.updateCellTo(getItem()));
+        this.setOnMouseEntered(event -> {
+            Underlining.updateCellTo(getItem());
+            setVisible(false);
+            setVisible(true);
+        });
         this.setOnMouseExited(event -> {
             if (Underlining.getActiveCell() == getItem()) {
                 Underlining.updateCellTo(null);
             }
+            setVisible(false);
+            setVisible(true);
         });
         this.setPadding(new Insets(0));
         this.setOnDragDetected(event -> {
             if (getItem() != null && getItem().partOfLine != null) {
                 startFullDrag();
-                fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                fullDragStartedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(),
+                        column);
                 event.consume();
             }
         });
         this.setOnMouseDragEntered(event -> {
 
             if (fullDragStartedAt != null && getItem() != null && getItem().partOfLine != null) {
-                TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView, getItem().partOfLine.lineNumber.getValue(), column);
+                TablePosition<LogicalLine, Cell> fullDragEndedAt = new TablePosition<>(snowTableView,
+                        getItem().partOfLine.lineNumber.getValue(), column);
                 snowTableView.getSelectionModel().clearSelection();
-                snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(), fullDragStartedAt.getTableColumn(),
-                        fullDragEndedAt.getRow(), fullDragEndedAt.getTableColumn());
+                snowTableView.getSelectionModel().selectRange(fullDragStartedAt.getRow(),
+                        fullDragStartedAt.getTableColumn(), fullDragEndedAt.getRow(), fullDragEndedAt.getTableColumn());
                 event.consume();
             }
         });
@@ -61,7 +85,10 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         if (cellIndex < 0) {
             // Only the "Row" column has cells with 'cellIndex" less than 0 (it's -1).
             this.setEditable(false);
+            setVisible(false);
+            setVisible(true);
         }
+
     }
 
     public int getCellIndex() {
@@ -112,7 +139,10 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
 
     @Override
     public void commitEdit(Cell newValue) {
-        snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents, this.getItem().postTrivia, this.getItem().partOfLine.lineNumber.getValue(), this.getItem().partOfLine.cells.indexOf(this.getItem())));
+        snowTableView.getScenario().getUndoStack()
+                .iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newValue.contents,
+                        this.getItem().postTrivia, this.getItem().partOfLine.lineNumber.getValue(),
+                        this.getItem().partOfLine.cells.indexOf(this.getItem())));
         super.commitEdit(newValue);
         if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
             ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
@@ -154,7 +184,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
     private TextField ensureTextField() {
         if (textField == null) {
             textField = new TextField();
-            textField.setStyle("-fx-text-box-border: transparent; -fx-background-insets: 0; -fx-focus-color: transparent; -fx-border-width: 0;");
+            textField.setStyle(
+                    "-fx-text-box-border: transparent; -fx-background-insets: 0; -fx-focus-color: transparent; -fx-border-width: 0;");
             textField.setPadding(new Insets(0));
             textField.setOnAction(event -> {
                 commit();
@@ -179,7 +210,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 textField.selectRange(oldAnchor, oldCaret);
             });
             textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-                // prevent issues with uncommitted changes when switching from 'Grid editor' when editing cell
+                // prevent issues with uncommitted changes when switching from 'Grid editor'
+                // when editing cell
                 if (!newValue && isEditing()) {
                     cancelEdit();
                 }
@@ -199,7 +231,8 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         }
         if (!textField.getText().equals(this.getItem().contents)) {
             Cell newCell = constructNewCell();
-            snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(), this.getItem().contents, newCell.contents, this.getItem().postTrivia, lineNumber, columnIndex));
+            snowTableView.getScenario().getUndoStack().iJustDid(new ChangeTextOperation(snowTableView.getItems(),
+                    this.getItem().contents, newCell.contents, this.getItem().postTrivia, lineNumber, columnIndex));
             getItem().partOfLine.getCellAsStringProperty(cellIndex, MainForm.INSTANCE).set(newCell);
             if (snowTableView.snowTableKind == SnowTableKind.SETTINGS) {
                 ((Suite) snowTableView.getScenario()).reparseAndRecalculateResources();
@@ -209,21 +242,55 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
         trueCancelEdit();
     }
 
+    private String getDebugCellIdentification() {
+        return "Table cell IDX " + getIndex() + "-" + getCellIndex() + ": " + getText();
+    }
+
     @Override
     protected void updateItem(Cell item, boolean empty) {
         super.updateItem(item, empty);
-        styleProperty().unbind();
+        setLastLogicalCell(item);
+
+        setVisible(false);
+
+        getStyleClass().removeAll(interchangableStyles);
+        getStyleClass().removeAll(Cell.interchangableCellStyles);
+
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
+
             setStyle(null);
         } else {
             setTextAndGraphicTo(item);
             updateLineNumberCellStyle(item);
-            if (!item.isLineNumberCell) {
-                // TODO This is a potential performance bottleneck.
-                styleProperty().bind(item.getStyleProperty());
+            // make the binding manually so we just add some styles on top
+            if (item.getRecentChangeListener() != null) {
+                item.getCssStyleClassesProperty().removeListener(item.getRecentChangeListener());
             }
+            ChangeListener<List<String>> changeListener = (observable, oldValue, newValue) -> {
+                if (getLastLogicalCell() != item) {
+                    // removing obsolete listener
+                    // previous registration of the graphical cell was rendering different logical
+                    // cell (due switching scenarios presented in the grid)
+                    item.getCssStyleClassesProperty().remove(this);
+                    return;
+                }
+                boolean collectionsAreEqual = oldValue.containsAll(newValue) && newValue.containsAll(oldValue);
+                boolean allAreSet = getStyleClass().contains(newValue);
+                if (collectionsAreEqual && allAreSet) {
+                    return;
+                }
+                setVisible(false);
+                getStyleClass().removeAll(Cell.interchangableCellStyles);
+                getStyleClass().removeAll(interchangableStyles);
+                getStyleClass().addAll(item.getCssStyleClassesProperty());
+
+                setVisible(true);
+            };
+            item.setRecentChangeListener(changeListener);
+            item.getCssStyleClassesProperty().addListener(changeListener);
+
             if (item.triggerDocumentationNext) {
                 triggerDocumentation();
                 item.triggerDocumentationNext = false;
@@ -232,7 +299,18 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
                 triggerMessages(item);
                 item.triggerMessagesNext = false;
             }
+            item.updateStyle();
         }
+
+        setVisible(true);
+    }
+
+    private void setLastLogicalCell(Cell item) {
+        this.lastLogicalCell = item;
+    }
+
+    public Cell getLastLogicalCell() {
+        return lastLogicalCell;
     }
 
     public void updateLineNumberCellStyle(Cell cell) {
@@ -240,36 +318,32 @@ public class IceCell extends TableCell<LogicalLine, Cell> {
             if (cell.iceCell == null) {
                 cell.iceCell = this;
             }
-            String style = LINE_NUMBER_CELL_STYLE;
-            String color = "lavender";
+            List<String> rowHeadStyles = new ArrayList<>();
+            rowHeadStyles.add(ROWHEAD_STYLE);
+
             if (cell.partOfLine != null && cell.partOfLine.status != null) {
                 BodyItemStatusValue status = cell.partOfLine.status;
                 if (status == BodyItemStatusValue.FAIL) {
-                    color = "#ce3e01";
-                    //style += "-fx-background-color: #ce3e01;";
+                    rowHeadStyles.add(ROWHEAD_FAIL_STYLE);
                 } else if (status == BodyItemStatusValue.PASS) {
-                    color = "#97bd61";
-                    //style += "-fx-background-color: #97bd61;";
+                    rowHeadStyles.add(ROWHEAD_PASS_STYLE);
                 } else if (status == BodyItemStatusValue.SKIP) {
-                    color = "#dddddd";
-                    //style += "-fx-background-color: #dddddd;";
+                    rowHeadStyles.add(ROWHEAD_SKIP_STYLE);
                 } else if (status == BodyItemStatusValue.NOT_RUN) {
-                    color = "lightgray";
-                    //style += "-fx-background-color: lightgray;";
                 }
 
                 if (cell.partOfLine.doesNotMatch) {
-                    style += "-fx-background-color: linear-gradient(from 12px 12px to 0px 0px, " + color + " 50%, #F4A460 10%);";
+                    rowHeadStyles.add(ROWHEAD_PARTIAL_STYLE);
                 } else {
-                    style += "-fx-background-color: " + color + ";";
                 }
             } else {
-                style += "-fx-background-color: lavender;";
+                rowHeadStyles.add(ROWHEAD_BASIC_STYLE);
             }
-            setStyle(style);
+            rowHeadStyles.forEach(style -> getStyleClass().add(style));
+            setVisible(false);
+            setVisible(true);
         }
     }
-
 
     private void setTextAndGraphicTo(Cell item) {
         setText(item.contents);

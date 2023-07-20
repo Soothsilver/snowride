@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static cz.hudecekpetr.snowride.Extensions.toInvariant;
@@ -60,6 +61,9 @@ public class LogicalLine {
     public List<ForIteration> forIterations;
     public For forLoop;
 
+    // optimization flag - when the line is changed we want to update the semantics
+    private boolean semanticsUpToDate = false;
+
     public static LogicalLine createEmptyLine(SnowTableKind snowTableKind, HighElement highElement, ObservableList<LogicalLine> list) {
         LogicalLine newLine = new LogicalLine();
         newLine.setBelongsToHighElement(highElement);
@@ -75,7 +79,8 @@ public class LogicalLine {
         if (text.trim().startsWith("#")) {
             // TODO not perfect, probably better dealt with at grammar/lexer level:
             if (text.startsWith("  ") || text.startsWith("\t") || text.startsWith(" \t")) {
-                line.cells.add(new Cell("", text.substring(0, text.indexOf('#')), line));
+                line.cells.add(
+                        new Cell("", text.substring(0, text.indexOf('#')), line));
             }
             line.cells.add(new Cell(text.trim(), "", line));
         } else {
@@ -85,6 +90,7 @@ public class LogicalLine {
     }
 
     public LogicalLine prepend(String cellspace, String cell) {
+        semanticsUpToDate = false;
         cells.add(0, new Cell("", cellspace, this));
         cells.add(1, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
@@ -92,6 +98,7 @@ public class LogicalLine {
     }
 
     public LogicalLine prepend(String cell) {
+        semanticsUpToDate = false;
         cells.add(0, new Cell(cell, this.preTrivia, this));
         this.preTrivia = "";
         return this;
@@ -130,18 +137,20 @@ public class LogicalLine {
             Cell cell = new Cell("", "    ", this);
             cell.virtual = true;
             cells.add(cell);
+            semanticsUpToDate = false;
         }
         while (cells.size() > wrappers.size()) {
             int index = wrappers.size();
             SimpleObjectProperty<Cell> wrapper = new SimpleObjectProperty<>();
             wrapper.addListener((observable, oldValue, newValue) -> {
                 String previousValue = cells.get(index).contents;
-                cells.set(index, newValue);
-                recalcStyles();
-
-
-                if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
-                    getBelongsToHighElement().markAsStructurallyChanged(mainForm);
+                if (!previousValue.equals(newValue.contents)) {
+                    cells.set(index, newValue);
+                    semanticsUpToDate = false;
+                    recalcStyles();
+                    if (getBelongsToHighElement() != null && !previousValue.equals(newValue.contents)) {
+                        getBelongsToHighElement().markAsStructurallyChanged(mainForm);
+                    }
                 }
             });
             wrappers.add(wrapper);
@@ -170,6 +179,7 @@ public class LogicalLine {
     }
 
     public void shiftTrueCellsRight(MainForm mainForm) {
+        semanticsUpToDate = false;
         int cellCount = cells.size();
         for (int i = cellCount - 1; i >= 1; i--) {
             getCellAsStringProperty(i + 1, mainForm).set(cells.get(i).copy());
@@ -177,6 +187,7 @@ public class LogicalLine {
     }
 
     public void shiftTrueCellsLeft(MainForm mainForm) {
+        semanticsUpToDate = false;
         int cellCount = cells.size();
         for (int i = 2; i <= cellCount; i++) {
             if (i == cellCount) {
@@ -188,7 +199,13 @@ public class LogicalLine {
     }
 
     public void recalculateSemantics() {
+        recalculateSemantics(false);
+    }
 
+    public void recalculateSemantics(boolean force) {
+        if (!force && semanticsUpToDate) {
+            return;
+        }
         boolean thereHasBeenNoGuaranteedKeywordCellYet = true;
         boolean isInScenario = getBelongsToHighElement() instanceof Scenario;
         boolean skipFirst = isInScenario;
@@ -247,28 +264,36 @@ public class LogicalLine {
                 }
             }
 
-            boolean isVariable = isVariable(cell.contents);
-            boolean isCertainlyNotAKeyword = isInScenario && (isVariable || cell.contents.trim().equals("\\"));
-            boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet || (currentKeyword != null && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
-            if (canKeywordBeHere) {
+            boolean mayBeKeywordInKeyword = false;
+            if (currentKeyword != null) {
+                Scenario scenarioOfMainLineKeyword = currentKeyword.getScenarioIfPossible();
+                if (scenarioOfMainLineKeyword != null) {
+                    scenarioOfMainLineKeyword.analyzeCodeInSelf();
+                }
+                mayBeKeywordInKeyword = scenarioOfMainLineKeyword != null
+                        && scenarioOfMainLineKeyword.variablesCarryingKeyword != null
+                        && !scenarioOfMainLineKeyword.variablesCarryingKeyword.isEmpty();
+            }
+            
+            
 
-                // This is the keyword.
-                cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
-                cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuiteByInvariantName();
-                Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName.get(toInvariant(cell.contents));
-                if (homonyms != null) {
-                    for (IKnownKeyword homonym : homonyms) {
-                        if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
-                            cellSemantics.thisHereKeyword = homonym;
-                        }
-                    }
+            boolean isVariable = isVariable(cell.contents);
+            boolean isVariablCarryingKeyword = isVariable && (currentKeyword != null
+                    && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument);
+            if (isVariablCarryingKeyword && belongsToHighElement instanceof Scenario) {
+                if (((Scenario) belongsToHighElement).getSemanticsArguments().contains(cell.contents)) {
+                    belongsToHighElement.variablesCarryingKeyword.add(cell.contents);
                 }
-                if (cellSemantics.thisHereKeyword == null) {
-                    determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, cell.contents);
-                }
-                if (cellSemantics.thisHereKeyword == null) {
-                    determineViaGherkin(cellSemantics, kind, cell.contents);
-                }
+            }
+
+            boolean isCertainlyNotAKeyword = isInScenario && (isVariable || cell.contents.trim().equals("\\"));
+            boolean canKeywordBeHere = thereHasBeenNoGuaranteedKeywordCellYet
+                    || (currentKeyword != null
+                            && currentKeyword.getArgumentIndexOfKeywordArgument() == indexOfThisAsArgument)
+                    || mayBeKeywordInKeyword;
+            if (canKeywordBeHere) {
+                assignCellSemanticsAKeywordWhenPossible(i, cell.contents, kind, cellSemantics);
+
                 currentKeyword = cellSemantics.thisHereKeyword;
                 indexOfThisAsArgument = -1;
                 if (isTemplate) {
@@ -291,9 +316,33 @@ public class LogicalLine {
                 }
             }
 
-
         }
+        semanticsUpToDate = true;
+    }
 
+    private void assignCellSemanticsAKeywordWhenPossible(int cellIndex, String cellContents, SnowTableKind kind,
+            CellSemantics cellSemantics) {
+        // we need to assign this always as it is used also for auto-complete
+        // including typing on empty cell
+        cellSemantics.permissibleKeywords = getBelongsToHighElement().asSuite().getKeywordsPermissibleInSuite();
+        cellSemantics.permissibleKeywordsByInvariantName = getBelongsToHighElement().asSuite()
+                .getKeywordsPermissibleInSuiteByInvariantName();
+
+        Collection<IKnownKeyword> homonyms = cellSemantics.permissibleKeywordsByInvariantName
+                .get(toInvariant(cellContents));
+        if (homonyms != null) {
+            for (IKnownKeyword homonym : homonyms) {
+                if (homonym.isLegalInContext(cellSemantics.cellIndex, kind)) {
+                    cellSemantics.thisHereKeyword = homonym;
+                }
+            }
+        }
+        if (cellSemantics.thisHereKeyword == null) {
+            determineThisHereKeywordWithAdvancedProcedures(cellSemantics, kind, cellContents);
+        }
+        if (cellSemantics.thisHereKeyword == null) {
+            determineViaGherkin(cellSemantics, kind, cellContents);
+        }
     }
 
     private void determineViaGherkin(CellSemantics cellSemantics, SnowTableKind kind, String cellContents) {
@@ -364,6 +413,7 @@ public class LogicalLine {
     }
 
     public void reformat(SectionKind sectionKind) {
+        semanticsUpToDate = false;
         for (int i = cells.size() - 1; i >= 0; i--) {
             Cell cell = cells.get(i);
             if (StringUtils.isBlank(cell.contents) && StringUtils.isBlank(cell.postTrivia)) {

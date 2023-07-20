@@ -72,11 +72,13 @@ public class UpperBox extends VBox {
         HBox hboxNameAndFindUsages = new HBox(10d, lblName, bFindUsages);
         hboxNameAndFindUsages.setPadding(new Insets(5, 0, 0, 5));
         Hyperlink bEditDocumentation = new Hyperlink("(edit documentation...)");
+        bEditDocumentation.getStyleClass().add("myLink");
         bEditDocumentation.setOnAction(event -> {
             DocumentationEditWindow editWindow = new DocumentationEditWindow(forElement);
             editWindow.showAndWait();
         });
         Hyperlink bEditTags = new Hyperlink("(edit tags)");
+        bEditTags.getStyleClass().add("myLink");
         bEditTags.setOnAction(event -> {
             if (forElement == null) {
                 return;

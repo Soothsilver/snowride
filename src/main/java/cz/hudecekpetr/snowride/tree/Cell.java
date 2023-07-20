@@ -13,9 +13,13 @@ import cz.hudecekpetr.snowride.semantics.resources.ImportedResource;
 import cz.hudecekpetr.snowride.settings.Settings;
 import cz.hudecekpetr.snowride.tree.highelements.Suite;
 import cz.hudecekpetr.snowride.ui.grid.SnowTableKind;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import org.apache.commons.lang3.StringUtils;
+import org.reactfx.collection.LiveArrayList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,8 +32,44 @@ import static cz.hudecekpetr.snowride.semantics.RobotFrameworkVariableUtils.*;
 import static cz.hudecekpetr.snowride.ui.grid.YellowHighlight.lastPositionSelectText;
 
 public class Cell implements IHasQuickDocumentation {
+    
+
+    private static final String CELL_STYLE_SETTINGS = "settingsCell";
+    private static final String CELL_STYLE_NON_SETTINGS = "nonSettingsCell";
+    private static final String CELL_STYLE_SUITE_IMPORT = "suiteImportCell";
+    private static final String CELL_STYLE_OTHER_IMPORT = "otherImportCell";
+    private static final String CELL_STYLE_FAILED_IMPORT = "failedImportCell";
+
+    private static final String CELL_STYLE_RESERVED_KEYWORD = "reservedKeywordCell";
+    private static final String CELL_STYLE_INDENTATION = "indentationCell";
+    private static final String CELL_STYLE_COMMENT = "commentCell";
+    private static final String CELL_STYLE_KEYWORD = "keywordCell";
+    private static final String CELL_STYLE_SCENARIO_LINK = "scenarioLinkCell";
+    private static final String CELL_STYLE_SCENARIO_LINK_ACTIVE = "scenarioLinkActiveCell";
+    private static final String CELL_STYLE_KEYWORD_NO_LINK = "keywordNoLinkCell";
+
+    private static final String CELL_STYLE_CONDITIONAL_KEYWORD = "conditionalKeywordCell";
+    private static final String CELL_STYLE_VARIABLE = "variableCell";
+    private static final String CELL_STYLE_VARIABLE_UNKNOWN = "variableUnknownOriginCell";
+    private static final String CELL_STYLE_BORDERED = "borderedCell";
+    private static final String CELL_STYLE_HIGHLIGHTED = "highlightedCell";
+    private static final String CELL_STYLE_FORBIDDEN_ARGUMENT = "forbiddenArgumentCell";
+    private static final String CELL_STYLE_BLANK_ARGUMENT = "blankArgumentCell";
+    private static final String CELL_STYLE_VARIABLE_ARGUMENT = "variableArgumentCell";
+    private static final String CELL_STYLE_MANDATORY_ARGUMENT = "mandatoryArgumentCell";
+    private static final String CELL_STYLE_MANDATORY_ARGUMENT_MISSING = "missingMandatoryArgumentCell";
+
+    public static List<String> interchangableCellStyles = Arrays.asList(CELL_STYLE_SETTINGS, CELL_STYLE_NON_SETTINGS,
+        CELL_STYLE_SUITE_IMPORT, CELL_STYLE_OTHER_IMPORT, CELL_STYLE_FAILED_IMPORT, CELL_STYLE_RESERVED_KEYWORD,
+        CELL_STYLE_INDENTATION, CELL_STYLE_COMMENT, CELL_STYLE_KEYWORD, CELL_STYLE_SCENARIO_LINK,
+        CELL_STYLE_SCENARIO_LINK_ACTIVE, CELL_STYLE_KEYWORD_NO_LINK, CELL_STYLE_CONDITIONAL_KEYWORD,
+        CELL_STYLE_VARIABLE, CELL_STYLE_VARIABLE_UNKNOWN, CELL_STYLE_BORDERED, CELL_STYLE_HIGHLIGHTED,
+        CELL_STYLE_FORBIDDEN_ARGUMENT, CELL_STYLE_BLANK_ARGUMENT,
+        CELL_STYLE_VARIABLE_ARGUMENT, CELL_STYLE_MANDATORY_ARGUMENT, CELL_STYLE_MANDATORY_ARGUMENT_MISSING);
+
     private static final String LINE_NUMBER_CELL_STYLE = "-fx-padding: 0; -fx-background-insets: 0.0; -fx-font-weight: bold;  -fx-alignment: center;";
-    private static final String LINE_NUMBER_CELL_STYLE_DEFAULT = LINE_NUMBER_CELL_STYLE + "-fx-background-color: lavender";
+    private static final String LINE_NUMBER_CELL_STYLE_DEFAULT = LINE_NUMBER_CELL_STYLE
+            + "-fx-background-color: lavender";
 
     private static final List<String> CONDITIONAL_KEYWORDS = new ArrayList<>(Arrays.asList(": FOR", ":FOR", "FOR", "END", "IF", "ELSE IF", "ELSE"));
 
@@ -47,18 +87,18 @@ public class Cell implements IHasQuickDocumentation {
     public boolean triggerMessagesNext;
     public boolean isLineNumberCell;
     public BodyItemStatusValue status;
-    private final SimpleStringProperty styleProperty = new SimpleStringProperty(null);
+    
+    private final ListProperty<String> cssStyleClassesProperty = new SimpleListProperty<>(  new LiveArrayList<>());
+    
     public IceCell iceCell;
     private CellSemantics semantics;
+    private ChangeListener<List<String>> recentChangeListener;
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine, boolean isLineNumberCell) {
         this.contents = contents;
         this.postTrivia = postTrivia;
         this.partOfLine = partOfLine;
         this.isLineNumberCell = isLineNumberCell;
-        if (isLineNumberCell) {
-            styleProperty.set(LINE_NUMBER_CELL_STYLE_DEFAULT);
-        }
     }
 
     public Cell(String contents, String postTrivia, LogicalLine partOfLine) {
@@ -85,17 +125,16 @@ public class Cell implements IHasQuickDocumentation {
     }
 
     public void updateStyle() {
-        if (isLineNumberCell) {
+        if (isLineNumberCell || semantics == null) {
             return;
         }
         leadsToSuite = null;
-        String style = "";
+        List<String> styleClasses = new ArrayList<>();
         if (semantics.cellIndex == 0) {
-            style += "-fx-font-weight: bold; ";
             if (partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
-                style += "-fx-text-fill: darkmagenta; ";
+                styleClasses.add(CELL_STYLE_SETTINGS);
             } else {
-                style += "-fx-text-fill: green; ";
+                styleClasses.add(CELL_STYLE_NON_SETTINGS);
             }
         }
         if (semantics.cellIndex == 1 && partOfLine.belongsWhere == SnowTableKind.SETTINGS) {
@@ -105,93 +144,96 @@ public class Cell implements IHasQuickDocumentation {
                 if (resource.isPresent()) {
                     if (resource.get().isSuccessfullyImported()) {
                         if (resource.get().getImportsSuite() != null) {
-                            style += "-fx-text-fill: blue; -fx-underline: true; -fx-font-weight: bold; ";
+                            styleClasses.add(CELL_STYLE_SUITE_IMPORT);
                             leadsToSuite = resource.get().getImportsSuite();
                         } else {
-                            style += "-fx-text-fill: dodgerblue; ";
+                            styleClasses.add(CELL_STYLE_OTHER_IMPORT);
                         }
                     } else {
-                        style += "-fx-text-fill: red; ";
+                        styleClasses.add(CELL_STYLE_FAILED_IMPORT);
                     }
                 }
             }
         }
         if (semantics.cellIndex == 1 && (contents.startsWith("[") && contents.endsWith("]"))) {
-            style += "-fx-text-fill: darkmagenta; ";
-            style += "-fx-font-weight: bold; ";
+            styleClasses.add(CELL_STYLE_RESERVED_KEYWORD);
         } else if (semantics.cellIndex == 1 && contents.equals("\\")) {
-            style += "-fx-font-style: italic; -fx-background-color: darkgray; ";
+            styleClasses.add(CELL_STYLE_INDENTATION);
         } else if (semantics.isComment) {
-            style += "-fx-text-fill: brown; ";
+            styleClasses.add(CELL_STYLE_COMMENT);
         } else if (semantics.isKeyword) {
-            style += "-fx-font-weight: bold; ";
+            styleClasses.add(CELL_STYLE_KEYWORD);
             IKnownKeyword knownKeyword = semantics.thisHereKeyword;
             if (knownKeyword != null) {
                 if (knownKeyword.getScenarioIfPossible() != null) {
-                    style += "-fx-text-fill: blue; ";
+                    styleClasses.add(CELL_STYLE_SCENARIO_LINK);
                     if (Underlining.getActiveCell() == this && Underlining.ctrlDown) {
-                        style += "-fx-underline: true; ";
+                        styleClasses.add(CELL_STYLE_SCENARIO_LINK_ACTIVE);
                     }
                 } else {
-                    style += "-fx-text-fill: dodgerblue; ";
+                    styleClasses.add(CELL_STYLE_KEYWORD_NO_LINK);
                 }
             }
         } else if (semantics.cellIndex == 1 && CONDITIONAL_KEYWORDS.stream().anyMatch(contents::matches)) {
-            style += "-fx-text-fill: darkmagenta; ";
-            style += "-fx-font-weight: bold; ";
+            styleClasses.add(CELL_STYLE_CONDITIONAL_KEYWORD);
         } else if (semantics.isVariable) {
-            style += "-fx-text-fill: green; ";
+            styleClasses.add(CELL_STYLE_VARIABLE);
         } else if (containsAnyVariable(contents)) {
             if (containsVariable(contents, partOfLine.getBelongsToHighElement().variables)) {
-                style += "-fx-text-fill: green; ";
+                styleClasses.add(CELL_STYLE_VARIABLE);
             } else {
-                style += "-fx-text-fill: #ff861a; ";
+                styleClasses.add(CELL_STYLE_VARIABLE_UNKNOWN);
             }
         }
-        style += "-fx-border-color: transparent #EDEDED #EDEDED transparent; -fx-border-width: 1px; ";
+        styleClasses.add(CELL_STYLE_BORDERED);
         if (!StringUtils.isBlank(contents) && Settings.getInstance().cbHighlightSameCells &&
                 (contents.equals(lastPositionSelectText)
                         || (isVariable(lastPositionSelectText) && containsVariable(contents, getVariableName(lastPositionSelectText)))
                         || (containsVariable(lastPositionSelectText) && containsVariable(contents, getVariableName(lastPositionSelectText)))
                 )
         ) {
-            style += "-fx-background-color: #FFFF77; ";
+            styleClasses.add(CELL_STYLE_HIGHLIGHTED);
         } else {
             switch (semantics.argumentStatus) {
                 case FORBIDDEN:
                     if (!semantics.isComment && !StringUtils.isBlank(contents)) {
-                        style += "-fx-background-color: #ff7291; ";
+                        styleClasses.add(CELL_STYLE_FORBIDDEN_ARGUMENT);
                     } else {
-                        style += "-fx-background-color: #c0c0c0; ";
+                        styleClasses.add(CELL_STYLE_BLANK_ARGUMENT);
                     }
                     break;
                 case VARARG:
-                    style += "-fx-background-color: #F5F5F5; ";
+                    styleClasses.add(CELL_STYLE_VARIABLE_ARGUMENT);
                     break;
                 case MANDATORY:
-                    style += "-fx-background-color: white; ";
+                    styleClasses.add(CELL_STYLE_MANDATORY_ARGUMENT);
                     if (StringUtils.isBlank(contents)) {
-                        style += "-fx-background-color: #ffcf32; ";
+                        styleClasses.add(CELL_STYLE_MANDATORY_ARGUMENT_MISSING);
                     }
                     break;
             }
         }
-        styleProperty.set(style);
+		cssStyleClassesProperty.setValue(new LiveArrayList(styleClasses));
     }
 
     public Stream<? extends IAutocompleteOption> getCompletionOptions(SnowTableKind snowTableKind, QualifiedKeyword whatWrittenSoFar) {
-        partOfLine.recalculateSemantics();
+        partOfLine.recalculateSemantics(true);
         Stream<IAutocompleteOption> options = Stream.empty();
-        if (semantics.isKeyword) {
+        // get the semantics after recalculation locally
+        CellSemantics actualSemantics = getSemantics();
+        if (actualSemantics.isKeyword) {
             options = Stream.concat(options,
-                    semantics.permissibleKeywords.stream().filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind)));
+                    actualSemantics.permissibleKeywords.stream()
+                            .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind)));
             if (whatWrittenSoFar.getSource() == null) {
                 options = Stream.concat(options,
-                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                        actualSemantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals(""))
+                                .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind))
                                 .map(kw -> new LibraryAutocompleteOption(kw.getSourceName())).distinct());
             } else {
                 options = Stream.concat(options,
-                        semantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals("")).filter(kw -> kw.isLegalInContext(semantics.cellIndex, snowTableKind))
+                        actualSemantics.permissibleKeywords.stream().filter(kw -> !kw.getSourceName().equals(""))
+                                .filter(kw -> kw.isLegalInContext(actualSemantics.cellIndex, snowTableKind))
                                 .filter(kw -> Extensions.toInvariant(kw.getSourceName()).equals(Extensions.toInvariant(whatWrittenSoFar.getSource())))
                                 .map(QualifiedCompletionOption::new));
             }
@@ -203,8 +245,9 @@ public class Cell implements IHasQuickDocumentation {
         }
         options = Stream.concat(options, GherkinKeywords.all.stream());
         if (Settings.getInstance().cbAutocompleteVariables) {
-            if (semantics.cellIndex >= 1 && semantics.variablesList != null && snowTableKind != SnowTableKind.VARIABLES) {
-                options = Stream.concat(options, semantics.variablesList.stream());
+            if (actualSemantics.cellIndex >= 1 && actualSemantics.variablesList != null
+                    && snowTableKind != SnowTableKind.VARIABLES) {
+                options = Stream.concat(options, actualSemantics.variablesList.stream());
             }
         }
         return options;
@@ -263,8 +306,8 @@ public class Cell implements IHasQuickDocumentation {
         return null;
     }
 
-    public SimpleStringProperty getStyleProperty() {
-        return styleProperty;
+    public ListProperty<String> getCssStyleClassesProperty() {
+        return cssStyleClassesProperty;
     }
 
     public CellSemantics getSemantics() {
@@ -280,5 +323,13 @@ public class Cell implements IHasQuickDocumentation {
         VARARG,
         FORBIDDEN,
         UNKNOWN
+    }
+
+    public void setRecentChangeListener(ChangeListener<List<String>> changeListener) {
+        this.recentChangeListener = changeListener;
+    }
+
+    public ChangeListener<List<String>> getRecentChangeListener() {
+        return recentChangeListener;
     }
 }
